@@ -11,7 +11,7 @@
 </script>
 
 <template>
-    <footer class="print:hidden">
+    <footer class="print:hidden max-dvw">
         <p class="print:hidden opacity-50 *:text-[10px]! text-[10px]! leading-[14px] sm:max-w-[400px] text-center sm:text-left">
             
             ИП Торшин Илья Евгеньевич ОГРНИП 323480000011992 ИНН 482308004814<br>
