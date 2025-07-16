@@ -10,21 +10,12 @@ services:
       context: .
       dockerfile_inline: |
         FROM node:20-alpine
-
-        # Создание рабочей директории
         WORKDIR /app
-
-        # Установка зависимостей
         COPY .npmrc ./
         COPY package*.json ./
-        RUN npm install
-
-        # Копирование исходников
+        RUN npm ci
         COPY . .
-
-        # Сборка Nuxt-проекта (если SSR или generate)
         RUN npm run build
-
         CMD ["node", ".output/server/index.mjs"]
     ports:
       - "4001:3000"
