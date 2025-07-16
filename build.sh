@@ -80,7 +80,7 @@ init_build_meta() {
 
     if [[ -f "$build_meta_file" ]]; then
         local current_b
-        current_b=$(jq -r '.b' "$build_meta_file" 2>/dev/null)
+        current_b=$(jq -r '.b' F"$build_meta_file" 2>/dev/null)
         if [[ "$current_b" =~ ^[0-9]+$ ]]; then
             current_b=$((current_b + 1))
         else
@@ -150,7 +150,7 @@ update_message_loop() {
         local last_commit
         last_commit=$(get_last_commit)
 
-        text=$'*Статус:* '"$status_text"$'\n*Билд:* '"$build_info"$'\n*Время сборки:* '"$elapsed_fmt"$'\n*Последний коммит:* '"$last_commit"$'\n*Последний апдейт логов:* '"$now"$'\n```\n'"$short_log"$'```'
+        text=$'*Статус:* '"$status_text"$'\n*Билд:* '"$build_info"$'\n*Время сборки:* '"$elapsed_fmt"$'\n*Последний коммит:* '"$last_commit"$'\n*Последний апдейт логов:* '"$now"$'\n```log\n'"$short_log"$'```'
 
 
         echo "[INFO] Updating message at $now (elapsed: $elapsed_fmt)"
@@ -208,7 +208,7 @@ main() {
     local last_commit
     last_commit=$(get_last_commit)
 
-    final_text=$'*Статус:* '"$status_text"$'\n*Билд:* '"$build_info"$'\n*Время сборки:* '"$total_time_fmt"$'\n*Последний коммит:* '"$last_commit"$'\n*Последний апдейт логов:* '"$now"$'\n```\n'"$short_log"$'```'
+    final_text=$'*Статус:* '"$status_text"$'\n*Билд:* '"$build_info"$'\n*Время сборки:* '"$total_time_fmt"$'\n*Последний коммит:* '"$last_commit"$'\n*Последний апдейт логов:* '"$now"$'\n```log\n'"$short_log"$'```'
 
 
     echo "[INFO] Final status: $status_text"

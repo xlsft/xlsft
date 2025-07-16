@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    // DDD
+
     const ddd_diff = ref()
     const ddd_diff_update = () => {
         const now = Date.now();
