@@ -9,7 +9,7 @@
     font-variant-ligatures: no-historical-ligatures;
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;     /* Firefox */
-    @apply  outline-neutral-700 border-neutral-700 text-neutral-100 select-none transition-all scroll-smooth cursor-crosshair
+    @apply  outline-neutral-700 border-neutral-700 text-neutral-100 print:text-black! print:outline-black print:border-black select-none transition-all scroll-smooth cursor-crosshair
 } *::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
 }
@@ -19,11 +19,11 @@
 }
 
 html {
-    @apply overflow-hidden print:overflow-scroll
+    @apply overflow-hidden print:overflow-scroll max-w-dvw
 }
 
 body, #app {
-    @apply w-dvw h-dvh print:h-fit overflow-scroll bg-black flex flex-col items-center
+    @apply w-dvw h-dvh print:h-fit overflow-scroll bg-black flex flex-col items-center max-w-dvw
 }
 
 #app {
