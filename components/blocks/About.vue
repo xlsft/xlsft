@@ -25,8 +25,8 @@
             }
             return age;
         })(),
-        sex: 'male',
-        loc: 'Russia, Lipetsk, (GMT +3)',
+        sex: t('sex'),
+        loc: t('location'),
     }})
 
     const params_length = computed(() => new TextEncoder().encode(JSON.stringify(params.value, null, 4)).length)
@@ -76,37 +76,57 @@
 </script>
 
 <template>
-    <section class="h-[48px] group" style="background-image: url('/patterns/topography.svg');" id="about">
+    <section class="print:hidden h-[48px] group" style="background-image: url('/patterns/topography.svg');" id="about">
         <div class="w-full h-full absolute group-hover:opacity-100 opacity-0 top-0 left-0" style="background-image: url('/patterns/topography-hover.svg');"></div>
         <Cross/>
     </section>
 
-    <section class="h-fit flex justify-between gap-[48px]">
+    <section class="h-fit flex justify-between gap-[48px] print:gap-0 print:h-[calc(100dvh-48px)]">
+        <div class="hidden print:inline-block absolute top-0 right-0 w-[350px] text-right text-lg! *:text-lg!">{{ t('more_print') }}:&nbsp;<a href="https://xlsft.ru">https://xlsft.ru</a></div>
         <div class="flex flex-col gap-[48px]">
-            <div class="h-full flex flex-col gap-[24px]">
-                <h1 class="flex flex-col gap-[12px] mb-[]"><img src="@/assets/photo.webp" class="w-[256px] xl:hidden block"> {{ t('hi') }}</h1>
+            <img src="@/assets/photo.webp" class="w-[300px] h-[300px] hidden print:block">
+            <div class="h-full flex flex-col gap-[24px] print:mb-[48px]">
+                <h1 class="flex flex-col gap-[12px] mb-[]"><img src="@/assets/photo.webp" class="print:hidden w-[256px] xl:hidden block"> {{ t('hi') }}</h1>
                 <h2>{{ t('intro') }}</h2>
+                <div class="flex-col hidden print:flex grow">
+                    <div class="flex gap-[12px] items-center *:text-xl!">
+                        <div class="opacity-50">{{ t('name_label') }}:</div>
+                        <div>{{ params.name }}</div>
+                    </div>
+                    <div class="flex gap-[12px] items-center *:text-xl!">
+                        <div class="opacity-50">{{ t('bd_label') }}:</div>
+                        <div>{{ params.bd }}</div>
+                    </div>
+                    <div class="flex gap-[12px] items-center *:text-xl!">
+                        <div class="opacity-50">{{ t('age_label') }}:</div>
+                        <div>{{ params.age }}</div>
+                    </div>
+                    <div class="flex gap-[12px] items-center *:text-xl!">
+                        <div class="opacity-50">{{ t('location_label') }}:</div>
+                        <div>{{ params.loc }}</div>
+                    </div>
+                </div>
             </div>
-            <div class="flex flex-col border text-sm! *:text-sm!">
+            <div class="flex flex-col border text-sm! *:text-sm! print:hidden">
                 <div class="w-full flex items-center justify-between px-[12px] py-[4px] border-b">
                     <span class="text-xs! opacity-50">200 OK</span>
                     <span class="text-xs! opacity-50">{{ params_length }} bytes</span>
                 </div>
-                <div class="flex flex-col opacity-50 p-[12px]">
+                <div class="flex flex-col opacity-50 p-[12px] print:hidden">
                     {
                     <span v-for="key, i in Object.keys(params)">&nbsp;&nbsp;"{{ key }}": "{{ params[(key as keyof typeof params)] }}"{{ i + 1 < Object.keys(params).length ? ',' : '' }}</span>
                     }
                 </div>
             </div>
-            <div class="flex flex-col gap-[24px]">
-                <div class="flex flex-wrap gap-[4px]">
+            <div class="flex flex-col gap-[24px] print:mb-[96px]">
+                <div class="flex flex-wrap gap-[4px] print:gap-[8px]">
                     <div class="badge" :style="`--badge-color: ${badge.color}`" v-for="badge in badges">{{ badge.name }}</div>
                 </div>
                 <button @click="goto">{{ t('contact_me') }}</button>
             </div>
         </div>
-        <img src="@/assets/photo.webp" class="h-[400px] xl:block hidden">
-        <a href="https://github.com/xlsft/xlsft" target="_blank" class="absolute bottom-[48px] right-[48px] opacity-25! hover:opacity-100! hover:text-accent!">{{ t('this_project') }}</a>
+        <img src="@/assets/photo.webp" class="h-[400px] xl:block hidden print:hidden">
+        <a href="https://github.com/xlsft/xlsft" target="_blank" class="print:hidden absolute bottom-[48px] right-[48px] opacity-25! hover:opacity-100! hover:text-accent!">{{ t('this_project') }}</a>
     </section>
 </template>
 

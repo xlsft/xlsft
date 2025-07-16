@@ -34,8 +34,8 @@
 </script>
 
 <template>
-    <SectionHeader id="contact_me"  style="background-image: url('/patterns/hideout.svg');" hover-style="background-image: url('/patterns/hideout-hover.svg');"/>
-    <section class="flex flex-col gap-[12px]" v-if="!sended">
+    <SectionHeader id="contact_me" class="print:hidden" style="background-image: url('/patterns/hideout.svg');" hover-style="background-image: url('/patterns/hideout-hover.svg');"/>
+    <section class="flex flex-col gap-[12px] print:hidden" v-if="!sended">
 
         <label>
             {{ t('contact.company_name') }}

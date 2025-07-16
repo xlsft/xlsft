@@ -11,8 +11,8 @@
 </script>
 
 <template>
-    <footer>
-        <p class="opacity-50 *:text-[10px]! text-[10px]! leading-[14px] sm:max-w-[400px] text-center sm:text-left">
+    <footer class="print:hidden">
+        <p class="print:hidden opacity-50 *:text-[10px]! text-[10px]! leading-[14px] sm:max-w-[400px] text-center sm:text-left">
             
             ИП Торшин Илья Евгеньевич ОГРНИП 323480000011992 ИНН 482308004814<br>
             <a target="_blank" href="https://t.me/xlsfotware">Telegram</a>&nbsp;
@@ -25,7 +25,7 @@
             <DDD/>
             <Debug v-model="debug" v-model:clicks="clicks"/>
         </p>
-        <div class="flex sm:flex-col sm:justify-between sm:items-end flex-row justify-between items-center">
+        <div class="print:hidden flex sm:flex-col sm:justify-between sm:items-end flex-row justify-between items-center">
             <img :src="`${clicks > 5 ? '/logo-mini-debug.svg' : '/logo-mini.svg'}`" class="w-[24px] cursor-help!" :style="`transform: scale(${clicks > 5 ? 1 : Math.min(clicks / 10 + 1, 1.5)})`" @click="clicks++"> 
             <span class="text-[10px]! opacity-50">XL Software @ {{ new Date().getFullYear() }}</span>
         </div>

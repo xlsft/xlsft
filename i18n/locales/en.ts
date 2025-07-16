@@ -1,12 +1,16 @@
 export default {
     hi: 'Hi)',
     name: 'Ilya',
+    location: 'Russia, Lipetsk, (GMT +3)',
+    sex: 'male',
     intro: 'This is my Senior Frontend Software Engineer CV',
     contact_me: 'Contact me',
     experience: 'Experience',
     job_description: 'Job description',
     projects: 'Projects',
     this_project: "this project on github",
+    more_print: 'Learn more about me and my projects',
+    print: 'Print version',
     menu: {
         about: 'Home',
         experience: 'Experience',
@@ -25,6 +29,7 @@ export default {
             Documented functionality and created user guides for future product owners.<br>
             Designed architectures of varying complexity — from monoliths to microservices.<br>
             Also actively participated in development: wrote a lot of code.<br><br>
+            ---NOPRINT---
             github: <a target="_blank" href="https://github.com/xlsft">xlsft</a>
             `,
             duration: 'October 2020 — January 2023 / 2 years 4 months'
@@ -39,6 +44,7 @@ export default {
             Created complex user interfaces focused on usability and performance — for both our clients and their end users. Migrated key modules to micro frontends and introduced a feature-sliced architecture (FSD) in the core of the product.<br>
             Fully designed, implemented, and brought to production one of the system’s core features — a <b>widget for developers’ and agencies’ websites</b>, including its backend part. It’s currently used by many developers and has processed over a billion rubles in leads.<br>
             Also developed an app for Bitrix24 integrated with the Ained Catalog product (a unit availability map for developers).<br><br>
+            ---NOPRINT---
             Urban 2024 Award Winner: <a target="_blank" href="https://uawards.ru/awards/federalnaya-premiya-urban-2024?nomineeId=5662">More details</a><br>
             Widget demo: <a href="/demo/ained_widget">Open</a><br>
             Product in production: <a target="_blank" href="https://rss48.ru/">rss48.ru</a> <a target="_blank" href="https://авторский48.рф/">авторский48.рф</a> and more...`,
@@ -131,6 +137,10 @@ export default {
             name: 'Cyber Arena Game Bot',
             description: 'A gaming bot with a loyalty system.',
         },
-    }
+    },
+    name_label: 'Name',
+    bd_label: 'Birthday',
+    age_label: 'Age',
+    location_label: 'Location'
 
 }

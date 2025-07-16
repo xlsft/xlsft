@@ -35,19 +35,18 @@
 </script>
 
 <template>
-    <SectionHeader id="projects" style="background-image: url('/patterns/lines-in-motion.svg');" hover-style="background-image: url('/patterns/lines-in-motion-hover.svg');"/>
-    <section class="p-0! px-[24px]! sm:px-[48px]! py-[24px]! flex gap-[12px] sm:gap-[48px] items-center justify-between flex-col sm:flex-row">
+    <SectionHeader id="projects" class="print:hidden" style="background-image: url('/patterns/lines-in-motion.svg');" hover-style="background-image: url('/patterns/lines-in-motion-hover.svg');"/>
+    <section class="print:hidden p-0! px-[24px]! sm:px-[48px]! py-[24px]! flex gap-[12px] sm:gap-[48px] items-center justify-between flex-col sm:flex-row">
         <span class="text-xl! opacity-50 hidden sm:flex">tags:</span>
         <div class="flex flex-wrap gap-[12px] justify-center items-center sm:justify-end">
             <span class="text-xl! opacity-50 flex sm:hidden">tags:</span>
             <button mini black v-for="tag in tags" @click="filters.includes(tag) ? filters.splice(filters.findIndex(v => v === tag), 1) : filters.push(tag)" :class="filters.includes(tag) ? 'border-accent! hover:border-accent!' : ''">{{ tag }} <span class="text-xs! opacity-50 ml-[8px] mt-[2px]">{{ counts[tag] }}</span></button>
         </div>
     </section>
-    <section class="flex gap-[12px] p-0! overflow-x-auto min-h-[400px] duration-0 transition-colors!" ref="container">
+    <section class="print:hidden flex gap-[12px] p-0! overflow-x-auto min-h-[400px] duration-0 transition-colors!" ref="container">
         <template v-if="filtered.length > 0">
             <ProjectCard v-for="item in filtered" v-bind="item" :key="item.id"/>
         </template>
         <div v-else class="w-full h-[400px] text-center flex items-center justify-center opacity-50 text-2xl!">{{ t('no_items') }}</div>
     </section>
-    
 </template>

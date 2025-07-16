@@ -14,33 +14,32 @@
     display: none;  /* Chrome, Safari and Opera */
 }
 
-
 *:not(h1,h2,h3) {
     @apply sm:text-[14px] text-[12px]
 }
 
 html {
-    @apply overflow-hidden
+    @apply overflow-hidden print:overflow-scroll
 }
 
 body, #app {
-    @apply w-dvw h-dvh overflow-scroll bg-black flex flex-col items-center
+    @apply w-dvw h-dvh print:h-fit overflow-scroll bg-black flex flex-col items-center
 }
 
 #app {
-    @apply relative min-w-full h-fit! md:max-w-[700px] xl:max-w-[1080px] mt-[48px] md:mt-[96px] outline-1 overflow-visible! min-h-[calc(100dvh-48px)] md:min-h-[calc(100dvh-96px-194px)]
+    @apply relative min-w-full h-fit! print:w-full! md:max-w-[700px] xl:max-w-[1080px] mt-[48px] md:mt-[96px] outline-1 print:outline-0 overflow-visible! min-h-[calc(100dvh-48px)] md:min-h-[calc(100dvh-96px-194px)]
 }
 
 footer {
-    @apply min-w-full h-fit! md:max-w-[700px] xl:max-w-[1080px] 
+    @apply min-w-full h-fit! md:max-w-[700px] xl:max-w-[1080px] print:hidden
 }
 
 section {
-    @apply relative border-b w-full p-[24px] md:p-[48px] last:border-none
+    @apply relative border-b w-full p-[24px] md:p-[48px] last:border-none print:border-none print:p-0!
 }
 
 header {
-    @apply w-full h-[48px] fixed top-0 bg-black z-[999] flex justify-between items-center px-[24px] border-b border-neutral-700! md:data-[floating=true]:border-neutral-700! md:data-[floating=false]:border-neutral-700/0!
+    @apply w-full h-[48px] fixed top-0 bg-black z-[999] flex justify-between items-center px-[24px] border-b border-neutral-700! md:data-[floating=true]:border-neutral-700! md:data-[floating=false]:border-neutral-700/0! print:hidden
 }
 
 h1 {
@@ -56,7 +55,7 @@ h3 {
 }
 
 button {
-    @apply bg-accent w-fit px-[32px] py-[12px] text-xl font-medium cursor-nw-resize! flex items-center justify-center hover:opacity-50
+    @apply print:hidden bg-accent w-fit px-[32px] py-[12px] text-xl font-medium cursor-nw-resize! flex items-center justify-center hover:opacity-50
 }
 
 button[black] {
@@ -105,4 +104,8 @@ ul, ol {
 
 .ps {
     @apply text-xs! *:text-xs!
+}
+
+br {
+    @apply print:hidden
 }
