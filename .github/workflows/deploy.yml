@@ -1,0 +1,29 @@
+name: Deploy on remote
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.DEPLOY_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H xlsft.ru >> ~/.ssh/known_hosts
+
+
+    - name: Pull and Start Background Build on Remote Server
+      run: |
+        ssh server@xlsft.ru << 'EOF'
+          cd /home/server/xlsft.ru
+          git pull origin main
+          nohup ./build.sh > /dev/null 2>&1 &
+        EOF

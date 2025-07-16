@@ -1,0 +1,29 @@
+services:
+  xlsft_ru:
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+      TG_USER: ${TG_USER}
+      TG_TOKEN: ${TG_TOKEN}
+    restart: always
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:20-alpine
+
+        # Создание рабочей директории
+        WORKDIR /app
+
+        # Установка зависимостей
+        COPY .npmrc ./
+        COPY package*.json ./
+        RUN npm install
+
+        # Копирование исходников
+        COPY . .
+
+        # Сборка Nuxt-проекта (если SSR или generate)
+        RUN npm run build
+
+        CMD ["node", ".output/server/index.mjs"]
+    ports:
+      - "4001:3000"

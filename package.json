@@ -1,0 +1,36 @@
+{
+    "name": "xlsft.ru",
+    "private": true,
+    "version": "1.0.69",
+    "type": "module",
+    "scripts": {
+        "build": "nuxt build",
+        "dev": "nuxt dev",
+        "generate": "nuxt generate",
+        "preview": "nuxt preview",
+        "postinstall": "nuxt prepare"
+    },
+    "dependencies": {
+        "@grammyjs/conversations": "^2.1.0",
+        "@nuxtjs/i18n": "9.5.6",
+        "@tailwindcss/vite": "^4.1.11",
+        "@vueuse/core": "^13.5.0",
+        "@xlsft/nuxt": "npm:@jsr/xlsft__nuxt@^1.1.33",
+        "drizzle-orm": "^0.44.3",
+        "engine.io": "^6.6.4",
+        "grammy": "^1.37.0",
+        "nuxt": "^3.17.6",
+        "pg": "^8.16.3",
+        "socket.io": "^4.8.1",
+        "socket.io-client": "^4.8.1",
+        "tailwindcss": "^4.1.11",
+        "vue": "^3.5.17",
+        "vue-router": "^4.5.1",
+        "yandex-metrika-module-nuxt3": "^1.5.3"
+    },
+    "devDependencies": {
+        "@types/pg": "^8.15.4",
+        "typescript": "^5.8.3",
+        "vue-tsc": "^3.0.1"
+    }
+}
