@@ -1,7 +1,7 @@
 {
     "name": "xlsft.ru",
     "private": true,
-    "version": "1.0.69",
+    "version": "1.0.71",
     "type": "module",
     "scripts": {
         "build": "nuxt build",
