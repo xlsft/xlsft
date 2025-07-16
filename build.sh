@@ -61,14 +61,14 @@ read_package_version() {
 read_build_info() {
     if [[ ! -f "$build_meta_file" ]]; then
         echo "[ERROR] build.json not found!"
-        echo "xlsft.ru (0.0.0-0) -"
+        echo "xlsft (0.0.0-0) -"
         return
     fi
     local version build date
     version=$(jq -r '.v' "$build_meta_file")
     build=$(jq -r '.b' "$build_meta_file")
     date=$(jq -r '.d' "$build_meta_file")
-    echo "xlsft.ru (${version}-${build}) ${date}"
+    echo "xlsft (${version}-${build}) ${date}"
 }
 
 
@@ -105,7 +105,7 @@ init() {
 first_message() {
     echo "[INFO] Sending initial message..."
     local resp
-    resp=$(send_msg $'*Статус:* ⌛ Ожидается сборка\n*Билд:* -\n*Время сборки:* -\n*Последний апдейт логов:* -')
+    resp=$(send_msg $'*Статус:* ⌛ Ожидается сборка\n*Билд:* -\n*Время сборки:* -\n*Последний коммит:* -\n*Последний апдейт логов:* -')
     message_id=$(echo "$resp" | grep -o '"message_id":[0-9]*' | cut -d: -f2)
 
     if [[ -z "$message_id" ]]; then
@@ -129,6 +129,11 @@ get_short_log() {
     echo "${short_log:-_}"
 }
 
+get_last_commit() {
+    git -C "$project_dir" log -1 --pretty=format:'(%h): %s'
+}
+
+
 update_message_loop() {
     while true; do
         local now short_log text resp elapsed
@@ -142,8 +147,10 @@ update_message_loop() {
         elapsed_fmt=$(printf '%02d:%02d:%02d' $((elapsed/3600)) $((elapsed%3600/60)) $((elapsed%60)))
         local build_info
         build_info=$(read_build_info)
+        local last_commit
+        last_commit=$(get_last_commit)
 
-        text=$'*Статус:* '"$status_text"$'\n*Билд:* '"$build_info"$'\n*Время сборки:* '"$elapsed_fmt"$'\n*Последний апдейт логов:* '"$now"$'\n```\n'"$short_log"$'```'
+        text=$'*Статус:* '"$status_text"$'\n*Билд:* '"$build_info"$'\n*Время сборки:* '"$elapsed_fmt"$'\n*Последний коммит:* '"$last_commit"$'\n*Последний апдейт логов:* '"$now"$'\n```\n'"$short_log"$'```'
 
 
         echo "[INFO] Updating message at $now (elapsed: $elapsed_fmt)"
@@ -198,8 +205,10 @@ main() {
     short_log=$(get_short_log)
     local build_info
     build_info=$(read_build_info)
+    local last_commit
+    last_commit=$(get_last_commit)
 
-    final_text=$'*Статус:* '"$status_text"$'\n*Билд:* '"$build_info"$'\n*Время сборки:* '"$total_time_fmt"$'\n*Последний апдейт логов:* '"$now"$'\n```\n'"$short_log"$'```'
+    final_text=$'*Статус:* '"$status_text"$'\n*Билд:* '"$build_info"$'\n*Время сборки:* '"$total_time_fmt"$'\n*Последний коммит:* '"$last_commit"$'\n*Последний апдейт логов:* '"$now"$'\n```\n'"$short_log"$'```'
 
 
     echo "[INFO] Final status: $status_text"
