@@ -104,10 +104,9 @@
                 </div>
                 <button @click="goto">{{ t('contact_me') }}</button>
             </div>
-            
         </div>
-        <div class="h-full w-px border-l border-dashed xl:block hidden"></div>
         <img src="@/assets/photo.webp" class="h-[400px] xl:block hidden">
+        <a href="https://github.com/xlsft/xlsft" target="_blank" class="absolute bottom-[48px] right-[48px] opacity-25! hover:opacity-100! hover:text-accent!">{{ t('this_project') }}</a>
     </section>
 </template>
 

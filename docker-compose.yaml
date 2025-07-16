@@ -1,6 +1,7 @@
 services:
   xlsft_ru:
     environment:
+      MODE: production
       DB_PASSWORD: ${DB_PASSWORD}
       TG_USER: ${TG_USER}
       TG_TOKEN: ${TG_TOKEN}

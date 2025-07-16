@@ -29,6 +29,7 @@ export const health = () => {
         uptime: `${days}:${hours}:${minutes}:${seconds}`,
         os: `${os.platform()} ${os.release()} (${os.arch()})`,
         disk,
-        build: `xlsft.ru (${build.v}-${build.b}) ${build.d}`
+        build: `xlsft.ru (${build.v}-${build.b}) ${build.d}`,
+        mode: useRuntimeConfig().mode
     })
 }

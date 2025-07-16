@@ -6,6 +6,7 @@ export default {
     experience: 'Experience',
     job_description: 'Job description',
     projects: 'Projects',
+    this_project: "this project on github",
     menu: {
         about: 'Home',
         experience: 'Experience',

@@ -6,6 +6,7 @@ export default {
     experience: 'Коммерческий опыт',
     job_description: 'Чем занимался на этой позиции',
     projects: 'Проекты',
+    this_project: "этот проект на github",
     menu: {
         about: 'Главная',
         experience: 'Опыт',

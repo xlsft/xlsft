@@ -49,6 +49,7 @@ export default defineNuxtConfig({
         },
     },
     runtimeConfig: {
+        mode: process.env.MODE || 'development',
         db_password: process.env.DB_PASSWORD,
         tg_token: process.env.TG_TOKEN,
         tg_user: process.env.TG_USER
