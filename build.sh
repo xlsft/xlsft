@@ -80,7 +80,7 @@ init_build_meta() {
 
     if [[ -f "$build_meta_file" ]]; then
         local current_b
-        current_b=$(jq -r '.b' F"$build_meta_file" 2>/dev/null)
+        current_b=$(jq -r '.b' "$build_meta_file" 2>/dev/null)
         if [[ "$current_b" =~ ^[0-9]+$ ]]; then
             current_b=$((current_b + 1))
         else
