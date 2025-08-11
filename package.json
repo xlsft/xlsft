@@ -1,7 +1,7 @@
 {
     "name": "xlsft.ru",
     "private": true,
-    "version": "1.0.77",
+    "version": "1.0.78",
     "type": "module",
     "packageManager": "pnpm@10.11.0",
     "scripts": {
@@ -20,7 +20,7 @@
         "drizzle-orm": "^0.44.3",
         "engine.io": "^6.6.4",
         "grammy": "^1.37.0",
-        "nuxt": "^3.17.6",
+        "nuxt": "^4.0.3",
         "pg": "^8.16.3",
         "socket.io": "^4.8.1",
         "socket.io-client": "^4.8.1",

@@ -45,7 +45,7 @@ send_log_file() {
     curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendDocument" \
         -F chat_id="$CHAT_ID" \
         -F document=@"$file" \
-        -F caption="📄 Full build log file"
+        -F caption="📄 Полные логи"
 }
 
 read_package_version() {

@@ -89,7 +89,7 @@
             if (!only.length || only.includes('tiles')) for (let r = sr; r <= er; r++) for (let c = sc; c <= ec; c++) {
                 const idx = r * options.cols + c
                 const key = state.value.map[idx]
-                const color = options.colors.map[key] || options.colors.bg
+                const color = options.colors.map[key as keyof typeof options.colors.map] || options.colors.bg
                 if (color === options.colors.bg) continue
                 const sx = state.value.offset.x + c * cell
                 const sy = state.value.offset.y + r * cell
@@ -119,7 +119,7 @@
             if (!only.length || only.includes('selected')) if (state.value.selected.x !== null && state.value.selected.y !== null) {
                 const sx = state.value.offset.x + state.value.selected.x * cell
                 const sy = state.value.offset.y + state.value.selected.y * cell
-                ctx.strokeStyle = state.value.ui.color === 0 ? options.colors.hover : options.colors.map[state.value.ui.color] 
+                ctx.strokeStyle = state.value.ui.color === 0 ? options.colors.hover : options.colors.map[state.value.ui.color]!
                 ctx.lineWidth = 2
                 ctx.globalAlpha = 1
                 ctx.strokeRect(sx + 1, sy + 1, cell - 2, cell - 2)
@@ -176,19 +176,19 @@
             start: (e: TouchEvent) => {
                 if (!canvas.value) return
                 if (e.touches.length === 1) {
-                    const t = e.touches[0]
+                    const t = e.touches[0] as Touch
                     state.value.panning = true
                     state.value.last.x = t.clientX
                     state.value.last.y = t.clientY
                 } else if (e.touches.length === 2) {
-                    state.value.touch.dist = actions.touch.calc.dist(e.touches[0], e.touches[1])
-                    state.value.touch.center = actions.touch.calc.center(e.touches[0], e.touches[1])
+                    state.value.touch.dist = actions.touch.calc.dist(e.touches[0] as Touch, e.touches[1] as Touch)
+                    state.value.touch.center = actions.touch.calc.center(e.touches[0] as Touch, e.touches[1] as Touch)
                 }
             },
             move: (e: TouchEvent) => {
                 if (!canvas.value) return
                 if (e.touches.length === 1 && state.value.panning) {
-                    const t = e.touches[0]
+                    const t = e.touches[0] as Touch
                     const dx = t.clientX - state.value.last.x
                     const dy = t.clientY - state.value.last.y
                     state.value.offset.x += dx
@@ -196,8 +196,8 @@
                     state.value.last.x = t.clientX
                     state.value.last.y = t.clientY
                 } else if (e.touches.length === 2) {
-                    const d = actions.touch.calc.dist(e.touches[0], e.touches[1])
-                    const c = actions.touch.calc.center(e.touches[0], e.touches[1])
+                    const d = actions.touch.calc.dist(e.touches[0] as Touch, e.touches[1] as Touch)
+                    const c = actions.touch.calc.center(e.touches[0] as Touch, e.touches[1] as Touch)
                     if (state.value.touch.dist && state.value.touch.center) {
                         const rect = canvas.value.getBoundingClientRect()
                         const px = state.value.touch.center.x - rect.left
@@ -238,8 +238,7 @@
                 if (!canvas.value) return
                 const rect = canvas.value.getBoundingClientRect()
                 let x: number, y: number
-
-                if ('touches' in e && e.touches.length > 0) { x = e.touches[0].clientX; y = e.touches[0].clientY } 
+                if ('touches' in e && e.touches.length > 0) { x = (e.touches[0] as Touch).clientX; y = (e.touches[0] as Touch).clientY } 
                 else if ('clientX' in e && 'clientY' in e) { x = e.clientX; y = e.clientY } 
                 else return
                 
