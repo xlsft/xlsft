@@ -3,7 +3,7 @@
     import { io } from "socket.io-client";
 
     const debug = defineModel<boolean>()
-    const debug_count = defineModel<number>('clicks')
+    const debug_count = defineModel<number>('clicks', { required: true })
     const debug_count_interval = ref(); onMounted(() => debug_count_interval.value = setInterval(() => debug_count.value = Math.max(debug_count.value - 1, 0), 300))
     watch(() => debug_count.value, () => {
         if (debug_count.value < 5) return

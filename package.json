@@ -1,7 +1,7 @@
 {
     "name": "xlsft.ru",
     "private": true,
-    "version": "1.0.76",
+    "version": "1.0.77",
     "type": "module",
     "packageManager": "pnpm@10.11.0",
     "scripts": {
