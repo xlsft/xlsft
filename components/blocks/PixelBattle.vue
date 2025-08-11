@@ -30,6 +30,7 @@
     }
 
     const state = ref<PixelBattleState>({
+        visible: false,
         loading: true,
         scale: 1,
         frame: 0,
@@ -52,7 +53,7 @@
     const actions = {
         resize: () => {
             if (!canvas.value) return
-            const parent = canvas.value.parentElement
+            const parent = state.value.visible ? document.body : canvas.value.parentElement
             if (!parent) return
             const dpr = window.devicePixelRatio || 1
             const rect = parent.getBoundingClientRect()
@@ -269,6 +270,7 @@
         actions.map.load()
         window.addEventListener('resize', actions.resize)
         window.addEventListener('wheel', actions.resize)
+        window.addEventListener('touchstart', actions.resize)
         actions.resize(); ctx = canvas.value!.getContext('2d')
         const rect = canvas.value!.getBoundingClientRect()
         state.value.offset.x = (rect.width - (options.cols * options.base * state.value.scale)) / 2
@@ -284,11 +286,13 @@
     watch(() => state.value.scale, () => { state.value.ui.updating.scale = true; debouncer.use(() => state.value.ui.updating.scale = false)})
     watch(() => state.value.hover, () => { state.value.ui.updating.pos = true; debouncer.use(() => state.value.ui.updating.pos = false)}, { deep: true })
     watch(() => state.value.ui.color, () => actions.draw('selected'))
+    watch(() => state.value.visible, actions.resize)
     socket.on('pb:update', (data) => state.value.map.splice(data.i - 1, 1, data.color))
 
     onBeforeUnmount(() => {
         window.removeEventListener('resize', actions.resize)
         window.removeEventListener('wheel', actions.resize)
+        window.removeEventListener('touchstart', actions.resize)
         cancelAnimationFrame(state.value.frame)
     })
     usePureClick(canvas, actions.selected.click)
@@ -296,10 +300,11 @@
 </script>
 
 <template>
-    <section @mouseleave="() => {
+
+    <section :data-visible="state.visible" @mouseleave="() => {
         actions.leave()
         actions.pan.end()
-    }" class="p-0! print:hidden max-sm:hidden h-[600px] border-none!">
+    }" class="p-0! print:hidden h-[600px] border-none! max-sm:fixed! max-sm:top-0! max-sm:left-0! max-sm:data-[visible=true]:flex! max-sm:data-[visible=false]:hidden! max-sm:z-[99999]! max-sm:h-dvh bg-black">
         <canvas 
             ref="canvas" 
             class="block w-full h-full bg-black transition-opacity! duration-500!" 
@@ -312,22 +317,30 @@
             @touchmove.passive="actions.touch.move" 
             @touchend="actions.touch.end"
         />
-        <div class="bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] right-[24px] pointer-events-none duration-500" :class="state.ui.updating.scale ? 'opacity-100' : 'opacity-0'">{{ (state.scale * 100).toFixed(0) }}%</div>
-        <div class="bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] left-[24px] pointer-events-none duration-500" :class="state.ui.updating.pos && state.hover.x && state.hover.y ? 'opacity-100' : 'opacity-0'">{{ state.hover.x || 0 }}x{{ state.hover.y || 0 }}</div>
-        <div class="bg-black p-[6px] flex gap-[6px] absolute border bottom-[24px] left-1/2 -translate-x-1/2" :class="state.selected.x && state.selected.y ? 'opacity-100 *:pointer-events-auto pointer-events-auto' : 'opacity-0 *:pointer-events-none pointer-events-none'">
-            <div class="h-[24px] w-[24px] flex items-center justify-center text-[24px]! font-bold cursor-nw-resize! hover:opacity-50"  @click="state.ui.color = i" :class="i === 0 ? 'border': ''" :style="useBadge(color)" v-for="color, i in Object.values(options.colors.map)" @mouseleave="() => {
-                actions.leave()
-                actions.pan.end()
-            }">
-                <template v-if="state.ui.color === i">
-                    •
-                </template>
+        <div :data-selected="!!state.selected.x && !!state.selected.y" class="max-sm:data-[selected=true]:bottom-[calc(118px+12px)] max-sm:bottom-[12px] max-sm:right-[12px] max-sm:px-[12px] max-sm:text-[14px]! bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] right-[24px] pointer-events-none duration-500" :class="state.ui.updating.scale ? 'opacity-100' : 'opacity-0'">{{ (state.scale * 100).toFixed(0) }}%</div>
+        <div :data-selected="!!state.selected.x && !!state.selected.y" class="max-sm:data-[selected=true]:bottom-[calc(118px+12px)] max-sm:bottom-[12px] max-sm:left-[12px] max-sm:px-[12px] max-sm:text-[14px]! bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] left-[24px] pointer-events-none duration-500" :class="state.ui.updating.pos && state.hover.x && state.hover.y ? 'opacity-100' : 'opacity-0'">{{ state.hover.x || 0 }}x{{ state.hover.y || 0 }}</div>
+        <div class="bg-black p-[6px] max-sm:p-[12px] flex max-sm:flex-col gap-[6px] max-sm:gap-[12px] absolute border bottom-[24px] left-1/2 -translate-x-1/2 max-sm:w-full max-sm:bottom-0 max-sm:border-none! max-sm:outline-1 outline-offset-[1px]" :class="state.selected.x && state.selected.y ? 'opacity-100 *:pointer-events-auto pointer-events-auto' : 'opacity-0 *:pointer-events-none pointer-events-none'">
+            <div class="flex w-full gap-[6px] max-sm:gap-[12px]">
+                <div class="max-sm:h-[48px] max-sm:grow max-sm:w-[48px] h-[24px] w-[24px] flex items-center justify-center text-[24px]! font-bold cursor-nw-resize! hover:opacity-50"  @click="state.ui.color = i" :class="i === 0 ? 'border': ''" :style="useBadge(color)" v-for="color, i in Object.values(options.colors.map)" @mouseleave="() => {
+                    actions.leave()
+                    actions.pan.end()
+                }">
+                    <template v-if="state.ui.color === i">
+                        •
+                    </template>
+                </div>
             </div>
-            <button mini class="h-[24px]! py-0! text-xs!" @click="actions.selected.apply">{{ t('apply') }}</button>
-            <button mini black class="h-[24px]! py-0! text-xs!" @click="actions.selected.clear">{{ t('cancel') }}</button>
+            <div class="w-full flex items-center justify-between gap-[6px] max-sm:gap-[12px]">
+                <button mini class="h-[24px]! max-sm:h-[48px]! max-sm:grow py-0! text-xs!" @click="actions.selected.apply">{{ t('apply') }}</button>
+                <button mini black class="h-[24px]! max-sm:h-[48px]! max-sm:grow py-0! text-xs!" @click="actions.selected.clear">{{ t('cancel') }}</button>
+            </div>
+            
         </div>
+        <button mini black class="hidden! max-sm:flex! absolute top-[24px] right-[24px]" @click="state.visible = false">X</button>
     </section>
-    <div class="w-full h-px bg-neutral-700"></div>
+    <section class="hidden max-sm:flex justify-center border-none!">
+        <button @click="() => { state.visible = true; actions.resize() }" class="top-[24px] right-[24px]">{{ t('enter_pixel_battle') }}</button>
+    </section>
 </template>
 
 <style scoped>
@@ -337,10 +350,12 @@
 <i18n>
     {
         "ru": {
+            "enter_pixel_battle": "Участвовать в пиксель-баттле",
             "apply": "Применить",
             "cancel": "Отмена"
         },
         "en": {
+            "enter_pixel_battle": "Enter pixel battle",
             "apply": "Apply",
             "cancel": "Cancel"
         },

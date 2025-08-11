@@ -22,6 +22,7 @@ export type PixelBattleCoords<Nullable extends boolean = false> = Nullable exten
 
 
 export type PixelBattleState = {
+    visible: boolean
     loading: boolean
     scale: number
     frame: number

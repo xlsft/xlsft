@@ -11,7 +11,7 @@
     <About/>
     <Experience/>
     <Projects/>
-    <PixelBattle/>
     <Contact/>
+    <PixelBattle/>
     
 </template>
