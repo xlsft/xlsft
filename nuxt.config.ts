@@ -4,7 +4,7 @@ export default defineNuxtConfig({
     compatibilityDate: '2025-05-15',
     devtools: { enabled: true },
     css: ['~/assets/css/main.css'],  
-    vite: { plugins: [ tailwindcss() ] },
+    vite: { plugins: [ tailwindcss() ], server: { allowedHosts: ['.ngrok-free.app'] } },
     app: {
         head: {
             charset: 'utf-8',

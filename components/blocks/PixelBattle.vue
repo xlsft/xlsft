@@ -17,7 +17,7 @@
         base: 16,
         name: 'pb',
         scale: {
-            min: .5,
+            min: .25,
             max: 6,
             threshold: 1
         },
@@ -199,6 +199,7 @@
                 } else if (e.touches.length === 2) {
                     const d = actions.touch.calc.dist(e.touches[0] as Touch, e.touches[1] as Touch)
                     const c = actions.touch.calc.center(e.touches[0] as Touch, e.touches[1] as Touch)
+                    console.log(d,c)
                     if (state.value.touch.dist && state.value.touch.center) {
                         const rect = canvas.value.getBoundingClientRect()
                         const px = state.value.touch.center.x - rect.left
@@ -219,19 +220,36 @@
             end: (e: TouchEvent) => {
                 if (e.touches.length !== 0) return
                 state.value.panning = false
-                state.value.touch.dist = null
-                state.value.touch.center = null
             }
         },
         map: {
             load: () => { try {
-                const saved = localStorage.getItem(`${options.name}-map`)
-                if (!saved) return
-                const map = JSON.parse(saved)
-                if (Array.isArray(map) && map.length === options.cols * options.rows) state.value.map = map
+
+                const [raw_map, raw_offset, raw_scale] = [
+                    localStorage.getItem(`${options.name}-map`), 
+                    localStorage.getItem(`${options.name}-offset`), 
+                    localStorage.getItem(`${options.name}-scale`)
+                ]
+                 
+                if (raw_map) {
+                    const map = JSON.parse(raw_map)
+                    if (Array.isArray(map) && map.length === options.cols * options.rows) state.value.map = map
+                }
+
+                if (raw_offset) {
+                    const offset = JSON.parse(raw_offset)
+                    state.value.offset = offset
+                }
+                if (raw_scale) {
+                    const scale = JSON.parse(raw_scale)
+                    state.value.scale = scale
+                }
+
             } catch {} },
-            save: () => { try {
-                localStorage.setItem(`${options.name}-map`, JSON.stringify(state.value.map))
+            save: (...only: string[]) => { try {
+                if (!only.length || only.includes('map')) localStorage.setItem(`${options.name}-map`, JSON.stringify(state.value.map))
+                if (!only.length || only.includes('offset')) localStorage.setItem(`${options.name}-offset`, JSON.stringify(state.value.offset))
+                if (!only.length || only.includes('scale')) localStorage.setItem(`${options.name}-scale`, JSON.stringify(state.value.scale))
             } catch {}}
         },
         selected: {
@@ -273,8 +291,8 @@
         window.addEventListener('touchstart', actions.resize)
         actions.resize(); ctx = canvas.value!.getContext('2d')
         const rect = canvas.value!.getBoundingClientRect()
-        state.value.offset.x = (rect.width - (options.cols * options.base * state.value.scale)) / 2
-        state.value.offset.y = (rect.height - (options.rows * options.base * state.value.scale)) / 2
+        if (!state.value.offset.x) state.value.offset.x = (rect.width - (options.cols * options.base * state.value.scale)) / 2
+        if (!state.value.offset.y) state.value.offset.y = (rect.height - (options.rows * options.base * state.value.scale)) / 2
         actions.draw()
         socket.emit('pb:init'); socket.on('pb:init:response', (map) => {
             state.value.map = map
@@ -282,9 +300,10 @@
         })
     })
 
-    watch(() => state.value.map, actions.map.save, { deep: true })
-    watch(() => state.value.scale, () => { state.value.ui.updating.scale = true; debouncer.use(() => state.value.ui.updating.scale = false)})
-    watch(() => state.value.hover, () => { state.value.ui.updating.pos = true; debouncer.use(() => state.value.ui.updating.pos = false)}, { deep: true })
+    watch(() => state.value.map, () => actions.map.save('map'), { deep: true })
+    watch(() => state.value.offset, () => actions.map.save('offset'), { deep: true })
+    watch(() => state.value.scale, () => { actions.map.save('scale'); state.value.ui.updating.scale = true; debouncer.use(() => state.value.ui.updating.scale = false)})
+    watch(() => [state.value.hover, state.value.selected], () =>  state.value.ui.updating.pos = !!((state.value.hover.x && state.value.hover.y) || (state.value.selected.x && state.value.selected.y)), { deep: true })
     watch(() => state.value.ui.color, () => actions.draw('selected'))
     watch(() => state.value.visible, actions.resize)
     socket.on('pb:update', (data) => state.value.map.splice(data.i - 1, 1, data.color))
@@ -318,7 +337,7 @@
             @touchend="actions.touch.end"
         />
         <div :data-selected="!!state.selected.x && !!state.selected.y" class="max-sm:data-[selected=true]:bottom-[calc(118px+12px)] max-sm:bottom-[12px] max-sm:right-[12px] max-sm:px-[12px] max-sm:text-[14px]! bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] right-[24px] pointer-events-none duration-500" :class="state.ui.updating.scale ? 'opacity-100' : 'opacity-0'">{{ (state.scale * 100).toFixed(0) }}%</div>
-        <div :data-selected="!!state.selected.x && !!state.selected.y" class="max-sm:data-[selected=true]:bottom-[calc(118px+12px)] max-sm:bottom-[12px] max-sm:left-[12px] max-sm:px-[12px] max-sm:text-[14px]! bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] left-[24px] pointer-events-none duration-500" :class="state.ui.updating.pos && state.hover.x && state.hover.y ? 'opacity-100' : 'opacity-0'">{{ state.hover.x || 0 }}x{{ state.hover.y || 0 }}</div>
+        <div :data-selected="!!state.selected.x && !!state.selected.y" class="max-sm:data-[selected=true]:bottom-[calc(118px+12px)] max-sm:bottom-[12px] max-sm:left-[12px] max-sm:px-[12px] max-sm:text-[14px]! bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] left-[24px] pointer-events-none duration-500" :class="state.ui.updating.pos && ((state.hover.x && state.hover.y) || (state.selected.x && state.selected.y)) ? 'opacity-100' : 'opacity-0'">{{ state.selected.x || state.hover.x || 0 }}x{{ state.selected.y || state.hover.y || 0 }}</div>
         <div class="bg-black p-[6px] max-sm:p-[12px] flex max-sm:flex-col gap-[6px] max-sm:gap-[12px] absolute border bottom-[24px] left-1/2 -translate-x-1/2 max-sm:w-full max-sm:bottom-0 max-sm:border-none! max-sm:outline-1 outline-offset-[1px]" :class="state.selected.x && state.selected.y ? 'opacity-100 *:pointer-events-auto pointer-events-auto' : 'opacity-0 *:pointer-events-none pointer-events-none'">
             <div class="flex w-full gap-[6px] max-sm:gap-[12px]">
                 <div class="max-sm:h-[48px] max-sm:grow max-sm:w-[48px] h-[24px] w-[24px] flex items-center justify-center text-[24px]! font-bold cursor-nw-resize! hover:opacity-50"  @click="state.ui.color = i" :class="i === 0 ? 'border': ''" :style="useBadge(color)" v-for="color, i in Object.values(options.colors.map)" @mouseleave="() => {
