@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Banner from './Banner.vue'
+
 
     const { t, locale, setLocale } = useI18n()
     const router = useRouter()

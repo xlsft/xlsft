@@ -14,7 +14,7 @@ export default defineNuxtConfig({
                 { property: 'og:type', content: 'website' },
                 { property: 'og:title', content: 'xlsft`s cv' },
                 { property: 'og:url', content: 'https://xlsft.ru' },
-                { property: 'og:image', content: 'https://xlsft.ru/og_image.png' },
+                { property: 'og:image', content: '/og_image.png' },
                 { property: 'og:description', content: 'An xlsft`s senior frontend software engineer CV' },
                 { property: 'business:contact_data:locality', content: 'Lipetsk' },
                 { property: 'business:contact_data:region', content: 'Lipetsk region' },

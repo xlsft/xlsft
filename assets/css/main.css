@@ -55,7 +55,7 @@ h3 {
 }
 
 button {
-    @apply print:hidden bg-accent w-fit px-[32px] py-[12px] text-xl font-medium cursor-nw-resize! flex items-center justify-center hover:opacity-50
+    @apply print:hidden bg-accent w-fit px-[32px] py-[12px] text-xl font-medium cursor-nw-resize! flex items-center justify-center hover:opacity-50 text-nowrap
 }
 
 button[black] {

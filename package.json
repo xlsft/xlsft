@@ -9,7 +9,14 @@
         "dev": "nuxt dev",
         "generate": "nuxt generate",
         "preview": "nuxt preview",
-        "postinstall": "nuxt prepare"
+        "postinstall": "nuxt prepare",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:push": "drizzle-kit push",
+        "db:pull": "drizzle-kit pull",
+        "db:check": "drizzle-kit check",
+        "db:up": "drizzle-kit up",
+        "db:studio": "drizzle-kit studio"
     },
     "dependencies": {
         "@grammyjs/conversations": "^2.1.0",
@@ -17,8 +24,11 @@
         "@tailwindcss/vite": "^4.1.11",
         "@vueuse/core": "^13.5.0",
         "@xlsft/nuxt": "npm:@jsr/xlsft__nuxt@^1.1.33",
+        "date-fns": "^4.1.0",
+        "drizzle-kit": "^0.31.4",
         "drizzle-orm": "^0.44.3",
         "engine.io": "^6.6.4",
+        "gifuct-js": "^2.1.2",
         "grammy": "^1.37.0",
         "nuxt": "^4.0.3",
         "pg": "^8.16.3",

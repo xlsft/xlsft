@@ -11,6 +11,7 @@
         { id: 'ained_widget', link: '/demo/ained_widget', tags: ['ained'] },
         { id: 'ained_developer', link: 'https://developer.ained.ru/', tags: ['ained'] },
         { id: 'briskly_business', link: 'https://briskly.business', tags: ['briskly'] },
+        { id: 'pixelbattle', link: '/pixelbattle', tags: ['xlsft', 'oss', 'fun'] },
         { id: 'ained_b24', link: 'https://www.bitrix24.ru/apps/app/ained.ained_chess', tags: ['ained'] },
         { id: 'work_russia', link: 'https://guide.cznnew.ru/', tags: ['xlsft'] },
         { id: 'xlsft_nuxt', link: 'https://jsr.io/@xlsft/nuxt', tags: ['xlsft', 'oss', 'lib'] },
@@ -21,7 +22,7 @@
         { id: 'xlui', link: 'https://github.com/xlsft/ui', tags: ['oss'] },
         { id: 'gizmo_parser', link: 'https://github.com/xlsft/gizmo-parser', tags: ['oss'] },
         { id: 'yasearch', link: 'https://addons.mozilla.org/ru/firefox/addon/yasearch/', tags: ['oss','popular'] },
-        { id: 'cyber_bot', link: 'https://github.com/xlsft/cyber-bot', tags: ['oss','tg'] },
+        { id: 'cyber_bot', link: 'https://github.com/xlsft/cyber-bot', tags: ['oss', 'tg', 'fun'] },
     ])
 
     const counts = computed(() => {

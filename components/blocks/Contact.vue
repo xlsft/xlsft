@@ -12,7 +12,7 @@
     const sended = ref(false)
 
     const telegram = () => {
-        window.open('https://t.me/xlsft_cv_bot', '_blank')
+        window.open('https://t.me/xlsft_cv_bot?start=start', '_blank')
         ;(window as any).ym(103237740,'reachGoal','go_tg')
     }
 

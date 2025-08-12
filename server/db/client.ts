@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
-import * as schema from './schema/form_requests.schema'
+import * as schema from './schema/request.schema'
 
 const pool = new Pool({
     host: 'postgress.xlsft.ru',

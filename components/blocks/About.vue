@@ -15,6 +15,7 @@
         now: now.value.toLocaleString(locale.value),
         name: t('name'),
         bd: new Date(2003, 7, 1).toLocaleDateString(locale.value),
+        status: 'open to hire',
         age: (() => {
             const today = new Date();
             const bd = new Date(2003, 7, 1);

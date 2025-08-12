@@ -141,6 +141,10 @@ export default {
             name: "Cyber Arena Game Bot",
             description: "A gaming bot with a loyalty system.",
         },
+        pixelbattle: {
+            name: "xlsft`s pixel battle",
+            description: "Fight for the canvas, build alliances, and just have fun.",
+        },
     },
     name_label: "Name",
     bd_label: "Birthday",

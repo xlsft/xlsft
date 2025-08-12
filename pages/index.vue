@@ -3,7 +3,7 @@
     import Projects from '~/components/blocks/Projects.vue';
     import Contact from '~/components/blocks/Contact.vue';
     import Experience from '~/components/blocks/Experience.vue';
-    import PixelBattle from '~/components/blocks/PixelBattle.vue';
+    import PixelBattle from '~/components/global/PixelBattle.vue';
 </script>
 
 <template>
@@ -12,6 +12,5 @@
     <Experience/>
     <Projects/>
     <Contact/>
-    <PixelBattle/>
     
 </template>
