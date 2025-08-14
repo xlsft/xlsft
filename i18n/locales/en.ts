@@ -147,7 +147,7 @@ export default {
         },
         worker: {
             name: "xlsft/worker",
-            description: "Lightweight, event and cron-based task runner for Deno with zero-boilerplate setup and persisted logs.",
+            description: "Lightweight, event and cron-based task framework for Deno with zero-boilerplate setup and persisted logs.",
         },
     },
     name_label: "Name",

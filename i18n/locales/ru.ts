@@ -149,7 +149,7 @@ export default {
         },
         worker: {
             name: "xlsft/worker",
-            description: "Легки, event и cron-based раннер для Deno без бойлерплейта и мощным логгированием",
+            description: "Легкий, event и cron-based task-фреймворк для Deno без бойлерплейта и мощным логгированием",
         },
     },
     name_label: 'Имя',
