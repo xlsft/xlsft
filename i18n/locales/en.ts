@@ -146,7 +146,7 @@ export default {
             description: "Fight for the canvas, build alliances, and just have fun.",
         },
         worker: {
-            name: "@xlsft/worker",
+            name: "xlsft/worker",
             description: "Lightweight, event and cron-based task runner for Deno with zero-boilerplate setup and persisted logs.",
         },
     },
