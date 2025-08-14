@@ -8,6 +8,7 @@
     onUnmounted(() => dragger.destroy())
     const { t } = useI18n()
     const items = computed<{ id: string, link: string, tags: string[] }[]>(() => [
+        { id: 'worker', link: 'https://github.com/xlsft/worker', tags: ['xlsft', 'oss'] },
         { id: 'ained_widget', link: '/demo/ained_widget', tags: ['ained'] },
         { id: 'ained_developer', link: 'https://developer.ained.ru/', tags: ['ained'] },
         { id: 'briskly_business', link: 'https://briskly.business', tags: ['briskly'] },

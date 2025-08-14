@@ -147,6 +147,10 @@ export default {
             name: "xlsft`s pixel battle",
             description: "Сражайтесь за полотно, стройте союзы, и просто веселитесь.",
         },
+        worker: {
+            name: "@xlsft/worker",
+            description: "Легки, event и cron-based раннер для Deno без бойлерплейта и мощным логгированием",
+        },
     },
     name_label: 'Имя',
     bd_label: 'Родился',

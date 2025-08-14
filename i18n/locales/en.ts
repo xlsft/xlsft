@@ -145,6 +145,10 @@ export default {
             name: "xlsft`s pixel battle",
             description: "Fight for the canvas, build alliances, and just have fun.",
         },
+        worker: {
+            name: "@xlsft/worker",
+            description: "Lightweight, event and cron-based task runner for Deno with zero-boilerplate setup and persisted logs.",
+        },
     },
     name_label: "Name",
     bd_label: "Birthday",
