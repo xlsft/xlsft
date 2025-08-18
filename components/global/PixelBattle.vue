@@ -16,8 +16,8 @@
     let ctx: CanvasRenderingContext2D | null = null
 
     const options: PixelBattleOptions = {
-        cols: 512,
-        rows: 512,
+        cols: 1024,
+        rows: 1024,
         base: 16,
         padding: 256,
         gif: {

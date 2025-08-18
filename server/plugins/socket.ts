@@ -44,7 +44,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
             socket.emit('pb:init:response', result)
         })
         socket.on('pb:draw', async (data: { color: number, coordinates: { x: number, y: number }, uuid: TelegramAuthUser['uuid'] }) => {
-            if (data.color > 9 || data.color < 0 || data.coordinates.x > 511 || data.coordinates.x < 0 ||  data.coordinates.y > 511 || data.coordinates.y < 0) return
+            if (data.color > 9 || data.color < 0 || data.coordinates.x > 1023 || data.coordinates.x < 0 ||  data.coordinates.y > 1023 || data.coordinates.y < 0) return
             const result = await db.insert(canvas).values({ color: data.color, coordinates: `${data.coordinates.x}:${data.coordinates.y}`, updated_at: new Date(), updated_by: data.uuid }).onConflictDoUpdate({
                 target: canvas.coordinates,
                 set: {
