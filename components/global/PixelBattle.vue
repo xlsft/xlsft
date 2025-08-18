@@ -13,6 +13,7 @@
     const ip = ref<string>()
     const socket = useSocket();
     const canvas = ref<HTMLCanvasElement | null>(null)
+    const cache: { offscreen?: HTMLCanvasElement, scale?: number, version?: number } = {};
     let ctx: CanvasRenderingContext2D | null = null
 
     const options: PixelBattleOptions = {
@@ -27,8 +28,7 @@
         name: 'pb',
         scale: {
             min: .1,
-            max: 6,
-            threshold: 8
+            max: 6
         },
         colors: {
             map: { 0: useBadge('#000000'), 1: useBadge('#ffffff'), 2: useBadge('#f97316'), 3: useBadge('#eab308'), 4: useBadge('#10b981'), 5: useBadge('#2B7FFF'), 6: useBadge('#a855f7'), 7: useBadge('#ec4899'), 8: useBadge('#e11d48'), 9: useBadge('#FFC79F') },
@@ -41,6 +41,7 @@
 
     const state = ref<PixelBattleState>({
         loading: true,
+        version: 0,
         scale: 1,
         frame: 0,
         panning: false,
@@ -162,56 +163,81 @@
             const sr = Math.max(0, y0)
             const er = Math.min(options.rows - 1, y1)
 
-            if (!only.length || only.includes('tiles')) for (let r = sr; r <= er; r++) for (let c = sc; c <= ec; c++) {
-                const idx = r * options.cols + c
-                const key = state.value.map[idx]
-                const color = options.colors.map[key as keyof typeof options.colors.map]?.background || options.colors.bg
-                if (color === options.colors.bg) continue
-                const sx = state.value.offset.x + c * cell
-                const sy = state.value.offset.y + r * cell
-                ctx.fillStyle = color
-                ctx.fillRect(sx, sy, cell, cell)
-            }
-            
-            if ((!only.length || only.includes('lines'))) { 
-                const sx = state.value.offset.x
-                const sy = state.value.offset.y
-                const gw = options.cols * cell
-                const gh = options.rows * cell
+            if (!only.length || only.includes('tiles')) {
+                const sx = state.value.offset.x;
+                const sy = state.value.offset.y;
+                const gw = options.cols * cell;
+                const gh = options.rows * cell;
 
-                if (cell >= options.scale.threshold) {
-                    ctx.strokeStyle = options.colors.fg
-                    ctx.lineWidth = 1
-                    ctx.beginPath()
+                if (!cache.offscreen || cache.version !== state.value.version) {
+                    const off = document.createElement('canvas');
+                    off.width = options.cols;
+                    off.height = options.rows;
+                    const offCtx = off.getContext('2d')!;
 
-                    for (let c = sc; c <= ec; c++) {
-                        const x = state.value.offset.x + c * cell + 0.5
-                        if (x >= sx && x <= sx + gw) {
-                            ctx.moveTo(x, sy)
-                            ctx.lineTo(x, sy + gh)
+                    const id = offCtx.createImageData(options.cols, options.rows);
+                    const data = id.data;
+
+                    for (let r = 0; r < options.rows; r++) {
+                        for (let c = 0; c < options.cols; c++) {
+                            const idx = r * options.cols + c;
+                            const key = state.value.map[idx];
+                            const color = options.colors.map[key as keyof typeof options.colors.map]?.background || options.colors.bg;
+
+                            const hex = color.replace('#', '');
+                            const r8 = parseInt(hex.substring(0, 2), 16);
+                            const g8 = parseInt(hex.substring(2, 4), 16);
+                            const b8 = parseInt(hex.substring(4, 6), 16);
+                            const p = (r * options.cols + c) * 4;
+                            data[p] = r8;
+                            data[p + 1] = g8;
+                            data[p + 2] = b8;
+                            data[p + 3] = 255;
                         }
                     }
 
-                    for (let r = sr; r <= er; r++) {
-                        const y = state.value.offset.y + r * cell + 0.5
-                        if (y >= sy && y <= sy + gh) {
-                            ctx.moveTo(sx, y)
-                            ctx.lineTo(sx + gw, y)
-                        }
-                    }
+                    offCtx.putImageData(id, 0, 0);
+                    cache.offscreen = off;
+                    cache.version = state.value.version;
                 }
 
-                ctx.stroke()
-                ctx.strokeStyle = options.colors.border; ctx.lineWidth = 1; ctx.strokeRect(sx + 0.5, sy + 0.5, gw, gh)
+                if (cell >= 1) {
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(cache.offscreen, sx, sy, gw, gh);
+                } else {
+                    ctx.fillStyle = options.colors.bg;
+                    ctx.fillRect(sx, sy, gw, gh);
+                }
+
+                if (state.value.scale >= .5) {
+                    ctx.strokeStyle = options.colors.fg;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    for (let c = sc; c <= ec; c++) {
+                        const x = sx + c * cell + 0.5;
+                        ctx.moveTo(x, sy);
+                        ctx.lineTo(x, sy + gh);
+                    }
+                    for (let r = sr; r <= er; r++) {
+                        const y = sy + r * cell + 0.5;
+                        ctx.moveTo(sx, y);
+                        ctx.lineTo(sx + gw, y);
+                    }
+                    ctx.stroke();
+                }
+
+                ctx.strokeStyle = options.colors.border;
+                ctx.lineWidth = 1;
+                ctx.strokeRect(sx + 0.5, sy + 0.5, gw, gh);
             }
 
-            if (!only.length || only.includes('hover')) if (state.value.hover.x !== null && state.value.hover.y !== null) {
+            if (!only.length || only.includes('hover')) if (state.value.hover.x !== null && state.value.hover.y !== null && state.value.scale >= .5) {
                 const sx = state.value.offset.x + state.value.hover.x * cell
                 const sy = state.value.offset.y + state.value.hover.y * cell
                 ctx.globalAlpha = 0.1; ctx.fillStyle = options.colors.hover; ctx.fillRect(sx, sy, cell, cell); ctx.globalAlpha = 1
             }
 
-            if (!only.length || only.includes('selected')) if (state.value.selected.x !== null && state.value.selected.y !== null) {
+            if (!only.length || only.includes('selected')) if (state.value.selected.x !== null && state.value.selected.y !== null && state.value.scale >= .5) {
                 const sx = state.value.offset.x + state.value.selected.x * cell
                 const sy = state.value.offset.y + state.value.selected.y * cell
                 ctx.strokeStyle = state.value.ui.color === 0 ? options.colors.hover : options.colors.map[state.value.ui.color]?.background!
@@ -220,7 +246,7 @@
                 ctx.strokeRect(sx + 1, sy + 1, cell - 2, cell - 2)
             }
 
-            if (!only.length || only.includes('popup')) {
+            if ((!only.length || only.includes('popup')) && state.value.scale >= .5) {
                 const x = state.value.selected.x
                 const y = state.value.selected.y
                 const info = state.value.ui.current
@@ -274,27 +300,31 @@
             }
 
             if (state.value.gif.frames.length > 0) {
-                const now = performance.now();
-                const index = state.value.gif.frame;
-                const delay = state.value.gif.delays?.[index];
-                const speed = options.gif.speed
+                const sx = state.value.offset.x
+                const sy = state.value.offset.y - cell
+                if (sx + cell >= 0 && sx <= w && sy + cell >= 0 && sy <= h) {
+                    const now = performance.now();
+                    const index = state.value.gif.frame;
+                    const delay = state.value.gif.delays?.[index];
+                    const speed = options.gif.speed
 
-                const ms = (typeof delay === 'number' && delay > 0)
-                    ? (delay * 10) / speed
-                    : 100 / speed;
-                if (now - (state.value.gif.last ?? 0) >= ms) {
-                    state.value.gif.frame = (index + 1) % state.value.gif.frames.length;
-                    state.value.gif.last = now;
+                    const ms = (typeof delay === 'number' && delay > 0)
+                        ? (delay * 10) / speed
+                        : 100 / speed;
+                    if (now - (state.value.gif.last ?? 0) >= ms) {
+                        state.value.gif.frame = (index + 1) % state.value.gif.frames.length;
+                        state.value.gif.last = now;
+                    }
+                    const frame = state.value.gif.frames[state.value.gif.frame];
+                    if (frame) {
+                        const sx = state.value.offset.x;
+                        const sy = state.value.offset.y;
+                        const size = cell;
+                        ctx.drawImage(frame, sx, sy - size, size, size);
+                    }
                 }
-                const frame = state.value.gif.frames[state.value.gif.frame];
-                if (frame) {
-                    const sx = state.value.offset.x;
-                    const sy = state.value.offset.y;
-                    const size = cell;
-                    ctx.drawImage(frame, sx, sy - size, size, size);
-                }
+
             }
-
 
             state.value.frame = requestAnimationFrame(() => actions.draw())
         },
@@ -431,6 +461,7 @@
         },
         selected: {
             click: (e: MouseEvent | TouchEvent) => {
+                if (state.value.scale < .5) return
                 if (!user.value?.id) return
                 if (!canvas.value) return
                 const rect = canvas.value.getBoundingClientRect()
@@ -459,6 +490,7 @@
                 socket.emit('pb:draw', { color: state.value.ui.color, coordinates: state.value.selected, uuid: user.value.uuid })
                 state.value.map.splice(i - 1, 1, state.value.ui.color)
                 actions.selected.clear()
+                state.value.version++
             },
         }
     }
@@ -498,14 +530,15 @@
 
             state.value.map = decode(base36)
             state.value.loading = false
+            state.value.version++
         })
     })
 
     watch(() => state.value.offset, () => actions.map.save('offset'), { deep: true })
-    watch(() => state.value.scale, () => { actions.map.save('scale'); state.value.ui.updating.scale = true; debouncer.use(() => state.value.ui.updating.scale = false)})
+    watch(() => state.value.scale, () => { if (state.value.scale < .5) actions.selected.clear(); actions.map.save('scale'); state.value.ui.updating.scale = true; debouncer.use(() => state.value.ui.updating.scale = false)})
     watch(() => [state.value.hover, state.value.selected], () => state.value.ui.updating.pos = !!((state.value.hover.x && state.value.hover.y) || (state.value.selected.x && state.value.selected.y)), { deep: true })
     watch(() => state.value.selected, () => { state.value.ui.current = null; socket.emit('pb:info', state.value.selected) }, { deep: true })
-    watch(() => state.value.ui.color, () => actions.draw('selected'))
+    watch(() => state.value.ui.color, () => actions.draw())
     socket.on('pb:update', (base36: string) => {
         const decode = (str: string) => {
             const pixels = []
@@ -520,6 +553,7 @@
         }
         const pixels = decode(base36)
         pixels.forEach((pixel) => state.value.map.splice((pixel.y * options.cols + (pixel.x + 1)) - 1, 1, pixel.c))
+        state.value.version++
     })
     socket.on('pb:info:response', (data) => {
         state.value.ui.current = data
@@ -553,9 +587,9 @@
             @touchend="actions.touch.end"
         />
         <template v-if="user?.id">
-            <div class="max-sm:top-[24px]! h-[16px] bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] right-[24px] pointer-events-none duration-500" :class="state.ui.updating.scale ? 'opacity-100' : 'opacity-0'">{{ (state.scale * 100).toFixed(0) }}%</div>
-            <div class="max-sm:top-[24px]! h-[16px] bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] left-[24px] pointer-events-none duration-500" :class="state.ui.updating.pos && ((state.hover.x && state.hover.y) || (state.selected.x != null && state.selected.y != null)) ? 'opacity-100' : 'opacity-0'">{{ state.selected.x || state.hover.x || 0 }}x{{ state.selected.y || state.hover.y || 0 }}</div>
-            <div class="bg-black p-[6px] max-sm:p-[12px] flex max-sm:flex-col gap-[6px] max-sm:gap-[12px] absolute border bottom-[24px] left-1/2 -translate-x-1/2 max-sm:w-full max-sm:bottom-0 max-sm:border-none! max-sm:outline-1 outline-offset-[1px]" :class="state.selected.x != null && state.selected.y != null ? 'opacity-100 *:pointer-events-auto pointer-events-auto' : 'opacity-0 *:pointer-events-none pointer-events-none'">
+            <div class="max-sm:top-[24px]! h-[16px] bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] right-[24px] pointer-events-none duration-500" :class="state.ui.updating.scale && state.scale > .5 ? 'opacity-100' : 'opacity-0'">{{ (state.scale * 100).toFixed(0) }}%</div>
+            <div class="max-sm:top-[24px]! h-[16px] bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] left-[24px] pointer-events-none duration-500" :class="state.ui.updating.pos && state.scale > .5 && ((state.hover.x && state.hover.y) || (state.selected.x != null && state.selected.y != null)) ? 'opacity-100' : 'opacity-0'">{{ state.selected.x || state.hover.x || 0 }}x{{ state.selected.y || state.hover.y || 0 }}</div>
+            <div class="bg-black p-[6px] max-sm:p-[12px] flex max-sm:flex-col gap-[6px] max-sm:gap-[12px] absolute border bottom-[24px] left-1/2 -translate-x-1/2 max-sm:w-full max-sm:bottom-0 max-sm:border-none! max-sm:outline-1 outline-offset-[1px]" :class="state.selected.x != null && state.selected.y != null && state.scale > .5 ? 'opacity-100 *:pointer-events-auto pointer-events-auto' : 'opacity-0 *:pointer-events-none pointer-events-none'">
                 <div class="flex max-sm:flex-wrap w-full gap-[6px] max-sm:gap-[12px]">
                     <div :data-current="state.ui.color === i" class=" data-[current=true]:opacity-100 data-[current=false]:opacity-25 max-sm:min-h-[32px] max-sm:min-w-[32px] max-sm:grow max-sm:w-[48px] h-[24px] w-[24px] flex items-center justify-center text-[24px]! font-bold cursor-nw-resize! hover:opacity-50" @click="state.ui.color = i" :class="i === 0 ? 'border': ''" :style="{ background: `${color.background} !important` }" v-for="color, i in Object.values(options.colors.map)" @mouseleave="() => {
                         actions.leave()

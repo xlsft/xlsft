@@ -11,7 +11,6 @@ export type PixelBattleOptions = {
     scale: {
         min: number
         max: number
-        threshold: number
     },
     colors: {
         map: Record<number, {
@@ -36,6 +35,7 @@ export type PixelBattleCoords<Nullable extends boolean = false> = Nullable exten
 
 export type PixelBattleState = {
     loading: boolean
+    version: number
     scale: number
     frame: number
     panning: boolean
