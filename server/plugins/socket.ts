@@ -40,7 +40,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
                 const [ x, y ] = v.i.split(':').map(Number) as [number, number]
                 return { ...v, i: { x, y } }
             })
-            const result = data.filter(v => v.c !== 0).map(({ i, c }) => ((i.x << 13) | (i.y << 4) | c!).toString(36).padStart(5,'0')).join('')
+            const result = data.filter(v => v.c !== 0).map(({ i, c }) => ((i.x << 14) | (i.y << 4) | c!).toString(36).padStart(5,'0')).join('')
             socket.emit('pb:init:response', result)
         })
         socket.on('pb:draw', async (data: { color: number, coordinates: { x: number, y: number }, uuid: TelegramAuthUser['uuid'] }) => {
@@ -76,7 +76,7 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
         if (!update_interval) update_interval = setInterval(() => {
             if (draw_stack.length === 0) return
             const stack = [ ...draw_stack ]; draw_stack = []
-            socket.broadcast.emit('pb:update', stack.map(({ i, c }) => ((i.x << 13) | (i.y << 4) | c!).toString(36).padStart(5,'0')).join(''))
+            socket.broadcast.emit('pb:update', stack.map(({ i, c }) => ((i.x << 14) | (i.y << 4) | c!).toString(36).padStart(5,'0')).join(''))
         }, 2000)
     });
 

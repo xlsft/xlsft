@@ -481,12 +481,11 @@
                 const pixels = []
                 for (let i = 0; i < str.length; i += 5) {
                     const n = parseInt(str.slice(i, i + 5), 36)
-                    const x = (n >> 13) & 0x1ff
-                    const y = (n >> 4) & 0x1ff
-                    const c = n & 0xf
+                    const x = (n >> 14) & 0x3ff   // 10 бит
+                    const y = (n >> 4) & 0x3ff    // 10 бит
+                    const c = n & 0xf             // 4 бит
                     pixels.push({ x, y, c })
                 }
-
                 const array = new Array(options.cols * options.rows).fill(0)
                 for (const { x, y, c } of pixels) {
                     if (x == null || y == null) continue
@@ -512,12 +511,11 @@
             const pixels = []
             for (let i = 0; i < str.length; i += 5) {
                 const n = parseInt(str.slice(i, i + 5), 36)
-                const x = (n >> 13) & 0x1ff
-                const y = (n >> 4) & 0x1ff
-                const c = n & 0xf
+                const x = (n >> 14) & 0x3ff   // 10 бит
+                const y = (n >> 4) & 0x3ff    // 10 бит
+                const c = n & 0xf             // 4 бит
                 pixels.push({ x, y, c })
             }
-
             return pixels
         }
         const pixels = decode(base36)
