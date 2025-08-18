@@ -576,8 +576,8 @@
                 <div class="w-fit h-fit border bg-black p-[24px] flex flex-col gap-[24px]">
                     <img src="/pixelbattle.svg" class="max-w-[80dvw] w-fit h-[32px]">
                     <p class="max-w-[400px]">
-                        <b>Правила:</b><br>
-                        КД нет, тематики нет, запретов нет (кроме законов РФ), боты приветствуются (только не положите сервак пж), удачи
+                        <b>{{ t('rules_title') }}:</b><br>
+                        {{ t('rules_text') }}
                     </p>
                     <div class="flex flex-wrap items-center justify-center gap-[12px] max-w-[80dvw]">
                         <TelegramAuth v-model="user"/>
@@ -601,12 +601,16 @@
             "apply": "Поставить",
             "cancel": "Отмена",
             "return": "Вернуться к резюме",
+            "rules_title": "Правила",
+            "rules_text": "КД нет, тематики нет, запретов нет (кроме законов РФ), боты приветствуются (только не положите сервак пж), удачи."
         },
         "en": {
             "enter_pixel_battle": "Enter pixel battle",
             "apply": "Place",
             "cancel": "Cancel",
-            "return": "Return to CV"
+            "return": "Return to CV",
+            "rules_title": "Rules",
+            "rules_text": "No cooldown, no specific theme, no restrictions (except Russian laws), bots are welcome (just don’t crash the server please), good luck."
         },
     }
 </i18n>
