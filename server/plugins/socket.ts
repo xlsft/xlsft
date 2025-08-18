@@ -6,7 +6,7 @@ import { db } from "../db/client";
 import { canvas } from "../db/schema/canvas.schema";
 import { TelegramAuthUser } from "~/types/telegram.types";
 import { user } from "../db/schema/user.schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, ne, sql } from "drizzle-orm";
 
 class Debouncer {
     private timeouts: Record<string, NodeJS.Timeout> = {}
@@ -25,9 +25,9 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
     const engine = new Engine();
     const io = new Server();
     let interval: NodeJS.Timeout
-    let online_interval: NodeJS.Timeout
+    let update_interval: NodeJS.Timeout
     const debouncer = new Debouncer(10000)
-
+    let draw_stack: { i: { x: number, y: number }, c: number }[] = []
     io.bind(engine);
 
     io.on("connection", (socket) => {
@@ -36,26 +36,28 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
             interval = setInterval(() => socket.emit('health', health()), 1000)
         })
         socket.on('pb:init', async () => {
-            const result = await (await db.select({ i: canvas.coordinates, c: canvas.color, u: canvas.updated_by, a: canvas.updated_at }).from(canvas)).map(v => {
+            const data = await (await db.select({ i: canvas.coordinates, c: canvas.color, u: canvas.updated_by, a: canvas.updated_at }).from(canvas).where(ne(canvas.color, 0))).map(v => {
                 const [ x, y ] = v.i.split(':').map(Number) as [number, number]
                 return { ...v, i: { x, y } }
             })
+            const result = data.filter(v => v.c !== 0).map(({ i, c }) => ((i.x << 13) | (i.y << 4) | c!).toString(36).padStart(5,'0')).join('')
             socket.emit('pb:init:response', result)
         })
-        socket.on('pb:draw', async (data: { color: number, coordinates: { x: number, y: number }, user: TelegramAuthUser }) => {
-            const result = await db.insert(canvas).values({ color: data.color, coordinates: `${data.coordinates.x}:${data.coordinates.y}`, updated_at: new Date(), updated_by: data.user.uuid }).onConflictDoUpdate({
+        socket.on('pb:draw', async (data: { color: number, coordinates: { x: number, y: number }, uuid: TelegramAuthUser['uuid'] }) => {
+            if (data.color > 9 || data.color < 0 || data.coordinates.x > 511 || data.coordinates.x < 0 ||  data.coordinates.y > 511 || data.coordinates.y < 0) return
+            const result = await db.insert(canvas).values({ color: data.color, coordinates: `${data.coordinates.x}:${data.coordinates.y}`, updated_at: new Date(), updated_by: data.uuid }).onConflictDoUpdate({
                 target: canvas.coordinates,
                 set: {
-                    color: data.color, updated_at: new Date(), updated_by: data.user.uuid
+                    color: data.color, updated_at: new Date(), updated_by: data.uuid
                 }
             }).returning()
             const [ x, y ] = result[0].coordinates.split(':').map(Number) as [number, number]
-            socket.broadcast.emit('pb:update', { color: result[0].color, coordinates: { x, y } })
-            await db.update(user).set({ online: true }); debouncer.use(async () => await db.update(user).set({ online: false }), data.user.uuid)            
+            draw_stack.push({ c: result[0].color!, i: { x, y } })     
         })
 
         socket.on('pb:info', async (c: { x: number, y: number }) => {
             const data = (await db.select().from(canvas).where(eq(canvas.coordinates, `${c.x}:${c.y}`)).leftJoin(user, eq(user.uuid, canvas.updated_by)))[0]
+            if (!data) return
             const info = {
                 color: data.canvas.color,
                 updated: data.canvas.updated_at,
@@ -71,15 +73,18 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
             const data = (await db.select().from(user).where(eq(user.uuid, uuid as string)))[0]
             socket.emit('pb:user:response', data)
         })
-
-        const online = async () => {
-            socket.emit('pb:online', (await db.select().from(user).where(eq(user.online, true))).length)
-        }; online(); online_interval = setInterval(online, 2000)
+        if (!update_interval) update_interval = setInterval(() => {
+            if (draw_stack.length === 0) return
+            const stack = [ ...draw_stack ]; draw_stack = []
+            socket.broadcast.emit('pb:update', stack.map(({ i, c }) => ((i.x << 13) | (i.y << 4) | c!).toString(36).padStart(5,'0')).join(''))
+        }, 2000)
     });
+
+
 
     io.on('close', () => {
         clearInterval(interval)
-        clearInterval(online_interval)
+        clearInterval(update_interval)
     })
     
     nitroApp.router.use("/socket.io/", defineEventHandler({

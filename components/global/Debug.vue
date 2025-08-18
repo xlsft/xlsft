@@ -1,7 +1,5 @@
 <script setup lang="ts">
 
-    import { io } from "socket.io-client";
-
     const debug = defineModel<boolean>()
     const debug_count = defineModel<number>('clicks', { required: true })
     const debug_count_interval = ref(); onMounted(() => debug_count_interval.value = setInterval(() => debug_count.value = Math.max(debug_count.value - 1, 0), 300))
@@ -11,7 +9,7 @@
         debug.value = true
     })
 
-    const socket = io();
+    const socket = useSocket();
 
     const ws_connected = ref(false);
     const ws_transport = ref("n/a");

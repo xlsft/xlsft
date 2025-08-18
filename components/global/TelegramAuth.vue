@@ -1,11 +1,10 @@
 <script setup lang="ts">
     import { useUUID } from '@xlsft/nuxt';
-    import { io } from 'socket.io-client';
     import type { TelegramAuthUser } from '~/types/telegram.types';
 
     const model = defineModel<TelegramAuthUser>()
     const uuid = ref()
-    const socket = io()
+    const socket = useSocket()
     const loading = ref(false)
 
     let interval: NodeJS.Timeout

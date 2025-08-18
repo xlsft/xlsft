@@ -2,7 +2,6 @@
 
     import { useBadge, useDebouncer, usePureClick } from '@xlsft/nuxt'
     import type { PixelBattleOptions, PixelBattleState } from '~/types/pixlebattle.types'
-    import { io } from "socket.io-client";
     import type { TelegramAuthUser } from '~/types/telegram.types';
     import TelegramAuth from '../global/TelegramAuth.vue';
     import { parseGIF, decompressFrames } from 'gifuct-js'
@@ -12,7 +11,7 @@
     const debouncer = useDebouncer(2000)
     const { t, locale } = useI18n()
     const ip = ref<string>()
-    const socket = io();
+    const socket = useSocket();
     const canvas = ref<HTMLCanvasElement | null>(null)
     let ctx: CanvasRenderingContext2D | null = null
 
@@ -27,12 +26,12 @@
         },
         name: 'pb',
         scale: {
-            min: .4,
+            min: .1,
             max: 6,
-            threshold: 1
+            threshold: 8
         },
         colors: {
-            map: { 0: useBadge('#000000'), 1: useBadge('#ffffff'), 2: useBadge('#f97316'), 3: useBadge('#eab308'), 4: useBadge('#10b981'), 5: useBadge('#2B7FFF'), 6: useBadge('#a855f7'), 7: useBadge('#ec4899'), 8: useBadge('#e11d48'), },
+            map: { 0: useBadge('#000000'), 1: useBadge('#ffffff'), 2: useBadge('#f97316'), 3: useBadge('#eab308'), 4: useBadge('#10b981'), 5: useBadge('#2B7FFF'), 6: useBadge('#a855f7'), 7: useBadge('#ec4899'), 8: useBadge('#e11d48'), 9: useBadge('#FFC79F') },
             bg: '#000000',
             fg: '#101010',
             border: '#404040',
@@ -174,32 +173,34 @@
                 ctx.fillRect(sx, sy, cell, cell)
             }
             
-           if (!only.length || only.includes('lines')) if (cell >= options.scale.threshold) {
+            if ((!only.length || only.includes('lines'))) { 
                 const sx = state.value.offset.x
                 const sy = state.value.offset.y
                 const gw = options.cols * cell
                 const gh = options.rows * cell
 
-                ctx.strokeStyle = options.colors.fg
-                ctx.lineWidth = 1
-                ctx.beginPath()
+                if (cell >= options.scale.threshold) {
+                    ctx.strokeStyle = options.colors.fg
+                    ctx.lineWidth = 1
+                    ctx.beginPath()
 
-                for (let c = sc; c <= ec; c++) {
-                    const x = state.value.offset.x + c * cell + 0.5
-                    if (x >= sx && x <= sx + gw) {
-                        ctx.moveTo(x, sy)
-                        ctx.lineTo(x, sy + gh)
+                    for (let c = sc; c <= ec; c++) {
+                        const x = state.value.offset.x + c * cell + 0.5
+                        if (x >= sx && x <= sx + gw) {
+                            ctx.moveTo(x, sy)
+                            ctx.lineTo(x, sy + gh)
+                        }
+                    }
+
+                    for (let r = sr; r <= er; r++) {
+                        const y = state.value.offset.y + r * cell + 0.5
+                        if (y >= sy && y <= sy + gh) {
+                            ctx.moveTo(sx, y)
+                            ctx.lineTo(sx + gw, y)
+                        }
                     }
                 }
-
-                for (let r = sr; r <= er; r++) {
-                    const y = state.value.offset.y + r * cell + 0.5
-                    if (y >= sy && y <= sy + gh) {
-                        ctx.moveTo(sx, y)
-                        ctx.lineTo(sx + gw, y)
-                    }
-                }
-
+                
                 ctx.stroke()
                 ctx.strokeStyle = options.colors.border; ctx.lineWidth = 1; ctx.strokeRect(sx + 0.5, sy + 0.5, gw, gh)
             }
@@ -408,16 +409,10 @@
         map: {
             load: () => { try {
 
-                const [raw_map, raw_offset, raw_scale] = [
-                    localStorage.getItem(`${options.name}-map`), 
+                const [raw_offset, raw_scale] = [
                     localStorage.getItem(`${options.name}-offset`), 
                     localStorage.getItem(`${options.name}-scale`)
                 ]
-                 
-                if (raw_map) {
-                    const map = JSON.parse(raw_map)
-                    if (Array.isArray(map) && map.length === options.cols * options.rows) state.value.map = map
-                }
 
                 if (raw_offset) {
                     const offset = JSON.parse(raw_offset)
@@ -430,7 +425,6 @@
 
             } catch {} },
             save: (...only: string[]) => { try {
-                if (!only.length || only.includes('map')) localStorage.setItem(`${options.name}-map`, JSON.stringify(state.value.map))
                 if (!only.length || only.includes('offset')) localStorage.setItem(`${options.name}-offset`, JSON.stringify(state.value.offset))
                 if (!only.length || only.includes('scale')) localStorage.setItem(`${options.name}-scale`, JSON.stringify(state.value.scale))
             } catch {}}
@@ -462,7 +456,7 @@
                 if (!user.value?.id) return
                 if (!state.value.selected.y || !state.value.selected.x || !ip.value) return
                 const i =  state.value.selected.y * options.cols + (state.value.selected.x + 1)
-                socket.emit('pb:draw', { color: state.value.ui.color, coordinates: state.value.selected, user: user.value })
+                socket.emit('pb:draw', { color: state.value.ui.color, coordinates: state.value.selected, uuid: user.value.uuid })
                 state.value.map.splice(i - 1, 1, state.value.ui.color)
                 actions.selected.clear()
             },
@@ -482,38 +476,52 @@
         if (!state.value.offset.x) state.value.offset.x = (rect.width - (options.cols * options.base * state.value.scale)) / 2
         if (!state.value.offset.y) state.value.offset.y = (rect.height - (options.rows * options.base * state.value.scale)) / 2
         actions.draw()
-        socket.emit('pb:init'); socket.on('pb:init:response', (map: {
-            i: {
-                x: number;
-                y: number;
-            } | null;
-            c: number | null;
-            u: string | null;
-            a: Date | null;
-        }[]) => {
-            const array = new Array(options.cols * options.rows).fill(0).map((v, i) => {
-                const color = map.find(item => {
-                    if (!item.i) return
-                    const index = item.i?.y * options.cols + (item.i?.x)
-                    if (index === i) return true
-                })
-                if (color?.c) return color.c
-                else return v
-            })
-            state.value.map = array
+        socket.emit('pb:init'); socket.on('pb:init:response', (base36: string) => {
+            const decode = (str: string) => {
+                const pixels = []
+                for (let i = 0; i < str.length; i += 5) {
+                    const n = parseInt(str.slice(i, i + 5), 36)
+                    const x = (n >> 13) & 0x1ff
+                    const y = (n >> 4) & 0x1ff
+                    const c = n & 0xf
+                    pixels.push({ x, y, c })
+                }
+
+                const array = new Array(options.cols * options.rows).fill(0)
+                for (const { x, y, c } of pixels) {
+                    if (x == null || y == null) continue
+                    const index = y * options.cols + x
+                    array[index] = c
+                }
+
+                return array
+            }
+
+            state.value.map = decode(base36)
             state.value.loading = false
         })
     })
 
-    watch(() => state.value.map, () => actions.map.save('map'), { deep: true })
     watch(() => state.value.offset, () => actions.map.save('offset'), { deep: true })
     watch(() => state.value.scale, () => { actions.map.save('scale'); state.value.ui.updating.scale = true; debouncer.use(() => state.value.ui.updating.scale = false)})
     watch(() => [state.value.hover, state.value.selected], () => state.value.ui.updating.pos = !!((state.value.hover.x && state.value.hover.y) || (state.value.selected.x && state.value.selected.y)), { deep: true })
     watch(() => state.value.selected, () => { state.value.ui.current = null; socket.emit('pb:info', state.value.selected) }, { deep: true })
     watch(() => state.value.ui.color, () => actions.draw('selected'))
-    socket.on('pb:update', (data) => {
-        const index = data.coordinates.y * options.cols + (data.coordinates.x + 1)
-        state.value.map.splice(index - 1, 1, data.color)
+    socket.on('pb:update', (base36: string) => {
+        const decode = (str: string) => {
+            const pixels = []
+            for (let i = 0; i < str.length; i += 5) {
+                const n = parseInt(str.slice(i, i + 5), 36)
+                const x = (n >> 13) & 0x1ff
+                const y = (n >> 4) & 0x1ff
+                const c = n & 0xf
+                pixels.push({ x, y, c })
+            }
+
+            return pixels
+        }
+        const pixels = decode(base36)
+        pixels.forEach((pixel) => state.value.map.splice((pixel.y * options.cols + (pixel.x + 1)) - 1, 1, pixel.c))
     })
     socket.on('pb:info:response', (data) => {
         state.value.ui.current = data
@@ -547,9 +555,9 @@
             @touchend="actions.touch.end"
         />
         <template v-if="user?.id">
-            <div :data-selected="!!state.selected.x && !!state.selected.y" class="max-sm:hidden bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] right-[24px] pointer-events-none duration-500" :class="state.ui.updating.scale ? 'opacity-100' : 'opacity-0'">{{ (state.scale * 100).toFixed(0) }}%</div>
-            <div :data-selected="!!state.selected.x && !!state.selected.y" class="max-sm:hidden bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] left-[24px] pointer-events-none duration-500" :class="state.ui.updating.pos && ((state.hover.x && state.hover.y) || (state.selected.x && state.selected.y)) ? 'opacity-100' : 'opacity-0'">{{ state.selected.x || state.hover.x || 0 }}x{{ state.selected.y || state.hover.y || 0 }}</div>
-            <div class="bg-black p-[6px] max-sm:p-[12px] flex max-sm:flex-col gap-[6px] max-sm:gap-[12px] absolute border bottom-[24px] left-1/2 -translate-x-1/2 max-sm:w-full max-sm:bottom-0 max-sm:border-none! max-sm:outline-1 outline-offset-[1px]" :class="state.selected.x && state.selected.y ? 'opacity-100 *:pointer-events-auto pointer-events-auto' : 'opacity-0 *:pointer-events-none pointer-events-none'">
+            <div class="max-sm:top-[24px]! h-[16px] bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] right-[24px] pointer-events-none duration-500" :class="state.ui.updating.scale ? 'opacity-100' : 'opacity-0'">{{ (state.scale * 100).toFixed(0) }}%</div>
+            <div class="max-sm:top-[24px]! h-[16px] bg-black border text-xs! text-white/50! px-[6px] absolute bottom-[24px] left-[24px] pointer-events-none duration-500" :class="state.ui.updating.pos && ((state.hover.x && state.hover.y) || (state.selected.x != null && state.selected.y != null)) ? 'opacity-100' : 'opacity-0'">{{ state.selected.x || state.hover.x || 0 }}x{{ state.selected.y || state.hover.y || 0 }}</div>
+            <div class="bg-black p-[6px] max-sm:p-[12px] flex max-sm:flex-col gap-[6px] max-sm:gap-[12px] absolute border bottom-[24px] left-1/2 -translate-x-1/2 max-sm:w-full max-sm:bottom-0 max-sm:border-none! max-sm:outline-1 outline-offset-[1px]" :class="state.selected.x != null && state.selected.y != null ? 'opacity-100 *:pointer-events-auto pointer-events-auto' : 'opacity-0 *:pointer-events-none pointer-events-none'">
                 <div class="flex max-sm:flex-wrap w-full gap-[6px] max-sm:gap-[12px]">
                     <div :data-current="state.ui.color === i" class=" data-[current=true]:opacity-100 data-[current=false]:opacity-25 max-sm:min-h-[32px] max-sm:min-w-[32px] max-sm:grow max-sm:w-[48px] h-[24px] w-[24px] flex items-center justify-center text-[24px]! font-bold cursor-nw-resize! hover:opacity-50" @click="state.ui.color = i" :class="i === 0 ? 'border': ''" :style="{ background: `${color.background} !important` }" v-for="color, i in Object.values(options.colors.map)" @mouseleave="() => {
                         actions.leave()
