@@ -200,7 +200,7 @@
                         }
                     }
                 }
-                
+
                 ctx.stroke()
                 ctx.strokeStyle = options.colors.border; ctx.lineWidth = 1; ctx.strokeRect(sx + 0.5, sy + 0.5, gw, gh)
             }
@@ -573,11 +573,18 @@
         </template>
         <template v-else>
             <div class="w-full h-full flex-col backdrop-blur-3xl absolute gap-[24px] top-0 left-0 flex items-center justify-center">
-                <img src="/pixelbattle.svg" class="max-w-[80dvw] h-[64px]">
-                <div class="flex flex-wrap items-center justify-center gap-[12px] max-w-[80dvw]">
-                    <TelegramAuth v-model="user"/>
-                    <button black>{{ t('return') }}</button>
+                <div class="w-fit h-fit border bg-black p-[24px] flex flex-col gap-[24px]">
+                    <img src="/pixelbattle.svg" class="max-w-[80dvw] w-fit h-[32px]">
+                    <p class="max-w-[400px]">
+                        <b>Правила:</b><br>
+                        КД нет, тематики нет, запретов нет (кроме законов РФ), боты приветствуются (только не положите сервак пж), удачи
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-[12px] max-w-[80dvw]">
+                        <TelegramAuth v-model="user"/>
+                        <button black>{{ t('return') }}</button>
+                    </div>
                 </div>
+
             </div>
         </template>
     </div>
