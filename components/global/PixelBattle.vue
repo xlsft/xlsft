@@ -284,6 +284,31 @@
                 ctx.strokeRect(sx + 0.5, sy + 0.5, gw, gh);
             }
 
+            if ((!only.length || only.includes('gif')) && state.value.gif.frames.length > 0) {
+                const size = cell * (96 / 2);
+                const x1 = state.value.offset.x;
+                const y1 = state.value.offset.y - size;
+                const x2 = x1 + size;
+                const y2 = y1 + size;
+
+                if (x2 > 0 && x1 < w && y2 > 0 && y1 < h) {
+                    const now = performance.now();
+                    const index = state.value.gif.frame;
+                    const delay = state.value.gif.delays?.[index];
+                    const speed = options.gif.speed;
+
+                    const ms = (typeof delay === 'number' && delay > 0) ? (delay * 10) / speed : 100 / speed;
+
+                    if (now - (state.value.gif.last ?? 0) >= ms) {
+                        state.value.gif.frame = (index + 1) % state.value.gif.frames.length;
+                        state.value.gif.last = now;
+                    }
+
+                    const frame = state.value.gif.frames[state.value.gif.frame];
+                    if (frame) ctx.drawImage(frame, x1, y1, size, size);
+                }
+            }
+
             if (!only.length || only.includes('hover')) if (state.value.hover.x !== null && state.value.hover.y !== null && state.value.scale >= .5) {
                 const sx = state.value.offset.x + state.value.hover.x * cell
                 const sy = state.value.offset.y + state.value.hover.y * cell
@@ -352,32 +377,7 @@
                 }
             }
 
-            if (state.value.gif.frames.length > 0) {
-                const sx = state.value.offset.x
-                const sy = state.value.offset.y - cell
-                if (sx + cell >= 0 && sx <= w && sy + cell >= 0 && sy <= h) {
-                    const now = performance.now();
-                    const index = state.value.gif.frame;
-                    const delay = state.value.gif.delays?.[index];
-                    const speed = options.gif.speed
 
-                    const ms = (typeof delay === 'number' && delay > 0)
-                        ? (delay * 10) / speed
-                        : 100 / speed;
-                    if (now - (state.value.gif.last ?? 0) >= ms) {
-                        state.value.gif.frame = (index + 1) % state.value.gif.frames.length;
-                        state.value.gif.last = now;
-                    }
-                    const frame = state.value.gif.frames[state.value.gif.frame];
-                    if (frame) {
-                        const sx = state.value.offset.x;
-                        const sy = state.value.offset.y;
-                        const size = cell * (96 / 2);
-                        ctx.drawImage(frame, sx, sy - size, size, size);
-                    }
-                }
-
-            }
 
             state.value.frame = requestAnimationFrame(() => actions.draw())
         },
