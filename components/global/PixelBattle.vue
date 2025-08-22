@@ -461,18 +461,25 @@
                         const rect = canvas.value.getBoundingClientRect()
                         const px = state.value.touch.center.x - rect.left
                         const py = state.value.touch.center.y - rect.top
+
                         const before = actions.screen(px, py)
 
                         const factor = d / state.value.touch.dist
-                        let ns = state.value.scale * factor; state.value.scale = ns = Math.max(options.scale.min, Math.min(options.scale.max, ns))
+                        let ns = state.value.scale * factor
+                        ns = Math.max(options.scale.min, Math.min(options.scale.max, ns))
+
+                        state.value.scale = ns
 
                         const after = actions.screen(px, py)
                         state.value.offset.x += (after.x - before.x) * options.base * state.value.scale
                         state.value.offset.y += (after.y - before.y) * options.base * state.value.scale
+
                         actions.clamp()
                     }
+
                     state.value.touch.dist = d
                     state.value.touch.center = c
+
                 }
             },
             end: (e: TouchEvent) => {
