@@ -644,7 +644,7 @@
             </div>
         </template>
         <template v-else>
-            <div class="w-full h-full flex-col absolute gap-[24px] top-0 left-0 flex items-center justify-center">
+            <div class="w-full h-full flex-col max-w-[90dvw] absolute gap-[24px] top-0 left-0 flex items-center justify-center">
                 <div class="w-fit h-fit border bg-black p-[24px] flex flex-col gap-[24px]">
                     <img src="/pixelbattle.svg" class="max-w-[80dvw] w-fit h-[32px]">
                     <p class="max-w-[400px]">
