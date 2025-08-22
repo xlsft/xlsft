@@ -10,10 +10,9 @@
 
     const debouncer = useDebouncer(2000)
     const { t, locale } = useI18n()
-    const ip = ref<string>()
     const socket = useSocket();
     const canvas = ref<HTMLCanvasElement | null>(null)
-    const cache: { offscreen?: HTMLCanvasElement, scale?: number, version?: number } = {};
+    const cache: { offscreen?: HTMLCanvasElement, scale?: number, version?: number, pattern?: CanvasPattern } = {};
     let ctx: CanvasRenderingContext2D | null = null
 
     const options: PixelBattleOptions = {
@@ -97,12 +96,10 @@
             const w = canvas.value.width / (window.devicePixelRatio || 1)
             const h = canvas.value.height / (window.devicePixelRatio || 1)
             const pad = options.padding
-
             const min_x = -map_w + pad
             const max_x = w - pad
             const min_y = -map_h + pad
             const max_y = h - pad
-
             state.value.offset.x = Math.min(max_x, Math.max(min_x, state.value.offset.x))
             state.value.offset.y = Math.min(max_y, Math.max(min_y, state.value.offset.y))
         },
@@ -110,21 +107,10 @@
             const date = new Date(ts)
             const loc = locale.value === 'ru' ? ru : enUS
             const now = new Date()
-
-            const secDiff = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-            if (secDiff < 60) {
-                return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} ${formatDistanceToNow(date, { locale: loc, addSuffix: true })}`
-            }
-            if (isToday(date)) {
-                return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} at ${format(date, 'HH:mm', { locale: loc })}`
-            }
-            if (isYesterday(date)) {
-                return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} ${locale.value === 'ru' ? 'вчера' : 'yesterday'} at ${format(date, 'HH:mm', { locale: loc })}`
-            }
-            if (date >= subDays(now, 2) && date < subDays(now, 1)) {
-                return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} ${locale.value === 'ru' ? 'позавчера' : 'the day before yesterday'} at ${format(date, 'HH:mm', { locale: loc })}`
-            }
+            if (Math.floor((now.getTime() - date.getTime()) / 1000) < 60) return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} ${formatDistanceToNow(date, { locale: loc, addSuffix: true })}`
+            if (isToday(date)) return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} ${locale.value === 'ru' ? 'в' : 'at'} ${format(date, 'HH:mm', { locale: loc })}`
+            if (isYesterday(date)) return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} ${locale.value === 'ru' ? 'вчера' : 'yesterday'} ${locale.value === 'ru' ? 'в' : 'at'} ${format(date, 'HH:mm', { locale: loc })}`
+            if (date >= subDays(now, 2) && date < subDays(now, 1)) return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} ${locale.value === 'ru' ? 'позавчера' : 'the day before yesterday'} ${locale.value === 'ru' ? 'в' : 'at'} ${format(date, 'HH:mm', { locale: loc })}`
             return `${locale.value === 'ru' ? 'Поставлен' : 'Placed'} ${formatRelative(date, now, { locale: loc })}`
         },
         resize: () => {
@@ -140,12 +126,10 @@
             if (!ctx) ctx = canvas.value.getContext('2d')
             if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         },
-        screen: (sx: number, sy: number) => {
-            return {
-                x: (sx - state.value.offset.x) / (options.base * state.value.scale),
-                y: (sy - state.value.offset.y) / (options.base * state.value.scale),
-            }
-        },
+        screen: (sx: number, sy: number) => ({
+            x: (sx - state.value.offset.x) / (options.base * state.value.scale),
+            y: (sy - state.value.offset.y) / (options.base * state.value.scale),
+        }),
         draw: (...only: string[]) => {
             if (!canvas.value || !ctx) return
             const w = canvas.value.width / (window.devicePixelRatio || 1)
@@ -162,6 +146,44 @@
             const ec = Math.min(options.cols - 1, x1)
             const sr = Math.max(0, y0)
             const er = Math.min(options.rows - 1, y1)
+
+            if (!only.length || only.includes('pattern')) {
+                const spacing = 32
+                const size = spacing * 2
+
+                if (!cache.pattern) {
+                    const off = document.createElement('canvas')
+                    off.width = size
+                    off.height = size
+                    const offCtx = off.getContext('2d')!
+
+                    offCtx.strokeStyle = options.colors.fg
+                    offCtx.lineWidth = 1
+
+                    for (let i = -size; i <= size; i += spacing) {
+                        offCtx.beginPath()
+                        offCtx.moveTo(i, 0)
+                        offCtx.lineTo(i + size, size)
+                        offCtx.stroke()
+                    }
+
+                    cache.pattern = ctx.createPattern(off, 'repeat')!
+                }
+
+                const mat = new DOMMatrix()
+                mat.translateSelf(state.value.offset.x % spacing, state.value.offset.y % spacing)
+                cache.pattern.setTransform(mat)
+
+                ctx.fillStyle = cache.pattern
+                ctx.fillRect(0, 0, w, h)
+
+                const sx = state.value.offset.x
+                const sy = state.value.offset.y
+                const gw = options.cols * cell
+                const gh = options.rows * cell
+
+                ctx.clearRect(sx, sy, gw, gh)
+            }
 
             if (!only.length || only.includes('tiles')) {
                 const sx = state.value.offset.x;
@@ -224,6 +246,37 @@
                         ctx.lineTo(sx + gw, y);
                     }
                     ctx.stroke();
+                }
+
+                if (state.value.loading) {
+                    const c = cell * 10;
+                    const colors = Object.values(options.colors.map).slice(2).map(c => c.background);
+                    const now = Date.now() / 1000;
+                    const speed = 0.1;
+                    const shift = (now * speed) % 1;
+                    const step = 1 / colors.length;
+
+                    for (let y = sy; y < sy + gh; y += c) for (let x = sx; x < sx + gw; x += c) {
+                        const w = Math.min(c, sx + gw - x);
+                        const h = Math.min(c, sy + gh - y);
+                        const index = Math.floor(((((x - sx) + (y - sy)) / (gw + gh) + shift) % 1) / step) % colors.length;
+                        ctx.fillStyle = colors[index] || '#000000';
+                        ctx.fillRect(x, y, w, h);
+                    }
+
+                    if (user.value?.id) {
+                        const size = 5;
+                        const width = size * c;
+                        const height = size * c;
+                        const ssx = sx + (gw - width) / 2;
+                        const ssy = sy + (gh - height) / 2;
+                        const now = Date.now() / 200; // скорость анимации
+                        const offset = Math.floor(now) % size;
+                        for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (((x + y + offset) % size) === 0 ? 1 : 0) {
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillRect(ssx + x * c, ssy + y * c, c, c);
+                        }
+                    }
                 }
 
                 ctx.strokeStyle = options.colors.border;
@@ -319,7 +372,7 @@
                     if (frame) {
                         const sx = state.value.offset.x;
                         const sy = state.value.offset.y;
-                        const size = cell;
+                        const size = cell * (96 / 2);
                         ctx.drawImage(frame, sx, sy - size, size, size);
                     }
                 }
@@ -329,7 +382,6 @@
             state.value.frame = requestAnimationFrame(() => actions.draw())
         },
         move: (e: MouseEvent) => {
-            if (!user.value?.id) return
             const rect = canvas.value!.getBoundingClientRect()
             const cx = e.clientX - rect.left
             const cy = e.clientY - rect.top
@@ -348,12 +400,10 @@
             }
         },
         leave: () => {
-            if (!user.value?.id) return
             state.value.hover.x = null
             state.value.hover.y = null
         },
         wheel: (e: WheelEvent) => {
-            if (!user.value?.id) return
             const rect = canvas.value!.getBoundingClientRect()
             const cx = e.clientX - rect.left
             const cy = e.clientY - rect.top
@@ -368,14 +418,11 @@
         },
         pan: {
             start: (e: MouseEvent) => {
-                if (!user.value?.id) return
-                if (!user.value?.id) return
                 state.value.panning = true
                 state.value.last.x = e.clientX
                 state.value.last.y = e.clientY
             },
             end: () => { 
-                if (!user.value?.id) return
                 state.value.panning = false
             }
         },
@@ -385,7 +432,6 @@
                 center: (a: Touch, b: Touch) => ({ x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 })
             },
             start: (e: TouchEvent) => {
-                if (!user.value?.id) return
                 if (!canvas.value) return
                 if (e.touches.length === 1) {
                     const t = e.touches[0] as Touch
@@ -398,7 +444,6 @@
                 }
             },
             move: (e: TouchEvent) => {
-                if (!user.value?.id) return
                 if (!canvas.value) return
                 if (e.touches.length === 1 && state.value.panning) {
                     const t = e.touches[0] as Touch
@@ -431,7 +476,6 @@
                 }
             },
             end: (e: TouchEvent) => {
-                if (!user.value?.id) return
                 if (e.touches.length !== 0) return
                 state.value.panning = false
             }
@@ -485,7 +529,7 @@
             },
             apply: async () => {
                 if (!user.value?.id) return
-                if (!state.value.selected.y || !state.value.selected.x || !ip.value) return
+                if (!state.value.selected.y || !state.value.selected.x) return
                 const i =  state.value.selected.y * options.cols + (state.value.selected.x + 1)
                 socket.emit('pb:draw', { color: state.value.ui.color, coordinates: state.value.selected, uuid: user.value.uuid })
                 state.value.map.splice(i - 1, 1, state.value.ui.color)
@@ -495,10 +539,15 @@
         }
     }
 
+    usePureClick(canvas, actions.selected.click)
+    watch(() => state.value.offset, () => actions.map.save('offset'), { deep: true })
+    watch(() => state.value.scale, () => { if (state.value.scale < .5) actions.selected.clear(); actions.map.save('scale'); state.value.ui.updating.scale = true; debouncer.use(() => state.value.ui.updating.scale = false)})
+    watch(() => [state.value.hover, state.value.selected], () => state.value.ui.updating.pos = !!((state.value.hover.x && state.value.hover.y) || (state.value.selected.x && state.value.selected.y)), { deep: true })
+    watch(() => state.value.selected, () => { state.value.ui.current = null; socket.emit('pb:info', state.value.selected) }, { deep: true })
+    watch(() => state.value.ui.color, () => actions.draw())
+
     onMounted(async () => {
-        await actions.gif()
-        
-        ip.value = (await (await fetch('https://api.ipify.org/?format=json')).json()).ip
+        await actions.gif() 
         actions.map.load()
         window.addEventListener('resize', actions.resize)
         window.addEventListener('wheel', actions.resize)
@@ -532,41 +581,33 @@
             state.value.loading = false
             state.value.version++
         })
-    })
-
-    watch(() => state.value.offset, () => actions.map.save('offset'), { deep: true })
-    watch(() => state.value.scale, () => { if (state.value.scale < .5) actions.selected.clear(); actions.map.save('scale'); state.value.ui.updating.scale = true; debouncer.use(() => state.value.ui.updating.scale = false)})
-    watch(() => [state.value.hover, state.value.selected], () => state.value.ui.updating.pos = !!((state.value.hover.x && state.value.hover.y) || (state.value.selected.x && state.value.selected.y)), { deep: true })
-    watch(() => state.value.selected, () => { state.value.ui.current = null; socket.emit('pb:info', state.value.selected) }, { deep: true })
-    watch(() => state.value.ui.color, () => actions.draw())
-    socket.on('pb:update', (base36: string) => {
-        const decode = (str: string) => {
-            const pixels = []
-            for (let i = 0; i < str.length; i += 5) {
-                const n = parseInt(str.slice(i, i + 5), 36)
-                const x = (n >> 14) & 0x3ff   // 10 бит
-                const y = (n >> 4) & 0x3ff    // 10 бит
-                const c = n & 0xf             // 4 бит
-                pixels.push({ x, y, c })
+        socket.on('pb:update', (base36: string) => {
+            const decode = (str: string) => {
+                const pixels = []
+                for (let i = 0; i < str.length; i += 5) {
+                    const n = parseInt(str.slice(i, i + 5), 36)
+                    const x = (n >> 14) & 0x3ff   // 10 бит
+                    const y = (n >> 4) & 0x3ff    // 10 бит
+                    const c = n & 0xf             // 4 бит
+                    pixels.push({ x, y, c })
+                }
+                return pixels
             }
-            return pixels
-        }
-        const pixels = decode(base36)
-        pixels.forEach((pixel) => state.value.map.splice((pixel.y * options.cols + (pixel.x + 1)) - 1, 1, pixel.c))
-        state.value.version++
+            const pixels = decode(base36)
+            pixels.forEach((pixel) => state.value.map.splice((pixel.y * options.cols + (pixel.x + 1)) - 1, 1, pixel.c))
+            state.value.version++
+        })
+        socket.on('pb:info:response', (data) => {
+            state.value.ui.current = data
+        })
     })
-    socket.on('pb:info:response', (data) => {
-        state.value.ui.current = data
-    })
-
     onBeforeUnmount(() => {
         window.removeEventListener('resize', actions.resize)
         window.removeEventListener('wheel', actions.resize)
         window.removeEventListener('touchstart', actions.resize)
         cancelAnimationFrame(state.value.frame)
     })
-    usePureClick(canvas, actions.selected.click)
-
+    
 </script>
 
 <template>
@@ -577,7 +618,6 @@
         <canvas 
             ref="canvas" 
             class="block w-full h-full bg-black transition-opacity! duration-500!" 
-            :class="state.loading ? 'animate-pulse opacity-50 pointer-events-none' : 'opacity-100'"
             @mousedown="actions.pan.start" 
             @mousemove="actions.move" 
             @mouseup="actions.pan.end" 
@@ -604,7 +644,7 @@
             </div>
         </template>
         <template v-else>
-            <div class="w-full h-full flex-col backdrop-blur-3xl absolute gap-[24px] top-0 left-0 flex items-center justify-center">
+            <div class="w-full h-full flex-col absolute gap-[24px] top-0 left-0 flex items-center justify-center">
                 <div class="w-fit h-fit border bg-black p-[24px] flex flex-col gap-[24px]">
                     <img src="/pixelbattle.svg" class="max-w-[80dvw] w-fit h-[32px]">
                     <p class="max-w-[400px]">
@@ -616,7 +656,6 @@
                         <button black>{{ t('return') }}</button>
                     </div>
                 </div>
-
             </div>
         </template>
     </div>
