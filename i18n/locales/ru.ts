@@ -11,6 +11,7 @@ export default {
     this_project: "этот проект на github",
     more_print: 'Подробнее обо мне и проектах в разработке которых я принимал участие',
     print: 'Печатная версия',
+    blog: 'Блог',
     one_year: 'год',
     two_years: 'года',
     more_years: 'лет',
@@ -24,6 +25,7 @@ export default {
         artifacts: 'Артефакты',
         contact_me: 'Контакты',
         projects: 'Проекты',
+        blog: 'Блог',
     },
     exp: {
         xls: {

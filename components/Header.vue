@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import Banner from './Banner.vue'
-
 
     const { t, locale, setLocale } = useI18n()
     const router = useRouter()
@@ -17,7 +15,7 @@ import Banner from './Banner.vue'
 
     const modal = ref(false)
 
-    const menu = ref<string[]>(['about', 'experience', 'contact_me', 'projects'])
+    const menu = ref<string[]>(['about', 'experience', 'contact_me', 'projects', 'blog'])
     
     const goto = (e: MouseEvent) => {
         e.preventDefault()

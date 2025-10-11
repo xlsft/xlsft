@@ -69,11 +69,26 @@
     const user = ref<TelegramAuthUser>()
 
     const actions = {
+        unpack: (buffer: Uint8Array | ArrayBuffer) => {
+            if (buffer instanceof ArrayBuffer) buffer = new Uint8Array(buffer);
+            const array = [];
+            for (let n = 0; n < Math.floor((buffer.length * 8) / 24); n++) {
+                let num = 0;
+                for (let b = 0; b < 24; b++) {
+                    const index = n * 24 + b;
+                    num = (num << 1) | ((buffer[Math.floor(index / 8)]! >> (7 - (index % 8))) & 1);
+                }
+                array.push({
+                    x: (num >> 14) & 0x3FF,
+                    y: (num >> 4) & 0x3FF,
+                    c: num & 0xF
+                });
+            }
+            return array;
+        },
         gif: async () => {
             const buffer = await (await fetch(options.gif.url)).arrayBuffer()
-            console.log(buffer)
             const gif = parseGIF(buffer)
-            console.log(gif)
             const frames = decompressFrames(gif, true)
             state.value.gif.frames = frames.map(f => {
                 const cvs = document.createElement('canvas')
@@ -86,7 +101,6 @@
                 return cvs
             })
             state.value.gif.delays = frames.map(f => f.delay)
-            console.log(frames)
         },
         clamp: () => {
             if (!canvas.value) return
@@ -564,44 +578,20 @@
         if (!state.value.offset.x) state.value.offset.x = (rect.width - (options.cols * options.base * state.value.scale)) / 2
         if (!state.value.offset.y) state.value.offset.y = (rect.height - (options.rows * options.base * state.value.scale)) / 2
         actions.draw()
-        socket.emit('pb:init'); socket.on('pb:init:response', (base36: string) => {
-            const decode = (str: string) => {
-                const pixels = []
-                for (let i = 0; i < str.length; i += 5) {
-                    const n = parseInt(str.slice(i, i + 5), 36)
-                    const x = (n >> 14) & 0x3ff   // 10 бит
-                    const y = (n >> 4) & 0x3ff    // 10 бит
-                    const c = n & 0xf             // 4 бит
-                    pixels.push({ x, y, c })
-                }
-                const array = new Array(options.cols * options.rows).fill(0)
-                for (const { x, y, c } of pixels) {
-                    if (x == null || y == null) continue
-                    const index = y * options.cols + x
-                    array[index] = c
-                }
-
-                return array
+        socket.emit('pb:init'); socket.on('pb:init:response', (buffer: Uint8Array) => {
+            const array = new Array(options.cols * options.rows).fill(0)
+            for (const { x, y, c } of actions.unpack(buffer)) {
+                if (x == null || y == null) continue
+                const index = y * options.cols + x
+                array[index] = c
             }
-
-            state.value.map = decode(base36)
+            state.value.map = array
             state.value.loading = false
             state.value.version++
         })
-        socket.on('pb:update', (base36: string) => {
-            const decode = (str: string) => {
-                const pixels = []
-                for (let i = 0; i < str.length; i += 5) {
-                    const n = parseInt(str.slice(i, i + 5), 36)
-                    const x = (n >> 14) & 0x3ff   // 10 бит
-                    const y = (n >> 4) & 0x3ff    // 10 бит
-                    const c = n & 0xf             // 4 бит
-                    pixels.push({ x, y, c })
-                }
-                return pixels
-            }
-            const pixels = decode(base36)
-            pixels.forEach((pixel) => state.value.map.splice((pixel.y * options.cols + (pixel.x + 1)) - 1, 1, pixel.c))
+
+        socket.on('pb:update', (buffer: Uint8Array) => {
+            actions.unpack(buffer).forEach((pixel) => state.value.map.splice((pixel.y * options.cols + (pixel.x + 1)) - 1, 1, pixel.c))
             state.value.version++
         })
         socket.on('pb:info:response', (data) => {

@@ -3,11 +3,7 @@ import { Pool } from 'pg'
 import * as schema from './schema/request.schema'
 
 const pool = new Pool({
-    host: 'postgress.xlsft.ru',
-    database: 'xlsft.ru',
-    user: 'admin',
-    password: useRuntimeConfig().db_password,
-    port: 5432
+    connectionString: useRuntimeConfig().db_url,
 })
 
 export const db = drizzle(pool, { schema })

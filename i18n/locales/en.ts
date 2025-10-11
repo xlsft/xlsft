@@ -11,6 +11,7 @@ export default {
     this_project: "this project on github",
     more_print: "Learn more about me and my projects",
     print: "Print version",
+    blog: 'Blog',
     one_year: 'year',
     two_years: 'years',
     more_years: 'years',
@@ -22,7 +23,8 @@ export default {
         about: "Home",
         experience: "Experience",
         projects: "Projects",
-        contact_me: "Contact"
+        contact_me: "Contact",
+        blog: 'Blog',
     },
     exp: {
         xls: {

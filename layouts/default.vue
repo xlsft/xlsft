@@ -1,6 +1,6 @@
 <script setup lang="ts">
     import Banner from '~/components/Banner.vue';
-import EasterEgg from '../components/EasterEgg.vue';
+    import EasterEgg from '../components/EasterEgg.vue';
     import Footer from '../components/Footer.vue';
     import Header from '../components/Header.vue';
     onMounted(() => {

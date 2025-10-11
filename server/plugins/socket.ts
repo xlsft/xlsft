@@ -30,6 +30,18 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
     let draw_stack: { i: { x: number, y: number }, c: number }[] = []
     io.bind(engine);
 
+    const pack = (data: { i: { x: number, y: number }, c: number | null }[]) => {
+        const buffer = new Uint8Array(Math.ceil(data.length * 24 / 8));
+        data.forEach(({i, c}, idx) => {
+            for (let b = 0; b < 24; b++) {
+                const bit = (((i.x << 14) | (i.y << 4) | c!) >> (23 - b)) & 1;
+                const index = idx * 24 + b;
+                buffer[Math.floor(index / 8)] |= bit << (7 - (index % 8));
+            }
+        });
+        return buffer
+    }
+
     io.on("connection", (socket) => {
         socket.on('debug', () => {
             socket.emit('health', health())
@@ -40,8 +52,8 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
                 const [ x, y ] = v.i.split(':').map(Number) as [number, number]
                 return { ...v, i: { x, y } }
             })
-            const result = data.filter(v => v.c !== 0).map(({ i, c }) => ((i.x << 14) | (i.y << 4) | c!).toString(36).padStart(5,'0')).join('')
-            socket.emit('pb:init:response', result)
+
+            socket.emit('pb:init:response', pack(data));
         })
         socket.on('pb:draw', async (data: { color: number, coordinates: { x: number, y: number }, uuid: TelegramAuthUser['uuid'] }) => {
             if (data.color > 9 || data.color < 0 || data.coordinates.x > 1023 || data.coordinates.x < 0 ||  data.coordinates.y > 1023 || data.coordinates.y < 0) return
@@ -74,9 +86,9 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
             socket.emit('pb:user:response', data)
         })
         if (!update_interval) update_interval = setInterval(() => {
-            if (draw_stack.length === 0) return
-            const stack = [ ...draw_stack ]; draw_stack = []
-            socket.broadcast.emit('pb:update', stack.map(({ i, c }) => ((i.x << 14) | (i.y << 4) | c!).toString(36).padStart(5,'0')).join(''))
+            if (!draw_stack.length) return
+            socket.broadcast.emit('pb:update', pack(draw_stack))
+            draw_stack = [];
         }, 2000)
     });
 

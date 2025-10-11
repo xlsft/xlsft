@@ -35,8 +35,26 @@ export default defineNuxtConfig({
         },
     },
     modules: [
-        '@nuxtjs/i18n', 'yandex-metrika-module-nuxt3',
+        '@nuxtjs/i18n', 'yandex-metrika-module-nuxt3', '@nuxt/content',
     ],
+    content: {
+        experimental: { sqliteConnector: 'native' },
+        database: {
+            type: 'postgres',
+            url: process.env.DATABASE_URL!,
+        },
+        preview: {
+            dev: true,
+            api: 'https://api.nuxt.studio',
+        },
+        build: {
+            markdown: {
+                highlight: {
+                    theme: 'github-dark-high-contrast'
+                }
+            }
+        }
+    },
     i18n: {
         strategy: 'no_prefix',
         locales: [
@@ -50,7 +68,7 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         mode: process.env.MODE || 'development',
-        db_password: process.env.DB_PASSWORD,
+        db_url: process.env.DATABASE_URL,
         tg_token: process.env.TG_TOKEN,
         tg_user: process.env.TG_USER
     },
@@ -65,5 +83,5 @@ export default defineNuxtConfig({
         experimental: {
             websocket: true
         }
-    }
+    },
 })
