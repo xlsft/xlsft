@@ -1,9 +1,10 @@
 CREATE TABLE "canvas" (
-	"coordinates" text PRIMARY KEY NOT NULL,
-	"color" integer,
+	"x" integer NOT NULL,
+	"y" integer NOT NULL,
+	"color" integer NOT NULL,
 	"updated_at" timestamp DEFAULT now(),
 	"updated_by" uuid,
-	CONSTRAINT "canvas_coordinates_unique" UNIQUE("coordinates")
+	CONSTRAINT "canvas_x_y_pk" PRIMARY KEY("x","y")
 );
 --> statement-breakpoint
 CREATE TABLE "request" (
@@ -24,4 +25,4 @@ CREATE TABLE "user" (
 	CONSTRAINT "user_id_unique" UNIQUE("id")
 );
 --> statement-breakpoint
-ALTER TABLE "canvas" ADD CONSTRAINT "canvas_updated_by_user_uuid_fk" FOREIGN KEY ("updated_by") REFERENCES "public"."user"("uuid") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "canvas" ADD CONSTRAINT "canvas_updated_by_user_uuid_fk" FOREIGN KEY ("updated_by") REFERENCES "public"."user"("uuid") ON DELETE cascade ON UPDATE cascade;

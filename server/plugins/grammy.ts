@@ -72,6 +72,8 @@ const conversation = async (conversation: Conversation, ctx: Context) => { try {
 
 
 export default defineNitroPlugin(() => {
+    console.log(`Nitro preset: `, process.env.NITRO_PRESET)
+    if (process.env.NITRO_PRESET) return
     bot.use(conversations())
     bot.use(createConversation(conversation, 'form'))
     bot.command('start', (ctx) => {

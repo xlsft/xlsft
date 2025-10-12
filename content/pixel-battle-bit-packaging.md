@@ -112,7 +112,7 @@ socket.on('pb:draw', async (data: { color: number, coordinates: { x: number, y: 
 
 ```js
 [
-  { i: { x: 10, y: 20 }, c: 1 },
+  { x: 10, y: 20, c: 1 },
   ...
 ]
 ```
@@ -146,7 +146,7 @@ socket.on('pb:draw', async (data: { color: number, coordinates: { x: number, y: 
 Простая упаковочная функция:
 
 ```js
-const pack = (i, c) => (i.x << 14) | (i.y << 4) | c!
+const pack = (x, y, c) => (x << 14) | (y << 4) | c!
 ```
 
 Таблица (на пальцах):
@@ -171,7 +171,7 @@ const pack = (i, c) => (i.x << 14) | (i.y << 4) | c!
 Первой мыслью было превратить каждый packed-int в строку (base64/base64-подобные), с одной стороны – логично, 3 байта в представлении base64 дают ровно 4 символа (4 байта)
 
 ```ts
-const result = data.filter(v => v.c !== 0).map(({ i, c }) => ((i.x << 14) | (i.y << 4) | c!).toString(64).padStart(4,'0')).join('')
+const result = data.filter(v => v.c !== 0).map(({ x, y, c }) => ((x << 14) | (y << 4) | c!).toString(64).padStart(4,'0')).join('')
 ```
 
 Оказалось – WebSocket поддерживает не только текстовые сообщения `opcode 0x1`. но и бинарные фреймы `opcode 0x2`, поэтому лучше отправлять raw-байты.
@@ -179,11 +179,11 @@ const result = data.filter(v => v.c !== 0).map(({ i, c }) => ((i.x << 14) | (i.y
 Решение пришло само собой: сформировать `Uint8Array`, записать в него 24-битные подрядные записи и отправить как бинарный фрейм.
 
 ```ts
-const pack = (data: { i: { x: number, y: number }, c: number | null }[]) => {
+const pack = async (data: { x: number, y: number, c: number }[]) => {
     const buffer = new Uint8Array(Math.ceil(data.length * 24 / 8));
     data.forEach(({i, c}, idx) => {
         for (let b = 0; b < 24; b++) {
-            const bit = (((i.x << 14) | (i.y << 4) | c!) >> (23 - b)) & 1;
+            const bit = (((x << 14) | (y << 4) | c!) >> (23 - b)) & 1;
             const index = idx * 24 + b;
             buffer[Math.floor(index / 8)] |= bit << (7 - (index % 8));
         }
@@ -232,7 +232,7 @@ unpack: (buffer: Uint8Array | ArrayBuffer) => {
 Завершающий штрих, чтобы не спамить сокет при каждом обновлении каждого пикселя, добавил на сервере стек и периодически отправляю батч всем участникам:
 
 ```ts
-let stack: { i: { x: number, y: number }, c: number }[] = []
+let stack: { x: number, y: number, c: number }[] = []
 setInterval(() => {
     if (!stack.length) return
     socket.broadcast.emit('pb:update', pack(stack))

@@ -1,5 +1,5 @@
 {
-  "id": "b7856150-30fb-4f75-9fad-f57d3b97b630",
+  "id": "3e4ea713-2edf-4f65-86bd-84b334df246f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -8,17 +8,23 @@
       "name": "canvas",
       "schema": "",
       "columns": {
-        "coordinates": {
-          "name": "coordinates",
-          "type": "text",
-          "primaryKey": true,
+        "x": {
+          "name": "x",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "y": {
+          "name": "y",
+          "type": "integer",
+          "primaryKey": false,
           "notNull": true
         },
         "color": {
           "name": "color",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "updated_at": {
           "name": "updated_at",
@@ -46,20 +52,20 @@
           "columnsTo": [
             "uuid"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "canvas_coordinates_unique": {
-          "name": "canvas_coordinates_unique",
-          "nullsNotDistinct": false,
+      "compositePrimaryKeys": {
+        "canvas_x_y_pk": {
+          "name": "canvas_x_y_pk",
           "columns": [
-            "coordinates"
+            "x",
+            "y"
           ]
         }
       },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

@@ -5,11 +5,7 @@ export default defineConfig({
     schema: './server/db/schema/*',
     out: './server/db/drizzle',
     dbCredentials: {
-        host: 'postgress.xlsft.ru',
-        database: 'xlsft.ru',
-        user: 'admin',
-        password: process.env.DB_PASSWORD,
-        port: 5432,
+        url: process.env.DATABASE_URL!,
         ssl: false
     },
 })
