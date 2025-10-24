@@ -10,12 +10,12 @@
 </script>
 
 <template>
-    <section class="flex items-center justify-between gap-[48px]">
-        <div class="flex flex-col gap-[12px] my-[48px]">
+    <section class="flex flex-wrap items-center justify-between">
+        <div class="flex flex-col gap-[12px] my-[48px] max-w-[40%]">
             <div class="text-4xl! font-black">{{ data?.title }}</div>
             <div class="text-xl!">{{ data?.description }}</div>
             <br>
-            <div class="">
+            <div>
                 <pre class="opacity-50">{{ JSON.stringify(data?.meta, null, 4) }}</pre>
             </div>
         </div>
