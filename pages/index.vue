@@ -9,9 +9,9 @@
 <template>
 
     <About/>
-    <Blog/>
     <Experience/>
     <Projects/>
+    <Blog/>
     <Contact/>
     
 </template>
