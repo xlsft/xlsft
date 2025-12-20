@@ -2,7 +2,7 @@
     import bytes from 'bytes'
     const open = () => window.open('https://proxy.xlsft.ru', '_blank')
 
-    const stats = await useFetch('https://proxy.xlsft.ru/api/config/stats').data.value
+    const stats = await (await fetch('https://proxy.xlsft.ru/api/config/stats')).json()
 </script>
 
 <template>
