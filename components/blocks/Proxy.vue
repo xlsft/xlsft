@@ -6,7 +6,7 @@
 </script>
 
 <template>
-    <section class="flex group items-center justify-between bg-accent/10 border-accent! overflow-hidden">
+    <section class="flex group items-center justify-between bg-accent/10 border-accent! overflow-hidden print:hidden">
         <div class="flex flex-col gap-6">
             <div class="flex flex-col">
                 <div class="flex items-center gap-4">
