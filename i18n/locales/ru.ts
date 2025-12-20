@@ -153,6 +153,22 @@ export default {
             name: "xlsft/worker",
             description: "Легкий, cron, date и event-based task-фреймворк без бойлерплейта",
         },
+        elsled: {
+            name: "els-led.ru",
+            description: "TBA. Сайт производителя светодиодных светильников, удобный каталог и инструменты для профессионалов. Интегрирован с xlsft/photon"
+        },
+        minjust_parser: {
+            name: "xlsft/minjust_parser",
+            description: "API-сервис для получения списка иноагентов"
+        },
+        photon: {
+            name: 'xlsft/photon',
+            description: "IESNA:LM-63-2002 парсер файлов фотометрии и SVG-рендер графиков"
+        },
+        proxy: {
+            name: 'proxy.xlsft.ru',
+            description: 'Самый традиционный прокси-сервис на территории РФ! Попробуйте уже сейчас!'
+        }
     },
     name_label: 'Имя',
     bd_label: 'Родился',

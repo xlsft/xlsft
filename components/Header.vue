@@ -36,7 +36,7 @@
             <a :href="`#${item}`" @click="goto" v-for="item in menu">{{ t(`menu.${item}`) }}</a>
             <a :href="`https://github.com/xlsft`" target="_blank">Git</a>
             <a :href="`https://t.me/xlsft_cv_bot`" target="_blank">Telegram</a>
-            <button black mini class="ml-[24px]" @click="print">{{ t('print') }}</button>
+            <button black mini class="ml-[24px]" v-if="route.path === '/'" @click="print">{{ t('print') }}</button>
             <button black mini @click="setLocale(locale === 'ru' ? 'en' : 'ru')">{{ locale === 'ru' ? 'English version' : 'Русская версия' }}</button>
             
         </div>

@@ -82,7 +82,7 @@
         <Cross/>
     </section>
 
-    <section class="h-fit flex justify-between gap-[48px] print:gap-0 print:h-[calc(100dvh-48px)]">
+    <section class="h-fit flex justify-between gap-[48px] print:gap-0 print:h-[calc(100dvh-48px)] border-accent!">
         <div class="hidden print:inline-block absolute top-0 right-0 w-[350px] text-right text-lg! *:text-lg!">{{ t('more_print') }}:&nbsp;<a href="https://xlsft.ru">https://xlsft.ru</a></div>
         <div class="flex flex-col gap-[48px]">
             <img src="@/assets/photo.webp" class="w-[300px] h-[300px] hidden print:block">
