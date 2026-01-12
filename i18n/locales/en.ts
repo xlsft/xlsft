@@ -151,6 +151,22 @@ export default {
             name: "xlsft/worker",
             description: "Lightweight, cron, date and event-based task framework with zero-boilerplate setup.",
         },
+        elsled: {
+            name: "els-led.ru",
+            description: "TBA. Website of an LED luminaire manufacturer — a convenient catalog and professional tools. Integrated with xlsft/photon"
+        },
+        minjust_parser: {
+            name: "xlsft/minjust_parser",
+            description: "API service for obtaining the list of foreign agents"
+        },
+        photon: {
+            name: 'xlsft/photon',
+            description: "IESNA:LM-63-2002 photometry files parser and SVG render engine "
+        },
+        proxy: {
+            name: 'proxy.xlsft.ru',
+            description: 'Most traditional proxy service in Russia — try it now!'
+        }
     },
     name_label: "Name",
     bd_label: "Birthday",

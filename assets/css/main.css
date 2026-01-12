@@ -27,7 +27,7 @@ body, #app {
 }
 
 #app {
-    @apply relative min-w-full h-fit! print:w-full! md:max-w-[700px] xl:max-w-[1080px] mt-[48px] md:mt-[96px] outline-1 print:outline-0 overflow-visible! min-h-[calc(100dvh-48px)] md:min-h-[calc(100dvh-96px-194px)]
+    @apply relative min-w-full h-fit! print:w-full! md:max-w-[1000px] xl:max-w-[1200px] mt-[48px] md:mt-[96px] outline-1 print:outline-0 overflow-visible! min-h-[calc(100dvh-48px)] md:min-h-[calc(100dvh-96px-194px)]
 }
 
 footer {

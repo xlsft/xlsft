@@ -9,7 +9,7 @@
 
 <template>
     <SectionHeader id="blog" class="print:hidden" style="background-image: url('/patterns/x-equals.svg');" hover-style="background-image: url('/patterns/x-equals-hover.svg');"/>
-    <section class="grid gap-[24px] xl:grid-cols-3  grid-cols-1">
+    <section class="grid gap-[24px] xl:grid-cols-3 grid-cols-1 print:hidden">
         <div class="border min-h-[300px] hover:opacity-50 cursor-nw-resize!" @click="router.push(`/blog${item.path}`)" v-if="data" v-for="item in data.map((v: any) => ({ ...v, body: undefined }))">
             <img :src="(item.meta.image as string)" class="w-full aspect-video border-b"/>
             <div class="flex flex-col p-[12px] gap-[8px]">
