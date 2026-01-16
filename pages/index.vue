@@ -6,6 +6,11 @@
     import Experience from '~/components/blocks/Experience.vue';
 
     import Proxy from '~/components/blocks/Proxy.vue';
+    
+    onMounted(() => {
+        const lang = useRoute().query.lang?.toString() || 'ru'
+        if (['en','ru'].includes(lang)) useI18n().setLocale(lang as any)
+    })
 </script>
 
 <template>

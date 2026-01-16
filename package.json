@@ -23,6 +23,7 @@
         "@nuxt/content": "^3.7.1",
         "@nuxtjs/i18n": "9.5.6",
         "@tailwindcss/vite": "^4.1.11",
+        "@tiptap/core": "3.15.3",
         "@vueuse/core": "^13.5.0",
         "@xlsft/nuxt": "npm:@jsr/xlsft__nuxt@^1.1.33",
         "better-sqlite3": "^12.4.1",
