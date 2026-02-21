@@ -1,0 +1,80 @@
+:root {
+    --ui-radius: 0px;
+    --ui-container: 1400px;
+    --ui-header-height: 54px;
+    --ui-bottom-bar-height: 54px;
+    --ui-viewport-height: calc(100dvh - var(--ui-header-height));
+    --ui-container-height: calc(100dvh - var(--ui-header-height) - calc(var(--spacing) * 24));
+}
+
+body {
+    background: var(--ui-bg) !important;
+}
+
+* {
+    border-color: var(--ui-border);
+}
+
+:root, .dark {
+    --ui-primary: var(--color-blue-500);
+    --ui-secondary: var(--color-blue-800);
+    --ui-success: var(--color-blue-500);
+    --ui-info: var(--color-blue-500);
+    --ui-warning: var(--color-orange-500);
+    --ui-error: var(--color-rose-500);
+    --ui-neutral: var(--color-neutral-500);
+
+    --ui-text-dimmed: var(--color-neutral-700);
+    --ui-text-muted: var(--color-neutral-700);
+    --ui-text-toned: var(--color-neutral-700);
+
+    --ui-border: #404040;
+}
+
+:root {
+
+    --ui-text: var(--color-black);
+    --ui-text-highlighted: var(--color-black);
+    --ui-text-inverted: var(--color-white);
+
+    --ui-bg: var(--color-white);
+    --ui-bg-muted: var(--color-white);
+    --ui-bg-elevated: var(--color-white);
+    --ui-bg-accented: var(--color-white);
+    --ui-bg-inverted: var(--color-black);
+    
+    --ui-border-accented: var(--color-neutral-800);
+    --ui-border-muted: var(--color-neutral-200);
+
+}
+
+.dark {
+    --ui-text: var(--color-white);
+    --ui-text-highlighted: var(--color-white);
+    --ui-text-inverted: var(--color-black);
+
+    --ui-bg: var(--color-black);
+    --ui-bg-muted: var(--color-sblack);
+    --ui-bg-elevated: var(--color-black);
+    --ui-bg-accented: var(--color-black);
+    --ui-bg-inverted: var(--color-white);
+
+    --ui-border-accented: var(--color-neutral-600);
+    --ui-border-muted: var(--color-neutral-800);
+}
+
+
+* ::selection {
+    color: var(--ui-text-inverted) !important;
+    background-color: var(--ui-primary) !important;
+}
+::selection {
+    color: var(--ui-text-inverted) !important;
+    background-color: var(--ui-primary) !important;
+}
+
+body {
+    --ui-bottom-bar-bottom: 0px;
+}; body:has([role="dialog"]) {
+    --ui-bottom-bar-bottom: calc(0px - var(--ui-bottom-bar-height));
+}
