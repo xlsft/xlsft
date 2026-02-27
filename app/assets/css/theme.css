@@ -1,0 +1,67 @@
+:root {
+    --ui-text: var(--color-black);
+    --ui-text-inverted: var(--color-white);
+
+    --ui-bg: var(--color-white);
+    --ui-bg-inverted: var(--color-black);
+}
+
+.dark {
+    --ui-text: var(--color-white);
+    --ui-text-inverted: var(--color-black);
+
+    --ui-bg: var(--color-black);
+    --ui-bg-inverted: var(--color-white);
+}
+
+:root, .dark {
+    --ui-radius: 0px;
+    --ui-container: 1200px;
+    --ui-header-height: 54px;
+    --ui-bottom-bar-height: 54px;
+    --ui-viewport-height: calc(100dvh - var(--ui-header-height));
+    --ui-container-height: calc(100dvh - var(--ui-header-height) - calc(var(--spacing) * 24));
+
+    --ui-primary: var(--color-blue-500);
+    --ui-secondary: var(--color-blue-500);
+
+    --ui-success: var(--color-emerald-500);
+    --ui-info: var(--color-cyan-500);
+    --ui-warning: var(--color-orange-500);
+    --ui-error: var(--color-rose-500);
+    --ui-neutral: #404040;
+
+    --ui-border: var(--ui-neutral);
+    --ui-border-accented: var(--ui-neutral);
+    --ui-border-muted: var(--ui-neutral);
+    --ui-text-dimmed: var(--ui-neutral);
+
+    --ui-bg-muted: var(--ui-bg);
+    --ui-bg-elevated: var(--ui-bg);
+    --ui-bg-accented: var(--ui-bg);
+
+    --ui-text-muted: var(--ui-text-dimmed);
+    --ui-text-toned: var(--ui-text-dimmed);
+    --ui-text-highlighted: var(--ui-text);
+}
+
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+} *::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    background: var(--ui-bg) !important;
+}
+
+* {
+    border-color: var(--ui-border);
+    outline-color: var(--ui-border);
+}
+
+* ::selection {
+    color: var(--color-white) !important;
+    background-color: var(--ui-primary) !important;
+}

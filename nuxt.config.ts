@@ -4,73 +4,42 @@ export default defineNuxtConfig({
     compatibilityDate: '2025-05-15',
     devtools: { enabled: true },
     css: ['~/assets/css/main.css'],  
-    vite: { plugins: [ tailwindcss() ], server: { allowedHosts: ['.ngrok-free.app'] } },
+    vite: { plugins: [ tailwindcss() as any ] },
     app: {
         head: {
             charset: 'utf-8',
             viewport: 'width=device-width, initial-scale=1',
-            title: 'xlsft`s cv',
+            title: 'Senior Frontend Software Engineer (Илья Торшин) – xlsft`s cv',
             meta: [
                 { property: 'og:type', content: 'website' },
-                { property: 'og:title', content: 'xlsft`s cv' },
+                { property: 'og:title', content: 'Senior Frontend Software Engineer (Илья Торшин) – xlsft`s cv' },
                 { property: 'og:url', content: 'https://xlsft.ru' },
                 { property: 'og:image', content: '/og_image.png' },
-                { property: 'og:description', content: 'An xlsft`s senior frontend software engineer CV' },
-                { property: 'business:contact_data:locality', content: 'Lipetsk' },
-                { property: 'business:contact_data:region', content: 'Lipetsk region' },
+                { property: 'og:description', content: 'Это мое резюме Senior Frontend Software Engineer' },
+                { property: 'business:contact_data:locality', content: 'Липецк' },
+                { property: 'business:contact_data:region', content: 'Липецкая область' },
                 { property: 'business:contact_data:postal_code', content: '398005' },
-                { property: 'business:contact_data:country_name', content: 'Russian Federation' },
-                { name: 'description', content: 'An xlsft`s senior frontend software engineer CV' },
-                { name: 'author', content: 'XL Software' },
-                { name: 'copyright', content: 'XL Software @ 2025' },
+                { property: 'business:contact_data:country_name', content: 'Россия' },
+                { name: 'description', content: 'Это мое резюме Senior Frontend Software Engineer' },
+                { name: 'author', content: 'xlsft' },
+                { name: 'copyright', content: `xlsft @ ${new Date().getFullYear()}` },
                 { name: 'robots', content: 'index, follow' }
             ],
             link: [
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
                 { rel: 'icon', type: 'image/png', href: '/favicon.png' },
-                { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-                { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-                { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap' }
             ]
         },
     },
-    modules: [
-        '@nuxtjs/i18n', 'yandex-metrika-module-nuxt3', '@nuxt/content',
-    ],
-    content: {
-        experimental: { sqliteConnector: 'native' },
-        database: {
-            type: 'postgres',
-            url: process.env.DATABASE_URL!,
-        },
-        preview: {
-            dev: true,
-            api: 'https://api.nuxt.studio',
-        },
-        build: {
-            markdown: {
-                highlight: {
-                    theme: 'github-dark-high-contrast'
-                }
-            }
-        }
-    },
+    modules: ['@nuxtjs/i18n', 'yandex-metrika-module-nuxt3', '@nuxt/ui', '@nuxtjs/sanity', '@nuxt/fonts', '@nuxtjs/seo'],
     i18n: {
         strategy: 'no_prefix',
-        locales: [
-            { code: 'en', language: 'en-US', file: 'en.ts' },
-            { code: 'ru', language: 'ru-RU', file: 'ru.ts' }
-        ],
-        defaultLocale: 'ru',
         compilation: {
             strictMessage: false,
         },
     },
-    runtimeConfig: {
-        mode: process.env.MODE || 'development',
-        db_url: process.env.DATABASE_URL,
-        tg_token: process.env.TG_TOKEN,
-        tg_user: process.env.TG_USER
+    ui: {
+        prefix: 'Nuxt',
     },
     yandexMetrika: {
         id: 103237740,
@@ -79,9 +48,13 @@ export default defineNuxtConfig({
         accurateTrackBounce: true,
         webvisor: true
     },
-    nitro: {
-        experimental: {
-            websocket: true
+    sanity: {
+        projectId: 'd5cxszmz',
+        apiVersion: '2026-02-27',
+        typegen: {
+            schemaTypesExport: './shared/types',
+            schemaTypesPath: './content/schema',
+            enabled: true
         }
-    },
+    }
 })
