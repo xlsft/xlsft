@@ -3,17 +3,29 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
-FROM base AS prod
-WORKDIR /app
+FROM base AS builder
+WORKDIR /app/main
 COPY .npmrc ./
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
-COPY . .
+
+COPY app ./
+COPY public ./
+COPY i18n ./
+COPY tsconfig.json ./
+COPY nuxt.config.ts ./
+COPY global.config.ts ./
+# COPY server ./
+RUN pnpm build
+
+WORKDIR /app/content
+COPY content/ ./
+RUN pnpm install --frozen-lockfile
 RUN pnpm build
 
 FROM base
 WORKDIR /app
-COPY --from=prod /app/node_modules /app/node_modules
-COPY --from=prod /app/.output /app/.output
-CMD ["node", ".output/server/index.mjs"]
+
+COPY --from=builder /app/.output/ /app/main
+CMD ["node", "main/server/index.mjs"]
