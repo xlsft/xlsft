@@ -19,6 +19,7 @@
     --ui-container: 1200px;
     --ui-header-height: 54px;
     --ui-bottom-bar-height: 54px;
+
     --ui-viewport-height: calc(100dvh - var(--ui-header-height));
     --ui-container-height: calc(100dvh - var(--ui-header-height) - calc(var(--spacing) * 24));
 
@@ -59,9 +60,14 @@ body {
 * {
     border-color: var(--ui-border);
     outline-color: var(--ui-border);
+    cursor: crosshair;
 }
 
 * ::selection {
     color: var(--color-white) !important;
     background-color: var(--ui-primary) !important;
+}
+
+a {
+    @apply text-sm! text-default/50! underline hover:opacity-50 transition-opacity cursor-nw-resize!
 }

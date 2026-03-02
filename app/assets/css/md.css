@@ -1,0 +1,51 @@
+.md {
+    @apply flex flex-col;
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-bold! leading-snug mb-2!;
+    }
+    h1 { @apply text-5xl! pb-2; }
+    h2 { @apply text-4xl! pb-1; }
+    h3 { @apply text-3xl!; }
+    h4 { @apply text-2xl!; }
+    h5, h6 { @apply text-xl; }
+
+    p { }
+
+    ul, ol {  }
+    li + li { }
+    ul ul, ol ol {  }
+
+    input[type="checkbox"] { @apply mr-2 accent-(--ui-primary); }
+
+    blockquote {
+        @apply border-l-4  pl-4 py-2 my-6 italic;
+    }
+
+    code {
+        @apply px-1 py-0.5 text-sm! font-mono outline-[1px] outline-(--ui-primary)! *:text-white! text-white! bg-(--ui-primary)/10;
+    }
+
+    pre {
+        @apply overflow-x-auto my-6 text-sm! outline-[1px] outline-(--ui-primary) p-[24px] bg-(--ui-primary)/10;
+        code {
+            @apply bg-transparent text-inherit p-0 outline-0!;
+        }
+    }
+
+    table {
+        @apply border-collapse mx-[24px] w-[calc(100%-48px)] text-sm! my-[12px];
+        th, td { @apply border px-3 py-2 text-left; }
+        th { @apply font-semibold; }
+    }
+
+    hr { @apply border-t my-8; }
+
+    img { @apply my-4 border max-w-[50dvh]!; }
+
+    sup { @apply text-xs! align-super; }
+
+    :is(span.emoji, img.emoji) { @apply align-middle h-[1.1em]; }
+
+    h2[id], h3[id] { @apply scroll-mt-24; }
+}

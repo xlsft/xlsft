@@ -31,14 +31,17 @@ import { useScroll } from '@vueuse/core';
 </script>
 
 <template>
-    <NuxtHeader class="transition-colors duration-500" :ui="{ container: 'max-w-dvw', root: header >= scroll.y.value && 'border-bg!' }">
+    <NuxtHeader class="transition-colors duration-500" :ui="{ container: 'max-w-dvw', root: `${header >= scroll.y.value && 'border-bg!'} max-lg:border-default!` }">
         <template #left>
             <AtomsLogo/>
         </template>
+        <template #toggle>
+            <MoleculesLocale/>
+        </template>
     </NuxtHeader>
-    <NuxtContainer  class="flex flex-col min-h-(--ui-viewport-height) py-12">
-        <div class="min-w-full min-h-full grow border relative flex flex-col">
-            <AtomsCross class="absolute top-0 left-0 opacity-50"/>
+    <NuxtContainer class="flex flex-col min-h-(--ui-viewport-height) py-12 max-lg:p-0!">
+        <div class="min-w-full min-h-full grow border max-lg:border-none relative flex flex-col">
+            <AtomsCross class="absolute top-0 left-0 opacity-50 max-lg:hidden"/>
             <MoleculesSectionHeader pattern="topography"/>
             <div class="w-full h-full grow flex flex-col overflow-x-hidden">
                 <slot/>

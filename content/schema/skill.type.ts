@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity'
+import { defineI18nField } from '../utils/defineI18nField'
 
 export default defineType({
     name: 'skill',
@@ -11,12 +12,19 @@ export default defineType({
             type: 'string',
         }),
         defineField({
+            name: 'type',
+            title: 'Type',
+            type: 'string',
+        }),
+        defineField({
             name: 'color',
             title: 'Color',
-            type: 'color',
-            options: {
-                disableAlpha: true,
-            }
+            type: 'string',
+        }),
+        defineField({
+            name: 'priority',
+            title: 'Priority',
+            type: 'number',
         })
     ],  
 })

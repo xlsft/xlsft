@@ -1,5 +1,10 @@
-import skill from "./skill.type";
+import skill from './skill.type'
+import summary from './summary.type'
+import link from './link.type'
+import experience from './experience.type'
 
-export default [
-    skill
+export const schemaTypes = [
+    skill, summary, link, experience
 ]
+
+export default schemaTypes

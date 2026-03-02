@@ -20,8 +20,10 @@
     },
     "dependencies": {
         "@nuxt/fonts": "0.14.0",
+        "@nuxt/image": "2.0.0",
         "@nuxt/ui": "4.5.0",
         "@nuxtjs/i18n": "9.5.6",
+        "@nuxtjs/mdc": "0.20.1",
         "@nuxtjs/sanity": "2.2.0",
         "@nuxtjs/seo": "3.4.0",
         "@tailwindcss/vite": "^4.1.11",
@@ -36,6 +38,7 @@
         "yandex-metrika-module-nuxt3": "^1.5.3"
     },
     "devDependencies": {
+        "@types/bytes": "^3.1.5",
         "typescript": "^5.8.3",
         "vue-tsc": "^3.0.1"
     }
