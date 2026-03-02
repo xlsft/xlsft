@@ -1,12 +1,13 @@
 import { defineConfig } from 'sanity'
 import schema from './schema'
 import plugins from './sanity.plugins'
+import config from '../global.config'
 
 export default defineConfig({
     name: 'default',
-    title: 'xlsft`s cv',
+    title: config.head.title,
 
-    projectId: 'd5cxszmz',
+    projectId: config.cms.project,
     dataset: 'production',
     basePath: '/admin',
     plugins,

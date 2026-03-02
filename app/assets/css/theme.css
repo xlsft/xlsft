@@ -4,6 +4,8 @@
 
     --ui-bg: var(--color-white);
     --ui-bg-inverted: var(--color-black);
+
+    --ui-neutral: #c2c2c2;
 }
 
 .dark {
@@ -12,6 +14,8 @@
 
     --ui-bg: var(--color-black);
     --ui-bg-inverted: var(--color-white);
+
+    --ui-neutral: #404040;
 }
 
 :root, .dark {
@@ -24,13 +28,13 @@
     --ui-container-height: calc(100dvh - var(--ui-header-height) - calc(var(--spacing) * 24));
 
     --ui-primary: var(--color-blue-500);
-    --ui-secondary: var(--color-blue-500);
+    --ui-secondary: var(--color-blue-300);
 
     --ui-success: var(--color-emerald-500);
     --ui-info: var(--color-cyan-500);
     --ui-warning: var(--color-orange-500);
     --ui-error: var(--color-rose-500);
-    --ui-neutral: #404040;
+    
 
     --ui-border: var(--ui-neutral);
     --ui-border-accented: var(--ui-neutral);
@@ -69,5 +73,5 @@ body {
 }
 
 a {
-    @apply text-sm! text-default/50! underline hover:opacity-50 transition-opacity cursor-nw-resize!
+    @apply text-sm! text-default/50! underline hover:opacity-50 transition-opacity cursor-nw-resize! text-nowrap
 }

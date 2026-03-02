@@ -1,0 +1,8 @@
+<svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <pattern id="tile-architect" patternUnits="userSpaceOnUse" width="101" height="199">
+            <path d="M100 199V0H99V1.99L0 199H1.12L99 4.22V199H100ZM0 2H0.120003L1.12 0H0V2Z" fill="var(--pattern-color)" fill-opacity="1" fill-rule="evenodd"/>
+        </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#tile-architect)" />
+</svg>

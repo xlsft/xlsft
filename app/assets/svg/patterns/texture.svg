@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200">
+    <defs>
+        <pattern id="tile-texture" patternUnits="userSpaceOnUse" width="4" height="4">
+            <path fill="var(--pattern-color)" fill-opacity="1" d="M1 3h1v1H1V3zm2-2h1v1H3V1z"/>
+        </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#tile-texture)" />
+</svg>

@@ -10,7 +10,13 @@
     h4 { @apply text-2xl!; }
     h5, h6 { @apply text-xl; }
 
-    p { }
+    p { 
+        @apply font-[100]!;
+    }
+
+    strong {
+        @apply font-black!;
+    }
 
     ul, ol {  }
     li + li { }
@@ -48,4 +54,8 @@
     :is(span.emoji, img.emoji) { @apply align-middle h-[1.1em]; }
 
     h2[id], h3[id] { @apply scroll-mt-24; }
+
+    a {
+        @apply border-none!;
+    }
 }
