@@ -6,12 +6,17 @@
     const { locale, setLocale, locales: i18nLocales } = useI18n()
     const scroll = useScroll(document)
     const header = computed(() => window ? parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--ui-header-height')) : 0)
+    const config = useRuntimeConfig().public.config
+
+    useSeoMeta({
+        titleTemplate: chunk => `${config.head.title}${chunk ? ` — ${chunk}` : ``}`
+    })
 </script>
 
 <template>
     <NuxtHeader class="transition-colors duration-500" :ui="{ container: 'max-w-dvw', root: `${header >= scroll.y.value && 'border-bg!'} max-lg:border-default!` }">
         <template #left>
-            <div v-html="Logo"/>
+            <NuxtLink to="/" v-html="Logo"/>
         </template>
         <template #toggle>
             <NuxtColorModeButton variant="subtle" :ui="{ base: '*:cursor-nw-resize! cursor-nw-resize! hover:opacity-75! transition-opacity' }"/>
@@ -30,16 +35,7 @@
     </NuxtHeader>
     <NuxtContainer class="flex flex-col min-h-(--ui-viewport-height) py-12 max-lg:p-0!">
         <div class="min-w-full min-h-full grow border max-lg:border-none relative flex flex-col">
-            <MoleculesSectionHeader pattern="lines-in-motion" class="max-lg:hidden">
-                <template #outer>
-                    <div class="absolute top-0 left-0 ">
-                        <div class="w-[12px] h-[12px] relative *:w-px *:h-full *:bg-(--ui-bg-inverted)/50 *:group-hover/header:bg-(--ui-primary) *:absolute *:-top-[6px] *:transition-colors">
-                            <div/>
-                            <div class="rotate-90"/>
-                        </div>
-                    </div>
-                </template>
-            </MoleculesSectionHeader>
+            <div class="w-full" id="container"/>
             <div class="w-full h-full grow flex flex-col overflow-x-hidden">
                 <slot/>
             </div>
