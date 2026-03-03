@@ -22,6 +22,11 @@ export default defineType({
             title: 'Thumbnail',
             type: 'image',
         }),
+        defineThemeField({
+            name: 'logo',
+            title: 'Project logo',
+            type: 'image',
+        }),
         defineI18nField({
             name: 'description',
             title: 'Small project description',
@@ -33,10 +38,21 @@ export default defineType({
             type: 'array',
             of: [{ type: 'image' }]
         }),
+        defineField({
+            name: 'bg',
+            title: 'Background color for images carousel',
+            type: 'color',
+        }),
         defineI18nField({
             name: 'about',
             title: 'About project',
             type: 'markdown'
+        }),
+        defineField({
+            name: 'related',
+            title: 'Related projects',
+            type: 'array',
+            of: [{ type: 'reference', to: [{ type: 'project' }] }]
         }),
         defineI18nField({
             name: 'status',
@@ -46,6 +62,11 @@ export default defineType({
         defineField({
             name: 'link',
             title: 'Project link',
+            type: 'string'
+        }),
+        defineField({
+            name: 'repo',
+            title: 'Github repo (ex: xlsft/photon)',
             type: 'string'
         }),
         defineField({
