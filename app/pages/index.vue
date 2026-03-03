@@ -1,6 +1,6 @@
 <script setup lang="ts">
-    import { useCase } from '@xlsft/nuxt'
-
+    import Skeleton from '~/assets/svg/skeleton.svg'
+    
     const { t, locale } = useI18n()
 
     const { data } = await useSanityLocaleQuery(groq`{
@@ -47,8 +47,8 @@
         const data = { total, from, to, now: !_to, months, years }
         return {
             duration() {  
-                return (data.years > 0 ? useCase(data.years, t('years.one'), t('years.two'), t('years.more')) + ' ' : '') + 
-                useCase(data.months, t('months.one'), t('months.two'), t('months.more')) 
+                return (data.years > 0 ? useNumberCase(data.years, t('years.one'), t('years.two'), t('years.more')) + ' ' : '') + 
+                useNumberCase(data.months, t('months.one'), t('months.two'), t('months.more')) 
             },
             period() {
                 const formatter = new Intl.DateTimeFormat(locale.value, { month: 'long' })
@@ -87,7 +87,7 @@
                 <NuxtImg 
                     :src="data.summary.image" 
                     class="h-fit w-100 min-lg:min-w-100 max-sm:w-full max-lg:w-70 transition-all" 
-                    placeholder="/skeleton.svg" 
+                    :placeholder="Skeleton" 
                     placeholder-class="animate-pulse blur-lg scale-110"
                 />
             </div>
@@ -138,22 +138,20 @@
                 </div>
             </section>
         </template>
-        <template>
-            <MoleculesSectionHeader pattern="lines-in-motion">
-                {{ t('sections.projects') }}
-            </MoleculesSectionHeader>
-            <section class="p-8 max-lg:p-4 flex max-lg:flex-col-reverse gap-4 relative">
-                <NuxtBlogPosts>
-                    <NuxtBlogPost
-                        title="Introducing Nuxt Icon v1"
-                        description="Discover Nuxt Icon v1 - a modern, versatile, and customizable icon solution for your Nuxt projects."
-                        image="https://nuxt.com/assets/blog/nuxt-icon/cover.png"
-                        date="2024-11-25"
-                        to="https://nuxt.com/blog/nuxt-icon-v1-0"
-                        target="_blank"
-                    />
-                </NuxtBlogPosts>
-            </section>
-        </template>
+        <MoleculesSectionHeader pattern="graph-paper">
+            <div>{{ t('sections.projects') }}</div>
+        </MoleculesSectionHeader>
+        <section class="p-8 max-lg:p-4 flex max-lg:flex-col-reverse gap-4 relative">
+            <NuxtBlogPosts>
+                <NuxtBlogPost
+                    title="Introducing Nuxt Icon v1"
+                    description="Discover Nuxt Icon v1 - a modern, versatile, and customizable icon solution for your Nuxt projects."
+                    image="https://nuxt.com/assets/blog/nuxt-icon/cover.png"
+                    date="2024-11-25"
+                    to="https://nuxt.com/blog/nuxt-icon-v1-0"
+                    target="_blank"
+                />
+            </NuxtBlogPosts>
+        </section>
     </template>
 </template>

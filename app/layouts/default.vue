@@ -1,4 +1,5 @@
 <script setup lang="ts">
+    import Logo from '~/assets/svg/logo.svg?raw'
     import { useScroll } from '@vueuse/core';   
     import * as locales from '@nuxt/ui/locale'
 
@@ -10,7 +11,7 @@
 <template>
     <NuxtHeader class="transition-colors duration-500" :ui="{ container: 'max-w-dvw', root: `${header >= scroll.y.value && 'border-bg!'} max-lg:border-default!` }">
         <template #left>
-            <AtomsLogo/>
+            <div v-html="Logo"/>
         </template>
         <template #toggle>
             <NuxtColorModeButton variant="subtle" :ui="{ base: '*:cursor-nw-resize! cursor-nw-resize! hover:opacity-75! transition-opacity' }"/>
@@ -29,8 +30,16 @@
     </NuxtHeader>
     <NuxtContainer class="flex flex-col min-h-(--ui-viewport-height) py-12 max-lg:p-0!">
         <div class="min-w-full min-h-full grow border max-lg:border-none relative flex flex-col">
-            <AtomsCross class="absolute top-0 left-0 opacity-50 max-lg:hidden"/>
-            <MoleculesSectionHeader pattern="lines-in-motion" class="max-lg:hidden"/>
+            <MoleculesSectionHeader pattern="lines-in-motion" class="max-lg:hidden">
+                <template #outer>
+                    <div class="absolute top-0 left-0 ">
+                        <div class="w-[12px] h-[12px] relative *:w-px *:h-full *:bg-(--ui-bg-inverted)/50 *:group-hover/header:bg-(--ui-primary) *:absolute *:-top-[6px] *:transition-colors">
+                            <div/>
+                            <div class="rotate-90"/>
+                        </div>
+                    </div>
+                </template>
+            </MoleculesSectionHeader>
             <div class="w-full h-full grow flex flex-col overflow-x-hidden">
                 <slot/>
             </div>
