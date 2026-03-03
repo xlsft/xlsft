@@ -62,6 +62,13 @@ export default defineNuxtConfig({
             anchorLinks: false
         }
     },
+    colorMode: {
+        preference: 'dark',
+        fallback: 'dark',
+    },
+    runtimeConfig: {
+        public: { config }
+    },
     yandexMetrika: {
         id: config.metrics.yandex,
         clickmap: true,
@@ -72,5 +79,8 @@ export default defineNuxtConfig({
     sanity: {
         projectId: config.cms.project,
         apiVersion: config.cms.api,
+    },
+    experimental: {
+        typescriptPlugin: true
     }
 })
