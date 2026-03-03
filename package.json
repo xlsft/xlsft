@@ -27,7 +27,6 @@
         "@nuxtjs/seo": "3.4.0",
         "@tailwindcss/vite": "^4.1.11",
         "@vueuse/core": "^13.5.0",
-        "@xlsft/nuxt": "npm:@jsr/xlsft__nuxt@^1.1.33",
         "bytes": "^3.1.2",
         "date-fns": "^4.1.0",
         "nuxt": "^4.3.1",
@@ -40,5 +39,8 @@
         "@types/bytes": "^3.1.5",
         "typescript": "^5.8.3",
         "vue-tsc": "^3.0.1"
+    },
+    "overrides": {
+        "vite": "npm:rolldown-vite@latest"
     }
 }
