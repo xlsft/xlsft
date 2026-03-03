@@ -18,5 +18,10 @@ export default {
         total_positions_duration: 'Общий стаж в компании',
         position_description: 'Чем занимался на этой позиции',
         stack: 'Стек технологий',
+        tags: 'Теги',
+        about: 'О проекте'
     },
+    pages: {
+        index: 'Главная',
+    }
 }

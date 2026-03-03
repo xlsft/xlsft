@@ -18,5 +18,10 @@ export default {
         total_positions_duration: 'Total duration',
         position_description: 'Job description',
         stack: 'Technology stack',
+        tags: 'Tags',
+        about: 'About'
     },
+    pages: {
+        index: 'Home',
+    }
 }
