@@ -1,5 +1,6 @@
 import { defineField, defineType } from 'sanity'
 import { defineI18nField } from '../utils/defineI18nField'
+import { defineThemeField } from '../utils/defineThemeField'
 
 export default defineType({
     name: 'project',
@@ -16,7 +17,7 @@ export default defineType({
             title: 'Project name',
             type: 'string'
         }),
-        defineField({
+        defineThemeField({
             name: 'thumbnail',
             title: 'Thumbnail',
             type: 'image',
