@@ -8,7 +8,7 @@ export default {
         yandex: 103237740
     },
     head: {
-        title: 'Senior Frontend Engineer (Илья Торшин) – xlsft`s cv',
+        title: 'Senior Frontend Engineer (Илья Торшин)',
         description: 'Senior Frontend Engineer с 5+ годами опыта. Работаю с Vue, React и TypeScript, создаю масштабируемые интерфейсы и высоконагруженные приложения',
         url: 'https://xlsft.ru',
         author: 'xlsft',
