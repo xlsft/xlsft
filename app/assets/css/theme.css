@@ -73,5 +73,9 @@ body {
 }
 
 a {
-    @apply text-sm! text-default/50! underline hover:opacity-50 transition-opacity cursor-nw-resize! text-nowrap
+    @apply text-sm! text-default/50! underline hover:opacity-50 transition-opacity cursor-nw-resize! *:cursor-nw-resize! text-nowrap *:pointer-events-none
+}
+
+button {
+    @apply cursor-nw-resize! *:cursor-nw-resize! hover:opacity-75 transition-opacity
 }
