@@ -63,9 +63,6 @@ export default defineNuxtConfig({
     mdc: {
         headings: {
             anchorLinks: false
-        },
-        components: {
-            
         }
     },
     colorMode: {
