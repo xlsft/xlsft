@@ -60,6 +60,9 @@ export default defineNuxtConfig({
     mdc: {
         headings: {
             anchorLinks: false
+        },
+        components: {
+            
         }
     },
     colorMode: {
@@ -80,7 +83,15 @@ export default defineNuxtConfig({
         projectId: config.cms.project,
         apiVersion: config.cms.api,
     },
+    sitemap: {
+        sources: [
+            '/api/sitemap',
+        ]
+    },
     experimental: {
         typescriptPlugin: true
+    },
+    ogImage: {
+        componentDirs: ['og']
     }
 })

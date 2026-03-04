@@ -6,16 +6,7 @@
     "scripts": {
         "build": "nuxt build",
         "dev": "nuxt dev",
-        "generate": "nuxt generate",
-        "preview": "nuxt preview",
-        "postinstall": "nuxt prepare",
-        "db:generate": "drizzle-kit generate",
-        "db:migrate": "drizzle-kit migrate",
-        "db:push": "drizzle-kit push",
-        "db:pull": "drizzle-kit pull",
-        "db:check": "drizzle-kit check",
-        "db:up": "drizzle-kit up",
-        "db:studio": "drizzle-kit studio"
+        "postinstall": "nuxt prepare"
     },
     "dependencies": {
         "@nuxt/fonts": "0.14.0",
@@ -26,10 +17,10 @@
         "@nuxtjs/sanity": "2.2.0",
         "@nuxtjs/seo": "3.4.0",
         "@tailwindcss/vite": "^4.1.11",
+        "@types/node": "^25.3.3",
         "@vueuse/core": "^13.5.0",
         "bytes": "^3.1.2",
         "date-fns": "^4.1.0",
-        "ky": "^1.14.3",
         "nuxt": "^4.3.1",
         "tailwindcss": "^4.1.11",
         "vue": "^3.5.17",
