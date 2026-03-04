@@ -12,14 +12,18 @@ export default {
     present: 'Настоящее время',
     sections: {
         experience: 'Коммерческий опыт',
-        projects: 'Проекты'
+        education: 'Образование',
+        projects: 'Проекты',
+        about_project: 'О проекте',
     },
     labels: {
         total_positions_duration: 'Общий стаж в компании',
         position_description: 'Чем занимался на этой позиции',
         stack: 'Стек технологий',
         tags: 'Теги',
-        about: 'О проекте'
+        about: 'О проекте',
+        links: 'Ссылки',
+        contact_me: 'Свяжитесь со мной!'
     },
     pages: {
         index: 'Главная',

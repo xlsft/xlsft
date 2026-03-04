@@ -12,14 +12,18 @@ export default {
     present: 'Present',
     sections: {
         experience: 'Experience',
-        projects: 'Projects'
+        education: 'Education',
+        projects: 'Projects',
+        about_project: 'About project',
     },
     labels: {
         total_positions_duration: 'Total duration',
         position_description: 'Job description',
         stack: 'Technology stack',
         tags: 'Tags',
-        about: 'About'
+        about: 'About',
+        links: 'Links',
+        contact_me: 'Contact me!'
     },
     pages: {
         index: 'Home',
