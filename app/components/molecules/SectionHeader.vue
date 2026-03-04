@@ -8,6 +8,5 @@
             <slot/>
         </h2>
         <OrganismsContactMe class="z-3" :id v-if="$slots.default && !props.noContact"/>
-        <slot name="outer"/>
     </AtomsPattern>
 </template>

@@ -6,11 +6,8 @@
 
     useSeoMeta({ title: t('pages.index') })
     
-    defineOgImage({
-        component: 'Home.takumi',
-        props: {
-            title: 'Is this thing on?'
-        }
+    defineOgImageComponent('Index', {
+        title: 'Is this thing on?'
     })
     
     const { data } = await useSanityDynamicQuery(groq`{
@@ -90,18 +87,7 @@
 </script>
 
 <template>
-    <Teleport to="#container">
-        <MoleculesSectionHeader pattern="lines-in-motion" class="max-lg:hidden">
-            <template #outer>
-                <div class="absolute top-0 left-0 ">
-                    <div class="w-[12px] h-[12px] relative *:w-px *:h-full *:bg-(--ui-bg-inverted)/50 *:group-hover/header:bg-(--ui-primary) *:absolute *:-top-[6px] *:transition-colors">
-                        <div/>
-                        <div class="rotate-90"/>
-                    </div>
-                </div>
-            </template>
-        </MoleculesSectionHeader>
-    </Teleport>
+    <MoleculesSectionHeader pattern="lines-in-motion" class="max-lg:hidden"/>
     <template v-if="data">
         <section class="p-8 max-lg:p-4 flex max-lg:flex-col-reverse gap-4 relative" v-if="data.summary">
             <div class="flex gap-2 flex-col absolute max-lg:static right-8 bottom-8 *:text-right max-lg:*:text-left">

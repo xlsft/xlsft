@@ -4,6 +4,7 @@
     import * as locales from '@nuxt/ui/locale'
 
     const { locale, setLocale, locales: i18nLocales } = useI18n()
+    const theme = useColorMode()
     const scroll = useScroll(document)
     const header = computed(() => window ? parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--ui-header-height')) : 0)
     const config = useRuntimeConfig().public.config
@@ -55,7 +56,8 @@
     }`)
 
     useSeoMeta({
-        titleTemplate: chunk => `${config.head.title}${chunk ? ` — ${chunk}` : ``}`
+        titleTemplate: chunk => `${config.head.title}${chunk ? ` — ${chunk}` : ``}`,
+        themeColor: config.globals.themeColor[theme.value],
     })
 
     useSchemaOrg([
@@ -148,7 +150,7 @@
     <NuxtContainer class="flex flex-col min-h-(--ui-viewport-height) py-12 max-lg:p-0!">
         <div class="min-w-full min-h-full grow border max-lg:border-none relative flex flex-col">
             <div class="w-full" id="container"/>
-            <div class="w-full h-full grow flex flex-col overflow-x-hidden">
+            <div class="w-full h-full grow flex flex-col">
                 <slot/>
             </div>
         </div>
