@@ -1,6 +1,6 @@
 import { defineField } from "sanity";
-
-const themes = ['dark', 'light'] as const
+import config from '../../global.config'
+const themes = config.globals.themes
 
 export const defineThemeField = (schemaField: { name: string, title: string, type: string }) => defineField({
     name: schemaField.name,

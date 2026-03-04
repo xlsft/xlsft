@@ -60,9 +60,10 @@ export default defineType({
             type: 'string'
         }),
         defineField({
-            name: 'link',
-            title: 'Project link',
-            type: 'string'
+            name: 'links',
+            title: 'Project links',
+            type: 'array',
+            of: [{ type: 'string' }]
         }),
         defineField({
             name: 'repo',
@@ -85,6 +86,11 @@ export default defineType({
             name: 'priority',
             title: 'Priority',
             type: 'number',
-        })
+        }),
+        defineI18nField({
+            name: 'copyright',
+            title: 'Project copyright (logo, name etc.)',
+            type: 'string'
+        }),
     ],
 })
