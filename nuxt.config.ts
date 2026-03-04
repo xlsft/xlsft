@@ -53,6 +53,9 @@ export default defineNuxtConfig({
             { code: 'en', language: 'en-US', file: 'en.ts' },
             { code: 'ru', language: 'ru-RU', file: 'ru.ts' }
         ],
+        bundle: {
+            optimizeTranslationDirective: false
+        }
     },
     ui: {
         prefix: 'Nuxt',
@@ -92,6 +95,9 @@ export default defineNuxtConfig({
         typescriptPlugin: true
     },
     ogImage: {
-        componentDirs: ['og']
+        componentDirs: ['og'],
+        defaults: {
+            renderer: 'satori'
+        }
     }
 })
