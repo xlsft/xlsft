@@ -6,6 +6,13 @@
 
     useSeoMeta({ title: t('pages.index') })
     
+    defineOgImage({
+        component: 'Home.takumi',
+        props: {
+            title: 'Is this thing on?'
+        }
+    })
+    
     const { data } = await useSanityDynamicQuery(groq`{
         "summary": *[_type == "summary"][0]{ 
             "content": content[$locale], 
@@ -40,12 +47,19 @@
             } | order(duration.from desc),
             "footer": footer[$locale],
         } | order(positions[0].duration.from desc),
-        "projectTags": array::unique(*[_type == "project"])[].tags
+        "education": *[_type == "education"] {
+            id, link, year,
+            "level": level[$locale],
+            "specialization": specialization[$locale],
+            "name": name[$locale],
+            "faculty": faculty[$locale],
+        } | order(year desc),
+        "projectTags": array::unique(*[_type == "project"].tags[]),
     }`)
 
     const projectFilters = ref<{ tags: string[] }>({ tags: [] })
     const { data: projects } = await useSanityDynamicQuery(groq`*[_type == "project" && (length($tags) == 0 || count(tags[@ in $tags]) > 0)] {
-        id, tags, repo,
+        id, tags, repo, priority,
         "name": name[$locale],
         "thumbnail": thumbnail[$theme].asset->url,
         "description": description[$locale]
@@ -73,7 +87,6 @@
             }
         }
     } 
-
 </script>
 
 <template>
@@ -105,11 +118,13 @@
                             group.type, 
                             group.items.sort((a: any, b: any) => b.priority - a.priority)
                         ]))"
+                        :key
                         class="flex flex-wrap gap-1 items-center" 
                         :style="`order: -${items.map((v: any) => v.name).join('').length}`" >
                         <span class="text-default/50 text-xs w-full">{{ key }}</span>
                         <NuxtBadge 
                             v-for="item in items" 
+                            :key="item.name"
                             variant="outline" color="neutral"
                             :style="`--badge-color: ${item.color}`"
                             :ui="{ base: 'hover:bg-(--badge-color)/50 hover:ring-(--badge-color)!'}"
@@ -123,6 +138,7 @@
                 <NuxtBadge class="absolute top-2 right-2" variant="solid">{{ data.summary.status }}</NuxtBadge>
                 <NuxtImg 
                     :src="data.summary.image" 
+                    :alt="'Photo'"
                     class="h-fit w-100 min-lg:min-w-100 max-sm:w-full max-lg:w-70 transition-all" 
                     :placeholder="Skeleton" 
                     placeholder-class="animate-pulse blur-lg scale-150"
@@ -130,7 +146,7 @@
             </div>
         </section>
         <template v-if="data.experience?.length">
-            <MoleculesSectionHeader pattern="architect">
+            <MoleculesSectionHeader pattern="architect" id="experience">
                 {{ t('sections.experience') }}<br>
                 <span class="text-sm! text-default/50">({{ experience(
                     data.experience.at(-1)?.positions.at(-1)?.duration.from, 
@@ -138,9 +154,9 @@
                 ).duration() }})</span>
             </MoleculesSectionHeader>
             <section class="p-8 max-lg:p-4 flex flex-col relative">
-                <div class="flex flex-col gap-8 relative pl-20 pb-6 last:pb-0 max-lg:pl-0!" v-for="company, i in data.experience">
+                <div class="flex flex-col gap-8 relative pl-20 pb-6 last:pb-0 max-lg:pl-0!" :key="company.name" v-for="company, i in data.experience">
                     <div class="h-full w-px bg-border absolute top-0 left-6 max-lg:hidden" v-if="data.experience.length !== Number(i) + 1"></div>
-                    <AtomsPattern name="texture" class="pointer-events-none w-12 h-12 border absolute! top-0 left-0 bg-default z-2 flex items-center justify-center text-default/50 text-sm! max-lg:hidden">{{ (data.experience.length - Number(i) - 1).toString().padStart(2, '0') }}</AtomsPattern>
+                    <AtomsPattern name="texture" class="[&_div]:scale-3000 overflow-hidden pointer-events-none w-12 h-12 border absolute! top-0 left-0 bg-default z-2 flex items-center justify-center text-default/50 text-sm! max-lg:hidden">{{ (data.experience.length - Number(i) - 1).toString().padStart(2, '0') }}</AtomsPattern>
 
                     <div class="flex flex-col gap-4 grow">
                         <NuxtImg v-if="company.logo" :src="company.logo" class="h-12 max-lg:h-6 w-fit flex items-center text-2xl font-bold" loading="lazy" :alt="company.name"/>
@@ -156,13 +172,14 @@
                             <NuxtLink v-if="company.link" :to="company.link" target="_blank" class="text-default/50">{{ company.link }}</NuxtLink>
                         </div>
 
-                        <div class="flex flex-col relative gap-2" v-for="position in company.positions">
+                        <div class="flex flex-col relative gap-2" :key="position.name" v-for="position in company.positions">
                             <div class="w-10 h-px bg-border absolute top-3 -left-14" v-if="company.positions.length > 1"></div>
                             <span class="text-lg font-bold">{{ position.name }} <span class="text-default/50">/ {{ experience(position.duration.from, position.duration.to).period() }}</span></span>
                             
                             <div class="flex flex-wrap gap-1">
                                 <NuxtBadge 
                                     v-for="item in position.skills" 
+                                    :key="item.name"
                                     variant="outline" color="neutral"
                                     :style="`--badge-color: ${item.color}`"
                                     :ui="{ base: 'hover:bg-(--badge-color)/50 hover:ring-(--badge-color)!'}"
@@ -182,60 +199,85 @@
                 </div>
             </section>
         </template>
-        <MoleculesSectionHeader pattern="graph-paper">
-            <div>{{ t('sections.projects') }}</div>
-        </MoleculesSectionHeader>
-        <section class="flex flex-col gap-4 relative">
-            <div class="w-full flex items-center justify-between border-b p-8 max-lg:p-4">
-                <span class="text-default/50 text-sm">{{ t('labels.tags') }}:</span>
-                <div class="flex flex-wrap gap-1 justify-center items-center sm:justify-end">
-                    <NuxtButton 
-                        v-for="tag in data.projectTags?.[0] || []" 
-                        variant="outline" 
-                        color="neutral" 
-                        size="sm"
-                        @click="projectFilters.tags.includes(tag) ? projectFilters.tags.splice(projectFilters.tags.findIndex(v => v === tag), 1) : projectFilters.tags.push(tag)"
+        <template v-if="data.education?.length">
+            <MoleculesSectionHeader pattern="plus" id="education">
+                <div>{{ t('sections.education') }}</div>
+            </MoleculesSectionHeader>
+            <section class="p-8 max-lg:p-4 flex flex-col relative">
+                <div class="flex flex-col relative pl-20 pb-6 last:pb-0 max-lg:pl-0! h-18 last:h-12 max-lg:h-fit!" v-for="education, i in data.education" :key="education.id">
+                    <AtomsPattern name="texture" class="[&_div]:scale-3000 overflow-hidden pointer-events-none w-12 h-12 border absolute! top-0 left-0 bg-default z-2 flex items-center justify-center text-default/50 text-sm! max-lg:hidden">{{ (data.education.length - Number(i) - 1).toString().padStart(2, '0') }}</AtomsPattern>
+                    <div class="h-full w-px bg-border absolute top-0 left-6 max-lg:hidden" v-if="data.education.length !== Number(i) + 1"></div>
+                    <div class="flex items-center justify-between gap-1 max-lg:items-start">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-bold">{{ education.name }} <span class="text-default/50">/ {{ education.faculty }} / {{ education.year }}</span></span>
+                        </div>
+                        <NuxtLink :to="education.link" target="_blank">{{ education.link }}</NuxtLink>
+                    </div>
+                    <span class="text-default/50">{{ education.level }}, {{ education.specialization }}</span>
+                </div>
+            </section>
+        </template>
+        <template v-if="projects?.length">
+            <MoleculesSectionHeader pattern="graph-paper" id="projects">
+                <div>{{ t('sections.projects') }}</div>
+            </MoleculesSectionHeader>
+            <section class="flex flex-col relative">
+                <div class="w-full flex items-center justify-between border-b p-8 max-lg:p-4" v-if="data.projectTags?.length">
+                    <span class="text-default/50 text-sm">{{ t('labels.tags') }}:</span>
+                    <div class="flex flex-wrap gap-1 justify-center items-center sm:justify-end">
+                        <NuxtButton 
+                            v-for="tag in data.projectTags || []" 
+                            :key="tag"
+                            variant="outline" 
+                            color="neutral" 
+                            size="sm"
+                            @click="() => { 
+                                if (!projectFilters.tags.includes(tag) && (projectFilters.tags.length + 1) === data.projectTags.length) { projectFilters.tags = []; return }
+                                if (projectFilters.tags.includes(tag)) projectFilters.tags.splice(projectFilters.tags.findIndex(v => v === tag), 1)
+                                else projectFilters.tags.push(tag)
+                            }"
+                            :ui="{
+                                base: projectFilters.tags.includes(tag) && 'ring-primary!'
+                            }"
+                        >
+                            {{ tag }}
+                        </NuxtButton>
+                    </div>
+                </div>
+                <NuxtBlogPosts class="p-8 max-lg:p-4" :ui="{ base: 'gap-4! p-8!' }">
+                    <NuxtBlogPost
+                        v-for="project in (projects || []).sort((a: any, b: any) => b.priority - a.priority)"
+                        :key="project.name"
+                        variant="outline"
+                        :image="project.thumbnail"
+                        @click="() => { router.push(`/${locale}/projects/${project.id}`) }"
                         :ui="{
-                            base: projectFilters.tags.includes(tag) && 'ring-primary!'
+                            header: 'border-b group-hover/blog-post:border-primary!', 
+                            image: 'grayscale group-hover/blog-post:grayscale-0 group-hover/blog-post:scale-105! transition-all',
+                            root: 'hover:ring-primary! *:cursor-nw-resize! cursor-nw-resize!',
+                            body: 'p-3! flex flex-col gap-1',
+                            description: 'm-0! flex flex-col gap-4 grow',
+                            title: 'text-sm!'
                         }"
                     >
-                        {{ tag }}
-                    </NuxtButton>
-                </div>
-            </div>
-            <NuxtBlogPosts class="p-8 max-lg:p-4">
-                <NuxtBlogPost
-                    v-for="project in projects || []"
-                    variant="outline"
-                    :title="project.name"
-                    :image="project.thumbnail"
-                    @click="() => { router.push(`/${locale}/projects/${project.id}`) }"
-                    :ui="{
-                        header: 'border-b group-hover/blog-post:border-primary!', 
-                        image: 'grayscale group-hover/blog-post:grayscale-0 group-hover/blog-post:scale-105! transition-all',
-                        root: 'hover:ring-primary! *:cursor-nw-resize! cursor-nw-resize!',
-                        body: 'p-3! flex flex-col gap-1',
-                        description: 'm-0! flex flex-col gap-4',
-                        title: 'text-sm!'
-                    }"
-                >
-                    <template #title>
-                        <div class="flex items-center justify-between w-full gap-2">
-                            <span>{{ project.name }}</span>
-                            <div class="flex items-center gap-1 *:text-yellow-500" v-if="projectStars[project.repo]">
-                                <NuxtIcon name="mingcute:star-line"/>
-                                <span>{{ projectStars[project.repo] }}</span>
+                        <template #title>
+                            <div class="flex items-center justify-between w-full gap-2">
+                                <span>{{ project.name }}</span>
+                                <div class="flex items-center gap-1 *:text-yellow-500" v-if="projectStars[project.repo]">
+                                    <NuxtIcon name="mingcute:star-fill"/>
+                                    <span>{{ projectStars[project.repo] }}</span>
+                                </div>
                             </div>
-                        </div>
-                    </template>
-                    <template #description>
-                        <MDC :value="project.description" class="md *:m-0! *:text-xs! *:leading-4!"/>
-                        <div class="flex flex-wrap gap-1">  
-                            <NuxtBadge v-for="tag in project.tags" variant="outline" color="neutral" size="sm">{{ tag }}</NuxtBadge>
-                        </div>
-                    </template>
-                </NuxtBlogPost>
-            </NuxtBlogPosts>
-        </section>
+                        </template>
+                        <template #description>
+                            <MDC :value="project.description" class="md *:m-0! *:text-xs! *:leading-4! grow"/>
+                            <div class="flex flex-wrap gap-1">  
+                                <NuxtBadge v-for="tag in project.tags" :key="tag" variant="outline" color="neutral" size="sm">{{ tag }}</NuxtBadge>
+                            </div>
+                        </template>
+                    </NuxtBlogPost>
+                </NuxtBlogPosts>
+            </section>
+        </template>
     </template>
 </template>
