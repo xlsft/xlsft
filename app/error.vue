@@ -1,14 +1,14 @@
 <script setup lang="ts">
     import type { NuxtError } from '#app';
-
     const props = defineProps({ error: Object as () => NuxtError })
+    useRobotsRule({ noindex: true })
 </script>
 
 <template>
     <div class="error">
         <h1>{{ error?.statusCode }}</h1>
-        <div>{{ error?.message }}</div>
-        <button @click="clearError({ redirect: '/' })">return 'home_page'</button>
+        <span>{{ error?.message }}</span>
+        <NuxtButton size="xl" @click="clearError({ redirect: '/' })">return '/'</NuxtButton>
     </div>
 </template>
 
@@ -23,5 +23,13 @@
         justify-content: center;
         position: relative;
         transition: all 0.4s ease-in-out;
+        h1 {
+            font-size: 128px !important;
+        }
+        span {
+            opacity: 50% !important;
+            position: absolute;
+            bottom: 24px; right: 24px;
+        }
     }
 </style>
