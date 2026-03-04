@@ -1,31 +1,56 @@
-FROM node:24-slim AS base
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+FROM oven/bun:alpine as base
 
-FROM base AS builder
-WORKDIR /app/main
-COPY .npmrc ./
+FROM base as builder
+
+WORKDIR /build/app
 COPY package*.json ./
-COPY pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-
+COPY bun.lock ./
+RUN bun install
 COPY app ./
 COPY public ./
 COPY i18n ./
 COPY tsconfig.json ./
 COPY nuxt.config.ts ./
 COPY global.config.ts ./
-# COPY server ./
-RUN pnpm build
+COPY server ./
+RUN bun run build
 
-WORKDIR /app/content
-COPY content/ ./
-RUN pnpm install --frozen-lockfile
-RUN pnpm build
+WORKDIR /build/content
+COPY content/ ./app
+COPY global.config.ts ./
+RUN bun install
+RUN bun run build
+COPY content/sanity.server.ts ./app/dist/server.ts
 
-FROM base
-WORKDIR /app
+FROM base as worker
 
-COPY --from=builder /app/.output/ /app/main
-CMD ["node", "main/server/index.mjs"]
+RUN apk add --no-cache supervisor
+RUN cat <<EOF > /etc/supervisord.conf
+[supervisord]
+nodaemon=true
+
+[program:app]
+command=bun /workers/app/server/index.mjs
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/dev/stdout
+stderr_logfile=/dev/stderr
+
+[program:content]
+command=bun serve /workers/content/server.ts
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/dev/stdout
+stderr_logfile=/dev/stderr
+EOF
+
+WORKDIR /workers
+
+COPY --from=builder /build/app/.output/ ./app
+COPY --from=builder /build/content/dist/ ./content
+
+ENTRYPOINT ["supervisord", "-c", "/etc/supervisord.conf"]
