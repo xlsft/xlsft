@@ -29,7 +29,7 @@
     }
 
     code {
-        @apply px-1 py-0.5 text-sm! font-mono outline-[1px] outline-(--ui-primary)! *:text-white! text-white! bg-(--ui-primary)/10;
+        @apply font-medium inline-flex items-center text-xs px-2 py-1 gap-1 rounded-md text-default bg-default!;
     }
 
     pre {
@@ -56,6 +56,6 @@
     h2[id], h3[id] { @apply scroll-mt-24; }
 
     a {
-        @apply border-none!;
+        @apply border-none! [font-size:unset]!;
     }
 }
