@@ -2,6 +2,10 @@ export default {
     globals: {
         themes: ['dark', 'light'],
         locales: ['ru', 'en'],
+        themeColor: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        }
     },
     cms: {
         project: 'd5cxszmz',
