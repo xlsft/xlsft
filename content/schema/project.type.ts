@@ -90,7 +90,7 @@ export default defineType({
         defineI18nField({
             name: 'copyright',
             title: 'Project copyright (logo, name etc.)',
-            type: 'string'
+            type: 'text'
         }),
     ],
 })

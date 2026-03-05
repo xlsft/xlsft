@@ -16,6 +16,11 @@ export default defineType({
             title: 'Label',
             type: 'string',
         }),
+        defineI18nField({
+            name: 'short',
+            title: 'Short label',
+            type: 'string',
+        }),
         defineField({
             name: 'to',
             title: 'To',

@@ -30,6 +30,11 @@ export default defineType({
             name: 'description',
             title: 'Description',
             type: 'string',
-        })
+        }),
+        defineI18nField({
+            name: 'legal',
+            title: 'Legal',
+            type: 'markdown',
+        }),
     ],
 })
