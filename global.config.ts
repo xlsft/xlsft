@@ -2,10 +2,21 @@ export default {
     globals: {
         themes: ['dark', 'light'],
         locales: ['ru', 'en'],
-        themeColor: {
+    },
+    theme: {
+        background: {
             dark: '#000000',
             light: '#FFFFFF'
-        }
+        },
+        font: {
+            dark: '#FFFFFF',
+            light: '#000000'
+        },
+        border: {
+            dark: '#404040',
+            light: '#c2c2c2'
+        },
+        accent: '#2b7fff'
     },
     cms: {
         project: 'd5cxszmz',
@@ -16,8 +27,6 @@ export default {
         yandex: 103237740
     },
     head: {
-        title: 'Senior Frontend Engineer (Илья Торшин)',
-        description: 'Senior Frontend Engineer с 5+ годами опыта. Работаю с Vue, React и TypeScript, создаю масштабируемые интерфейсы и высоконагруженные приложения',
         url: 'https://cv.xlsft.ru',
         author: 'xlsft',
         address: {
