@@ -55,7 +55,11 @@
         "seo": *[_type == "summary"][0]{
             "title": title[$locale],
             "description": description[$locale]
-        }
+        }, 
+        "allLinks": *[_type == "link"] {
+            "label": label[$locale],
+            "to": to
+        },
     }`)
 
     defineOgImage('AtomsOgIndex.takumi', {
