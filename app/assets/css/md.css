@@ -10,10 +10,6 @@
     h4 { @apply text-2xl!; }
     h5, h6 { @apply text-xl; }
 
-    p { 
-        @apply font-[100]!;
-    }
-
     strong {
         @apply font-black!;
     }
