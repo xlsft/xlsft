@@ -1,7 +1,7 @@
 import * as z from 'zod'
 import { Bot } from 'grammy'
 
-import MessagesAdminRequest from '#server/bot/messages/admin/request'
+import MessagesAdminRequest from '~~/bot/messages/admin/request'
 
 export default defineEventHandler(async (event) => {
 
