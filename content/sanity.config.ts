@@ -8,7 +8,7 @@ export default defineConfig({
     title: 'cms',
 
     projectId: config.cms.project,
-    dataset: 'production',
+    dataset: config.cms.dataset,
     basePath: '/admin',
     plugins,
     schema: {
