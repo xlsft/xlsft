@@ -1,12 +1,8 @@
 <div align="center">
-    <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="public/md/readme.svg">
-        <img src="public/md/readme_white.svg">
-    </picture>
     <a href="https://xlsft.ru" target="_blank" rel="noreferrer">
         <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="public/md/readme_button.svg">
-            <img src="public/md/readme_button_white.svg">
+            <source media="(prefers-color-scheme: dark)" srcset="http://localhost:3000/api/summary/ru/dark/image.png?width=2400">
+            <img src="http://localhost:3000/api/summary/ru/light/image.png?width=2400">
         </picture>
     </a>
 </div>
