@@ -9,16 +9,18 @@
     const header = computed(() => window ? parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--ui-header-height')) : 0)
     const config = useRuntimeConfig().public.config
 
-    const { data: schema } = await useSanityDynamicQuery(groq`{
+    const { data } = await useSanityDynamicQuery(groq`{
         "person": {
+            "title": *[_type == "summary"][0].title[$locale],
+            "description": *[_type == "summary"][0].description[$locale],
             "image": *[_type == "summary"][0].image.asset->url,
-            "email": *[_type == "link" && id == "email"][0].label.ru,
-            "phone": *[_type == "link" && id == "phone"][0].label.ru,
+            "email": *[_type == "link" && id == "email"][0].label[$locale],
+            "phone": *[_type == "link" && id == "phone"][0].label[$locale],
             "links": *[_type == "link"].to,
             "workplace": (*[_type == "experience"] | order(positions[0].duration.from desc) {
                 link,
-                "logo": logo.dark.asset->url,
-                "name": name.ru,
+                "logo": logo[$theme].asset->url,
+                "name": name[$locale],
                 "d": positions[0].duration.from
             })[0],
             "skills": *[_type == "skill"]{
@@ -26,11 +28,11 @@
             },
             "experience": *[_type == "experience"] {
                 id, link,
-                "name": name.ru,
-                "logo": logo.dark.asset->url,
-                "about": about.ru,
+                "name": name[$locale],
+                "logo": logo[$theme].asset->url,
+                "about": about[$locale],
                 "positions": positions[]{
-                    "name": name.ru,
+                    "name": name[$locale],
                     "description": description[$locale],
                     "skills": skills[]->{
                         name
@@ -40,49 +42,49 @@
             } | order(positions[0].duration.from desc),
             "education": *[_type == "education"] {
                 link,
-                "name": name.ru,
-                "faculty": faculty.ru,
+                "name": name[$locale],
+                "faculty": faculty[$locale],
             } | order(year desc)
         },
         "projects": *[_type == "project"] {
             id, priority,
-            "name": name.ru,
-            "thumbnail": thumbnail.dark.asset->url,
+            "name": name[$locale],
+            "thumbnail": thumbnail[$theme].asset->url,
             "stack": stack[]->{
                 name, type, color, priority
             } | order(priority desc),
-            "description": description.ru
+            "description": description[$locale]
         } | order(priority desc),
     }`)
 
-    useSeoMeta({
-        titleTemplate: chunk => `${config.head.title}${chunk ? ` — ${chunk}` : ``}`,
-        themeColor: config.globals.themeColor[theme.value],
+    if (data.value) useSeoMeta({
+        titleTemplate: chunk => `${data.value?.person?.title}${chunk ? ` — ${chunk}` : ``}`,
+        themeColor: config.theme.background[theme.value as 'dark' | 'light'],
     })
 
-    useSchemaOrg([
+    if (data.value) useSchemaOrg([
         definePerson({
             name: config.schema.person.fullname,
             givenName: config.schema.person.firstname,
             familyName: config.schema.person.lastname,
             alternateName: config.schema.person.initials,
-            image: schema.value.person.image,
-            description: config.head.description,
+            image: data.value.person.image,
+            description: data.value.person.description,
             jobTitle: config.schema.person.position,
-            telephone: schema.value.person.phone,
-            email: schema.value.person.email,
+            telephone: data.value.person.phone,
+            email: data.value.person.email,
             url: config.head.url,
-            sameAs: schema.value.person.links,
+            sameAs: data.value.person.links,
             worksFor: defineOrganization({
-                name: schema.value.person.workplace.name,
-                url: schema.value.person.workplace.link,
-                logo: schema.value.person.workplace.logo
+                name: data.value.person.workplace.name,
+                url: data.value.person.workplace.link,
+                logo: data.value.person.workplace.logo
             }),
-            knowsAbout: schema.value.person.skills?.flatMap((skill: any) => ({
+            knowsAbout: data.value.person.skills?.flatMap((skill: any) => ({
                 "@type": 'Thing',
                 name: skill.name
             })) || [],
-            hasOccupation: schema.value.person.experience.map((company: any) => company.positions.map((position: any) => ({
+            hasOccupation: data.value.person.experience.map((company: any) => company.positions.map((position: any) => ({
                 "@type": 'Occupation',
                 name: position.name,
                 description: company.about,
@@ -96,7 +98,7 @@
                     logo: company.logo || undefined
                 })
             }))),
-            "alumniOf": schema.value.education?.map((education: any) => ({
+            "alumniOf": data.value.education?.map((education: any) => ({
                 "@type": "EducationalOrganization",
                 name: education.name,
                 department: education.faculty,
@@ -105,7 +107,7 @@
         }),
         defineItemList({
             name: 'Проекты',
-            itemListElement: schema.value.projects.sort((a: any, b: any) => b.priority - a.priority).map((project: any, index: number) => ({
+            itemListElement: data.value.projects.sort((a: any, b: any) => b.priority - a.priority).map((project: any, index: number) => ({
                 "@type": project.repo ? 'SoftwareSourceCode' : 'CreativeWork',
                 position: index + 1,
                 name: project.name,
