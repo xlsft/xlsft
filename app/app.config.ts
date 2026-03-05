@@ -45,7 +45,7 @@ export default defineAppConfig({
         },
         formField: {
             slots: {
-                label: 'text-xs text-muted'
+                label: 'text-xs text-default/50'
             }
         },
         button: {
