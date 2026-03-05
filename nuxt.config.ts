@@ -6,22 +6,16 @@ export default defineNuxtConfig({
     devtools: { enabled: true },
     css: ['~/assets/css/main.css'],  
     vite: { plugins: [ tailwindcss() as any ] },
+    site: { url: config.head.url }, 
     app: {
         head: {
             charset: 'utf-8',
             viewport: 'width=device-width, initial-scale=1',
-            title: config.head.title,
             meta: [
-                { property: 'og:type', content: 'website' },
-                { property: 'og:title', content: config.head.title },
-                { property: 'og:url', content: config.head.url },
-                { property: 'og:image', content: '/og_image.png' },
-                { property: 'og:description', content: config.head.description },
                 { property: 'business:contact_data:locality', content: config.head.address.locality },
                 { property: 'business:contact_data:region', content: config.head.address.region },
                 { property: 'business:contact_data:postal_code', content: config.head.address.postal },
                 { property: 'business:contact_data:country_name', content: config.head.address.country },
-                { name: 'description', content: config.head.description },
                 { name: 'author', content: config.head.author },
                 { name: 'copyright', content: `${config.head.author} @ ${new Date().getFullYear()}` },
                 { name: 'robots', content: 'index, follow' }
@@ -31,6 +25,16 @@ export default defineNuxtConfig({
                 { rel: 'icon', type: 'image/png', href: '/favicon.png' },
             ]
         },
+    },
+    fonts: {
+        families: [
+            { 
+                name: 'Cascadia Mono', 
+                weights: [200, 300, 400, 500, 600, 700, 800, 900], 
+                global: true, 
+                provider: 'google' 
+            },
+        ],
     },
     hooks: {
         'imports:extend'(imports) {
@@ -42,7 +46,17 @@ export default defineNuxtConfig({
             }
         }
     },
-    modules: ['@nuxtjs/i18n', 'yandex-metrika-module-nuxt3', '@nuxt/ui', '@nuxtjs/sanity', '@nuxt/fonts', '@nuxtjs/seo', '@nuxt/image', '@nuxtjs/mdc'],
+    modules: [
+        '@nuxtjs/i18n', 
+        'yandex-metrika-module-nuxt3', 
+        '@nuxt/ui', 
+        '@nuxtjs/sanity', 
+        '@nuxt/fonts', 
+        '@nuxtjs/seo', 
+        '@nuxt/image', 
+        '@nuxtjs/mdc', 
+        'nuxt-og-image',
+    ],
     i18n: {
         strategy: 'prefix',
         compilation: {
@@ -92,9 +106,7 @@ export default defineNuxtConfig({
         typescriptPlugin: true
     },
     ogImage: {
-        componentDirs: ['og'],
-        defaults: {
-            renderer: 'satori'
-        }
+        componentDirs: ['atoms/og'],
+        zeroRuntime: true
     }
 })
