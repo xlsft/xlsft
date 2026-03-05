@@ -1,15 +1,23 @@
 <script setup lang="ts">
     import Logo from '~/assets/svg/logo.svg?raw'
+    import LogoMini from '~/assets/svg/logo-mini.svg?raw'
     import { useScroll } from '@vueuse/core';   
     import * as locales from '@nuxt/ui/locale'
 
-    const { locale, setLocale, locales: i18nLocales } = useI18n()
+    const { locale, setLocale, locales: i18nLocales, t } = useI18n()
     const theme = useColorMode()
     const scroll = useScroll(document)
     const header = computed(() => window ? parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--ui-header-height')) : 0)
     const config = useRuntimeConfig().public.config
 
     const { data } = await useSanityDynamicQuery(groq`{
+        "footer": {
+            "legal": *[_type == "summary"][0].legal[$locale],
+            "links": *[_type == "link"] {
+                "label": short[$locale],
+                "to": to
+            }
+        },
         "person": {
             "title": *[_type == "summary"][0].title[$locale],
             "description": *[_type == "summary"][0].description[$locale],
@@ -157,4 +165,29 @@
             </div>
         </div>
     </NuxtContainer>
+    <NuxtFooter :ui="{ container: 'lg:items-start!', right: 'lg:h-full! grow!', left: 'items-start! justify-start!s' }">
+        <template #left>
+            <div class="flex flex-col gap-4 *:text-[10px]! *:text-default/50 *:leading-5 max-w-100">
+                <div class="flex flex-col">
+                    <span>
+                        {{ config.schema.organization.legalName }} {{ t('labels.inn') }} {{ config.schema.organization.inn }} {{ t('labels.ogrn') }} {{ config.schema.organization.ogrn }}
+                    </span>
+                    <div class="flex w-full gap-1 flex-wrap opacity-50">
+                        <div class="flex items-center gap-1 flex-wrap group *:text-[10px]!" v-for="link in data.footer.links">
+                            <NuxtLink :to="link.to" target="_blank">{{ link.label }}</NuxtLink>
+                            <span class="group-last:hidden">*</span>
+                        </div>
+                    </div>
+                </div>
+
+                <MDC :value="data.footer.legal" class="md *:m-0! *:leading-5" />
+            </div>
+        </template>
+        <template #right>
+            <div class="flex flex-col items-end h-full gap-2 max-lg:items-center">
+                <NuxtLink to="/" v-html="LogoMini"/>
+                <span class="text-[10px]! text-default/50">{{ config.head.author }} @ {{ new Date().getFullYear() }}</span>
+            </div>
+        </template>
+    </NuxtFooter>
 </template>
