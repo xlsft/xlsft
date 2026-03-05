@@ -1,19 +1,20 @@
 export default {
     months: {
-        one: "месяц",
-        two: "месяца",
-        more: "месяцев",
+        one: 'месяц',
+        two: 'месяца',
+        more: 'месяцев',
     },
     years: {
-        one: "год",
-        two: "года",
-        more: "лет",
+        one: 'год',
+        two: 'года',
+        more: 'лет',
     },
     present: 'Настоящее время',
     sections: {
         experience: 'Коммерческий опыт',
         education: 'Образование',
         projects: 'Проекты',
+        related_projects: 'Связанные проекты',
         about_project: 'О проекте',
     },
     labels: {
@@ -27,5 +28,34 @@ export default {
     },
     pages: {
         index: 'Главная',
+    },
+    form: {
+        button: {
+            submit: 'Оставить заявку',
+            cancel: 'Отмена'
+        },
+        description: {
+            label: 'Расскажите о компании или о себе',
+            placeholder: 'Напишите сюда любую информацию, которую посчитаете интересной!'
+        },
+        telegram: {
+            label: 'Никнейм в Telegram',
+        },
+        phone: {
+            label: 'Номер телефона',
+        },
+        email: {
+            label: 'Электронная почта',
+        },
+        name: {
+            label: 'Название компании или имя',
+            placeholder: 'Как можно к вам обращаться?'
+        },
+        legal: {
+            leading: 'Нажимая кнопку Оставить заявку вы соглашаетесь с', 
+            privacy: 'Политикой конфиденциальности', 
+            and: 'и',
+            processing: 'Обработкой персональных данных'
+        }
     }
 }
