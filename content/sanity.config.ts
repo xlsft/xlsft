@@ -5,7 +5,7 @@ import config from '../global.config'
 
 export default defineConfig({
     name: 'default',
-    title: config.head.title,
+    title: 'cms',
 
     projectId: config.cms.project,
     dataset: 'production',

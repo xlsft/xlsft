@@ -2,23 +2,13 @@ import { defineField, defineType } from 'sanity'
 import { defineI18nField } from '../utils/defineI18nField'
 
 export default defineType({
-    name: 'summary',
-    title: 'Summary',
+    name: 'legal',
+    title: 'Legal',
     type: 'document',
     fields: [
-        defineI18nField({
-            name: 'content',
-            title: 'Content',
-            type: 'markdown',
-        }),
         defineField({
-            name: 'image',
-            title: 'Image',
-            type: 'image',
-        }),
-        defineI18nField({
-            name: 'status',
-            title: 'Status',
+            name: 'id',
+            title: 'ID',
             type: 'string',
         }),
         defineI18nField({
@@ -28,8 +18,13 @@ export default defineType({
         }),
         defineI18nField({
             name: 'description',
-            title: 'Description',
-            type: 'string',
-        })
+            title: 'Small description',
+            type: 'markdown',
+        }),
+        defineI18nField({
+            name: 'content',
+            title: 'Document content',
+            type: 'markdown',
+        }),
     ],
 })
