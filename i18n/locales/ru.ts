@@ -19,6 +19,13 @@ export default {
         lets_talk: 'Давайте пообщаемся!'
     },
     labels: {
+        print_version: 'Печатная версия',
+        inn: 'ИНН', ogrn: 'ОГРНИП',
+        this_project_on_github: 'этот проект на github',
+        this_cv_on_hh: 'это резюме на hh.ru',
+        this_cv_on_linkedin: 'это резюме на linkedin',
+        error: 'Ошибка',
+        success: 'Успех',
         total_positions_duration: 'Общий стаж в компании',
         position_description: 'Чем занимался на этой позиции',
         stack: 'Стек технологий',
@@ -31,6 +38,7 @@ export default {
         index: 'Главная',
     },
     form: {
+        success: 'Спасибо! Ваша заявка отправленна! Я свяжусь с вами в скором времени',
         button: {
             submit: 'Оставить заявку',
             cancel: 'Отмена'
@@ -57,6 +65,11 @@ export default {
             privacy: 'Политикой конфиденциальности', 
             and: 'и',
             processing: 'Обработкой персональных данных'
+        },
+        errors: {
+            one_contact_required: 'Требуется хотя бы одно поле с вашим контактом!',
+            name_required: 'Поле имени обязательно',
+            invalid_captcha: 'Captcha проваленна! Попробуйте еще раз!'
         }
     }
 }
