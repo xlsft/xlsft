@@ -16,12 +16,15 @@
         "@nuxtjs/mdc": "0.20.1",
         "@nuxtjs/sanity": "2.2.0",
         "@nuxtjs/seo": "3.4.0",
+        "@resvg/resvg-js": "^2.6.2",
         "@tailwindcss/vite": "^4.1.11",
         "@types/node": "^25.3.3",
         "@vueuse/core": "^13.5.0",
         "bytes": "^3.1.2",
         "date-fns": "^4.1.0",
+        "maska": "^3.2.0",
         "nuxt": "^4.3.1",
+        "nuxt-og-image": "^6.0.0-beta.47",
         "remove-markdown": "^0.6.3",
         "satori": "^0.24.1",
         "tailwindcss": "^4.1.11",
@@ -31,6 +34,7 @@
     },
     "devDependencies": {
         "@iconify-json/mingcute": "^1.2.7",
+        "@takumi-rs/core": "^0.70.3",
         "@types/bytes": "^3.1.5",
         "typescript": "^5.8.3",
         "vue-tsc": "^3.0.1"
