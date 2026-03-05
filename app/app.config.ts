@@ -58,6 +58,11 @@ export default defineAppConfig({
                 base: 'bg-muted',
                 icon: 'scale-80'
             }
+        },
+        toast: {
+            slots: {
+                description: 'text-default/50!'
+            }
         }
     },
 })
