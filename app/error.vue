@@ -2,13 +2,19 @@
     import type { NuxtError } from '#app';
     const props = defineProps({ error: Object as () => NuxtError })
 
-    const { data: title } = await useSanityDynamicQuery<any>(groq`*[_type == "summary"][0].title[$locale]`)
+    const { data: seo } = await useSanityDynamicQuery<any>(groq`*[_type == "summary"][0]{
+        "title": title[$locale],
+        "description": description[$locale]
+    }`)
 
     useRobotsRule({ noindex: true })
     
     useSeoMeta({
-        titleTemplate: chunk => `${title.value || ''}${chunk ? ` — ${chunk}` : ``}`,
-        title: props.error?.message
+        titleTemplate: chunk => `${seo.value.title || ''}${chunk ? ` — ${chunk}` : ``}`,
+        title: `[${props.error?.status}] ${props.error?.message}`,
+        description: seo.value.description,
+        ogTitle: `${seo.value.title} — [${props.error?.status}] ${props.error?.message}`,
+        ogDescription: seo.value.description
     })
 </script>
 
