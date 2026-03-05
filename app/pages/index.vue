@@ -2,16 +2,16 @@
     import Skeleton from '~/assets/svg/skeleton.svg'
 
     const { t, locale } = useI18n()
+    const theme = useColorMode()
+    const config = useRuntimeConfig().public.config
     const router = useRouter()
 
-    useSeoMeta({ title: t('pages.index') })
     
-    defineOgImageComponent('Index', {
-        title: 'Is this thing on?'
-    })
     
     const { data } = await useSanityDynamicQuery(groq`{
         "summary": *[_type == "summary"][0]{ 
+            "title": title[$locale], 
+            "description": description[$locale], 
             "content": content[$locale], 
             "image": image.asset->url,
             "status": status[$locale], 
@@ -54,17 +54,17 @@
         "projectTags": array::unique(*[_type == "project"].tags[]),
     }`)
 
-    const projectFilters = ref<{ tags: string[] }>({ tags: [] })
+    const projectsFilters = ref<{ tags: string[] }>({ tags: [] })
     const { data: projects } = await useSanityDynamicQuery(groq`*[_type == "project" && (length($tags) == 0 || count(tags[@ in $tags]) > 0)] {
         id, tags, repo, priority,
         "name": name[$locale],
         "thumbnail": thumbnail[$theme].asset->url,
         "description": description[$locale]
-    } | order(priority desc)`, projectFilters)
+    } | order(priority desc)`, projectsFilters)
 
-    const projectStars = Object.fromEntries(await Promise.all(projects.value.filter((project: any) => !!project.repo).map(async (project: any) => {
+    const projectsStars = Object.fromEntries(await Promise.all(projects.value.filter((project: any) => !!project.repo).map(async (project: any) => {
         const response = await useGithubRepository<any>(project.repo)
-        return [project.repo, response.stargazers_count]
+        return [project.repo, response?.stars]
     })))
 
     const experience = (_from: string | Date, _to: string | Date) => {
@@ -84,6 +84,27 @@
             }
         }
     } 
+
+    defineOgImage('AtomsOgIndex.takumi', {
+        theme: theme.value as 'dark' | 'light',
+        title: data.value?.summary.title,
+        description: data.value?.summary.description,
+        photo: data.value?.summary.image,
+        status: data.value?.summary.status,
+        experience: `${t('sections.experience')}: ${experience(
+            data.value?.experience?.at(-1)?.positions?.at(-1)?.duration?.from, 
+            data.value?.experience?.at(0)?.positions?.at(0)?.duration?.to
+        ).duration()}`,
+        url: config.head.url
+    })
+
+    useSeoMeta({ 
+        title: t('pages.index'),
+        ogTitle: `${data.value?.summary.title} — ${t('pages.index')}`,
+        description: data.value?.summary.description,
+        ogDescription: data.value?.summary.description
+    })
+    
 </script>
 
 <template>
@@ -218,12 +239,12 @@
                             color="neutral" 
                             size="sm"
                             @click="() => { 
-                                if (!projectFilters.tags.includes(tag) && (projectFilters.tags.length + 1) === data.projectTags.length) { projectFilters.tags = []; return }
-                                if (projectFilters.tags.includes(tag)) projectFilters.tags.splice(projectFilters.tags.findIndex(v => v === tag), 1)
-                                else projectFilters.tags.push(tag)
+                                if (!projectsFilters.tags.includes(tag) && (projectsFilters.tags.length + 1) === data.projectTags.length) { projectsFilters.tags = []; return }
+                                if (projectsFilters.tags.includes(tag)) projectsFilters.tags.splice(projectsFilters.tags.findIndex(v => v === tag), 1)
+                                else projectsFilters.tags.push(tag)
                             }"
                             :ui="{
-                                base: projectFilters.tags.includes(tag) && 'ring-primary!'
+                                base: projectsFilters.tags.includes(tag) && 'ring-primary!'
                             }"
                         >
                             {{ tag }}
@@ -249,9 +270,9 @@
                         <template #title>
                             <div class="flex items-center justify-between w-full gap-2">
                                 <span>{{ project.name }}</span>
-                                <div class="flex items-center gap-1 *:text-yellow-500" v-if="projectStars[project.repo]">
+                                <div class="flex items-center gap-1 *:text-yellow-500" v-if="projectsStars[project.repo]">
                                     <NuxtIcon name="mingcute:star-fill"/>
-                                    <span>{{ projectStars[project.repo] }}</span>
+                                    <span>{{ projectsStars[project.repo] }}</span>
                                 </div>
                             </div>
                         </template>
