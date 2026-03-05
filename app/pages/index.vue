@@ -48,7 +48,11 @@
             "name": name[$locale],
             "faculty": faculty[$locale],
         } | order(year desc),
-        "projectTags": array::unique(*[_type == "project"].tags[]),
+        "projectTags": array::unique(*[_type == "project"].tags[]), 
+        "allLinks": *[_type == "link"] {
+            "label": label[$locale],
+            "to": to
+        },
     }`)
 
     defineOgImage('AtomsOgIndex.takumi', {

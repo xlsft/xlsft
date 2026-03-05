@@ -103,6 +103,10 @@ export type IndexQuery = {
         faculty: string
     })[]
     projectTags: string[]
+    allLinks: {
+        label: I18nString,
+        to: string
+    }[]
 }
 
 export type ProjectsQuery = (

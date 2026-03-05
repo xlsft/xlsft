@@ -4,7 +4,8 @@ export default {
         locales: ['ru', 'en'],
     },
     requests: {
-        telegram: 5072212559
+        telegram: 5072212559,
+        
     },
     captcha: {
         key: '2eb435c8-d342-4ec2-bfc0-ed74765c8864'
@@ -30,7 +31,8 @@ export default {
         dataset: 'production',
     },
     metrics: {
-        yandex: 103237740
+        yandex: 103237740,
+        gtag: 'GTM-TFT8VB5P',
     },
     head: {
         url: 'https://cv.xlsft.ru',

@@ -47,15 +47,16 @@ export default defineNuxtConfig({
         }
     },
     modules: [
-        '@nuxtjs/i18n', 
-        'yandex-metrika-module-nuxt3', 
-        '@nuxt/ui', 
-        '@nuxtjs/sanity', 
-        '@nuxt/fonts', 
-        '@nuxtjs/seo', 
-        '@nuxt/image', 
-        '@nuxtjs/mdc', 
-        'nuxt-og-image',
+      '@nuxtjs/i18n',
+      'yandex-metrika-module-nuxt3',
+      '@nuxt/ui',
+      '@nuxtjs/sanity',
+      '@nuxt/fonts',
+      '@nuxtjs/seo',
+      '@nuxt/image',
+      '@nuxtjs/mdc',
+      'nuxt-og-image',
+      'nuxt-gtag'
     ],
     i18n: {
         strategy: 'prefix',
@@ -92,6 +93,9 @@ export default defineNuxtConfig({
         trackLinks: true,
         accurateTrackBounce: true,
         webvisor: true
+    },
+    gtag: {
+        id: config.metrics.gtag
     },
     sanity: {
         projectId: config.cms.project,
