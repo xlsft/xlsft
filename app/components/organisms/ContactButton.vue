@@ -46,9 +46,6 @@
     })
 
     const loading = ref<boolean>(false)
-
-    console.log(errors.value)
-
     const submit = async () => { loading.value = true; try {
         const token = (await captcha.value?.executeAsync())?.response
         if (!token) { 

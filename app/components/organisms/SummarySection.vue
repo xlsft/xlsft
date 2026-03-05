@@ -2,14 +2,21 @@
     import Skeleton from '~/assets/svg/skeleton.svg'
     const { t } = useI18n()
     const props = defineProps<{ data: IndexQuery }>()
+    const config = useRuntimeConfig().public.config
 </script>
 
 <template>
-    <section class="p-8 max-lg:p-4 flex max-lg:flex-col-reverse gap-4 relative">
+    <section class="p-8 max-lg:p-4 print:p-0! flex max-lg:flex-col-reverse gap-4 relative">
         <div class="flex gap-2 flex-col absolute max-lg:static right-8 bottom-8 *:text-right max-lg:*:text-left print:hidden">
             <NuxtLink v-if="data.links.github?.to" :to="data.links.github.to" target="_blank">{{ t('labels.this_project_on_github') }}</NuxtLink>
             <NuxtLink v-if="data.links.hh?.to" :to="data.links.hh.to" target="_blank">{{ t('labels.this_cv_on_hh') }}</NuxtLink>
             <NuxtLink v-if="data.links.linkedin?.to" :to="data.links.linkedin.to" target="_blank">{{ t('labels.this_cv_on_linkedin') }}</NuxtLink>
+        </div>
+        <div class="gap-2 flex-col absolute top-0 right-0 *:text-right *:text-sm *:text-default/50 hidden print:flex">
+            <span>{{ t('labels.more_about') }}: {{ config.head.url }}</span>
+        </div>
+        <div class="gap-2 flex-col absolute bottom-0 right-0 *:text-right *:text-sm *:text-default/50 hidden print:flex">
+            <span v-for="link in data.allLinks.filter(v => v.to.startsWith('http') && v.to.length < 50)">{{ link.label }}: {{ link.to }}</span>
         </div>
         
         <div class="grow flex flex-col gap-4">
