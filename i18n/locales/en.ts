@@ -24,7 +24,8 @@ export default {
         tags: 'Tags',
         about: 'About',
         links: 'Links',
-        contact_me: 'Contact me!'
+        contact_me: 'Contact me!',
+        lets_talk: 'Let`s talk!'
     },
     pages: {
         index: 'Home',

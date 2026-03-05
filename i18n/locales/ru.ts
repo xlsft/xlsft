@@ -16,6 +16,7 @@ export default {
         projects: 'Проекты',
         related_projects: 'Связанные проекты',
         about_project: 'О проекте',
+        lets_talk: 'Давайте пообщаемся!'
     },
     labels: {
         total_positions_duration: 'Общий стаж в компании',
