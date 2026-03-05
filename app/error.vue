@@ -1,7 +1,15 @@
 <script setup lang="ts">
     import type { NuxtError } from '#app';
     const props = defineProps({ error: Object as () => NuxtError })
+
+    const { data: title } = await useSanityDynamicQuery<any>(groq`*[_type == "summary"][0].title[$locale]`)
+
     useRobotsRule({ noindex: true })
+    
+    useSeoMeta({
+        titleTemplate: chunk => `${title.value || ''}${chunk ? ` — ${chunk}` : ``}`,
+        title: props.error?.message
+    })
 </script>
 
 <template>
