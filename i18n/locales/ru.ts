@@ -32,7 +32,8 @@ export default {
         tags: 'Теги',
         about: 'О проекте',
         links: 'Ссылки',
-        contact_me: 'Свяжитесь со мной!'
+        contact_me: 'Свяжитесь со мной!',
+        more_about: "Подробнее"
     },
     pages: {
         index: 'Главная',

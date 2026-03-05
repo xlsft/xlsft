@@ -34,7 +34,8 @@ export default {
         about: 'About',
         links: 'Links',
         contact_me: 'Contact me!',
-        lets_talk: 'Let`s talk!'
+        lets_talk: 'Let`s talk!',
+        more_about: "More about"
     },
     pages: {
         index: 'Home',
