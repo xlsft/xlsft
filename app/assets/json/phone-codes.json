@@ -1,0 +1,37 @@
+[
+    {
+        "name": "Belarus",
+        "code": "BY",
+        "emoji": "🇧🇾",
+        "dialCode": "+375",
+        "mask": "## ###-##-##"
+    },
+    {
+        "name": "Russia",
+        "code": "RU",
+        "emoji": "🇷🇺",
+        "dialCode": "+7",
+        "mask": "### ###-##-##"
+    },
+    {
+        "name": "Serbia",
+        "code": "RS",
+        "emoji": "🇷🇸",
+        "dialCode": "+381",
+        "mask": "## #######"
+    },
+    {
+        "name": "United Kingdom",
+        "code": "GB",
+        "emoji": "🇬🇧",
+        "dialCode": "+44",
+        "mask": "#### ######"
+    },
+    {
+        "name": "United States",
+        "code": "US",
+        "emoji": "🇺🇸",
+        "dialCode": "+1",
+        "mask": "(###) ###-####"
+    }
+]
