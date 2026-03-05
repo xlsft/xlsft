@@ -1,8 +1,6 @@
 import * as z from 'zod'
 import { Bot } from 'grammy'
 
-import MessagesAdminRequest from '~~/bot/messages/admin/request'
-
 export default defineEventHandler(async (event) => {
 
     const config = useRuntimeConfig().public.config
@@ -24,7 +22,13 @@ export default defineEventHandler(async (event) => {
 
     const bot = new Bot(process.env.TG_TOKEN)
 
-    const message = await bot.api.sendMessage(config.requests.telegram, MessagesAdminRequest(body), { parse_mode: 'HTML' })
+    const message = await bot.api.sendMessage(config.requests.telegram, /*html*/`<strong>New Request!</strong>
+
+<strong>Name</strong>: <code>${body.name || '-'}</code>
+<strong>Email</strong>: <code>${body.email || '-'}</code>
+<strong>Phone</strong>: <code>${body.phone || '-'}</code>
+<strong>Telegram</strong>: <code>${body.telegram || '-'}</code>
+<strong>Description</strong>: <blockquote>${body.description || '-'}</blockquote>`, { parse_mode: 'HTML' })
     
     return { message }
 })
