@@ -24,7 +24,6 @@ export const useSanityDynamicQuery = async <T = any>(
     )
 
     watch(() => [locale.value, theme.value, params?.value], () => {
-        console.log(params?.value)
         const keys = Object.keys(constructParams())
         if (keys.some(key => query.includes(`$${key}`))) data.refresh()
     }, { deep: true })
