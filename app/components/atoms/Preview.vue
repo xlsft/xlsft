@@ -37,9 +37,7 @@
         <Teleport to="body">
             <Transition name="zoom-fade">
                 <div v-if="visible" @click="actions.close" class="transition-all duration-500 fixed inset-0 bg-default/25 backdrop-blur-lg flex items-center justify-center z-50">
-                    <NuxtButton variant="outline" color="neutral" class="absolute top-4 right-4 w-8 h-8">
-                        <NuxtIcon name="mingcute:close-line"/>
-                    </NuxtButton>
+                    <NuxtButton icon="mingcute:close-line" variant="outline" color="neutral" class="absolute top-4 right-4 w-8 h-8"/>
                     <div class="max-w-full max-h-full *:w-full *:h-full w-full h-full">
                         <slot />
                     </div>
