@@ -1,17 +1,21 @@
 <script setup lang="ts">
     import type { HTMLAttributes } from 'vue';
     import SectionHeader from '../molecules/SectionHeader.vue';
+    import Captcha from '@hcaptcha/vue3-hcaptcha';
     import countryCodes from '~/assets/json/phone-codes.json'
     import { vMaska } from 'maska/vue'
 
     const { t, locale } = useI18n()
+    const toast = useToast()
+    const config = useRuntimeConfig().public.config
+    const theme = useColorMode()
     const props = defineProps<{ id?: string, class?: HTMLAttributes['class'] }>()
+    const captcha = useTemplateRef('captcha')
 
     const open = ref<boolean>(false)
 
     const form = ref<{
         name?: string, 
-        company?: string,
         email?: string,
         phone?: string,
         telegram?: string
@@ -36,16 +40,31 @@
 
     const errors = computed(() => {
         const stack = []
-        if (!form.value.name) stack.push(t('form.errors.name_required'))
-        if (!form.value.email && !form.value.phone && !form.value.telegram) stack.push(t('form.errors.one_contact_required'))
-        if (form.value.description)
+        if (!form.value.name) stack.push('form.errors.name_required')
+        if (!form.value.email && !form.value.phone && !form.value.telegram) stack.push('form.errors.one_contact_required')
         return stack
     })
+
+    const loading = ref<boolean>(false)
+
+    console.log(errors.value)
+
+    const submit = async () => { loading.value = true; try {
+        const token = (await captcha.value?.executeAsync())?.response
+        if (!token) { 
+            toast.add({ title: t('labels.error'), description: t('form.errors.invalid_captcha') })
+            captcha.value?.reset()
+            return
+        } 
+        $fetch('/api/request', { method: 'post', body: { ...form.value, token } })
+        toast.add({ title: t('labels.success'), description: t('form.success') })
+        form.value = {}; email.value = undefined; phone.value.number = undefined; open.value = false
+    } catch (e) { toast.add({ title: t('labels.error'), description: String(e) }) } finally { loading.value = false }}
 
 </script>
 
 <template>
-    <NuxtButton size="xl" :class @click="open = !open">{{ t('labels.contact_me') }}</NuxtButton>
+    <NuxtButton size="xl" class="print:hidden w-fit" :class @click="open = !open">{{ t('labels.contact_me') }}</NuxtButton>
     <NuxtModal v-model:open="open" class="max-w-[50dvw] max-lg:max-w-dvw! max-lg:max-h-dvh! max-lg:w-dvw! max-lg:h-dvh! max-lg:ring-0!">
         <template #content>
             <NuxtButton @click="open = false" icon="mingcute:close-line" variant="outline" color="neutral" class="absolute top-4 right-4 w-8 h-8 z-5 max-sm:hidden" :ui="{ leadingIcon: 'size-4! translate-x-px' }"/>
@@ -128,11 +147,26 @@
                     {{ t('form.legal.and') }} 
                     <NuxtLink target="_blank" :to="`/${locale}/legal/processing`">{{ t('form.legal.processing') }}</NuxtLink>
                 </p>
+                <div class="flex flex-col gap-1 *:text-xs! text-error min-lg:col-span-2" v-if="errors?.length">
+                    <span v-for="error in errors" class="flex items-center gap-2">
+                        <NuxtIcon name="mingcute:close-circle-line" class="size-3"/>
+                        {{ t(error) }}
+                    </span>
+                </div>
             </section>
             <section class="p-4 flex items-center justify-between gap-4 shrink">
-                <NuxtButton>{{ t('form.button.submit') }}</NuxtButton>
+                <NuxtButton :loading :disabled="!!errors?.length" @click="submit">{{ t('form.button.submit') }}</NuxtButton>
                 <NuxtButton @click="open = false" variant="outline" color="neutral" class="z-5 sm:hidden">{{ t('form.button.cancel') }}</NuxtButton>
             </section>
         </template>
     </NuxtModal>
+    <Teleport to="body">
+        <Captcha
+            ref="captcha"
+            :sitekey="config.captcha.key"
+            size="invisible"
+            :language="locale"
+            :theme="theme.value"
+        />
+    </Teleport>
 </template>
