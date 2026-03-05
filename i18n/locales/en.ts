@@ -52,7 +52,7 @@ export default {
             placeholder: 'How can i call you?'
         },
         legal: {
-            leading: 'Pressing Send request button you accept:', 
+            leading: 'Pressing "Send request" button you accept:', 
             privacy: 'Privacy policy', 
             and: 'and',
             processing: 'Personal Data Processing Policy'
