@@ -9,7 +9,7 @@
         },
         "title": title[$locale],
         "description": description[$locale],
-        "content": description[$locale],
+        "content": content[$locale],
     }[0]`, params);
 
     if (!data.value) throw createError({ status: 404, message: `"${route.params.id?.toString()}" Document not found` })
@@ -23,5 +23,11 @@
 </script>
 
 <template>
-    {{ data }}
+    <MoleculesSectionHeader pattern="plus" no-contact>
+        {{ data.title }}
+    </MoleculesSectionHeader>
+    <section class="p-8 max-lg:p-4 flex flex-col gap-4">
+        <p class="text-sm! text-default/50">{{ data.description }}</p>
+        <MDC :value="data.content" class="md *:mt-0!"/>
+    </section>
 </template>
