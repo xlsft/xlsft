@@ -2,7 +2,6 @@ import type { SitemapUrlInput } from '#sitemap/types'
 
 export default defineSitemapEventHandler(async () => {
     
-    const config = useRuntimeConfig().public.config
     const client = useSanity()
     const pages = await client.fetch<string[]>(groq`*[_type == "project"].id`)
     if (!pages.length) return []
