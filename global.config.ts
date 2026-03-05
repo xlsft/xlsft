@@ -3,6 +3,12 @@ export default {
         themes: ['dark', 'light'],
         locales: ['ru', 'en'],
     },
+    requests: {
+        telegram: 5072212559
+    },
+    captcha: {
+        key: '2eb435c8-d342-4ec2-bfc0-ed74765c8864'
+    },
     theme: {
         background: {
             dark: '#000000',
