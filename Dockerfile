@@ -3,22 +3,23 @@ FROM oven/bun:alpine AS base
 FROM base AS builder
 
 WORKDIR /build/app
-COPY package*.json ./
+COPY package.json ./
 COPY bun.lock ./
 RUN bun install
-COPY app ./
-COPY public ./
-COPY bot ./
-COPY i18n ./
-COPY tsconfig.json ./
-COPY nuxt.config.ts ./
-COPY global.config.ts ./
-COPY server ./
+COPY app ./app
+COPY public ./public
+COPY bot ./bot
+COPY i18n ./i18n
+COPY tsconfig.json ./tsconfig.json
+COPY nuxt.config.ts ./nuxt.config.ts
+COPY global.config.ts ./global.config.ts
+COPY server ./server
 RUN bun run build
 
 WORKDIR /build/content
 COPY content ./app
 COPY global.config.ts ./
+RUN cd app
 RUN bun install
 RUN bun run build
 
@@ -26,6 +27,7 @@ WORKDIR /build/bot
 COPY bot ./app
 COPY global.config.ts ./
 COPY i18n ./
+RUN cd app
 RUN bun install
 RUN bun run build
 
