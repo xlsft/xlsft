@@ -2,7 +2,10 @@
     "name": "cv.xlsft.ru_cms",
     "scripts": {
         "dev": "sanity dev",
-        "build": "sanity build && cp sanity.server.ts"
+        "build": "sanity build && cp sanity.server.mjs dist/server.mjs"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
     },
     "dependencies": {
         "@sanity/code-input": "^7.0.8",
@@ -20,6 +23,7 @@
         "@types/react": "^19.1",
         "eslint": "^9.28",
         "prettier": "^3.5",
-        "typescript": "^5.8"
+        "typescript": "^5.8",
+        "@types/bun": "latest"
     }
 }

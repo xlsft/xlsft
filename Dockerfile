@@ -21,7 +21,6 @@ COPY content ./app
 COPY global.config.ts ./
 RUN bun install
 RUN bun run build
-COPY content/sanity.server.ts ./app/dist/server.ts
 
 WORKDIR /build/bot
 COPY bot ./app
@@ -47,7 +46,7 @@ stdout_logfile=/dev/stdout
 stderr_logfile=/dev/stderr
 
 [program:content]
-command=bun serve /workers/content/server.ts
+command=bun serve /workers/content/server.mjs
 autostart=true
 autorestart=true
 stopasgroup=true
