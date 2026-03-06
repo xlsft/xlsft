@@ -111,6 +111,5 @@ export default defineNuxtConfig({
     },
     ogImage: {
         componentDirs: ['atoms/og'],
-        zeroRuntime: true
     }
 })
