@@ -5,7 +5,6 @@ export default {
     },
     requests: {
         telegram: 5072212559,
-        
     },
     captcha: {
         key: '2eb435c8-d342-4ec2-bfc0-ed74765c8864'
