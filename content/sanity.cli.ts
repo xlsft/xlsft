@@ -8,5 +8,6 @@ export default defineCliConfig({
     },
     deployment: {
         autoUpdates: true,
+        appId: process.env.SANITY_APP
     }
 })
