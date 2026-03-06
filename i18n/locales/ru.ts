@@ -26,14 +26,17 @@ export default {
         this_cv_on_linkedin: 'это резюме на linkedin',
         error: 'Ошибка',
         success: 'Успех',
-        total_positions_duration: 'Общий стаж в компании',
+        total_positions_duration: 'Общий стаж',
         position_description: 'Чем занимался на этой позиции',
         stack: 'Стек технологий',
         tags: 'Теги',
         about: 'О проекте',
         links: 'Ссылки',
         contact_me: 'Свяжитесь со мной!',
-        more_about: "Подробнее"
+        more_about: "Подробнее",
+        current_locale: "Текущий язык",
+        back: 'Вернутся назад',
+        anonymous: 'Анонимно'
     },
     pages: {
         index: 'Главная',
@@ -46,7 +49,8 @@ export default {
         },
         description: {
             label: 'Расскажите о компании или о себе',
-            placeholder: 'Напишите сюда любую информацию, которую посчитаете интересной!'
+            placeholder: 'Напишите сюда любую информацию, которую посчитаете интересной!',
+            shortPlaceholder: 'Любая интересная информация',
         },
         telegram: {
             label: 'Никнейм в Telegram',
@@ -70,7 +74,13 @@ export default {
         errors: {
             one_contact_required: 'Требуется хотя бы одно поле с вашим контактом!',
             name_required: 'Поле имени обязательно',
-            invalid_captcha: 'Captcha проваленна! Попробуйте еще раз!'
+            invalid_captcha: 'Captcha проваленна! Попробуйте еще раз!',
+            something_wrong: 'Кажется, вы отправили что-то не то. Попробуйте еще раз!'
+        },
+        contact: {
+            label: 'Как я могу с вами связаться?',
+            button: 'Отправить контакт',
         }
-    }
+    },
+
 }

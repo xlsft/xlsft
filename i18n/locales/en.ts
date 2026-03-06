@@ -27,7 +27,7 @@ export default {
         this_cv_on_linkedin: 'this cv on linkedin',
         error: 'Error',
         success: 'Success',
-        total_positions_duration: 'Total duration',
+        total_positions_duration: 'Total experience',
         position_description: 'Job description',
         stack: 'Technology stack',
         tags: 'Tags',
@@ -35,7 +35,10 @@ export default {
         links: 'Links',
         contact_me: 'Contact me!',
         lets_talk: 'Let`s talk!',
-        more_about: "More about"
+        more_about: "More about",
+        current_locale: "Current language",
+        back: 'Go back',
+        anonymous: 'Anonymous'
     },
     pages: {
         index: 'Home',
@@ -48,7 +51,8 @@ export default {
         },
         description: {
             label: 'Tell more about yourself or company',
-            placeholder: 'Write here any info that you find interesting!'
+            placeholder: 'Write here any info that you find interesting!',
+            shortPlaceholder: 'Any interesting info',
         },
         telegram: {
             label: 'Telegram nickname',
@@ -72,7 +76,12 @@ export default {
         errors: {
             one_contact_required: 'At least one contact field is required!',
             name_required: 'Name is required',
-            invalid_captcha: 'Captcha is invalid! Try again!'
+            invalid_captcha: 'Captcha is invalid! Try again!',
+            something_wrong: 'Something is wrong, message yоu send was invalid. Try again!'
+        },
+        contact: {
+            label: 'How can i contact you?',
+            button: 'Send contact',
         }
     }
 }

@@ -27,6 +27,11 @@ export default defineType({
             title: 'About company',
             type: 'markdown'
         }),
+        defineI18nField({
+            name: 'aboutShort',
+            title: 'Short about company',
+            type: 'markdown'
+        }),
         defineField({
             name: 'link',
             title: 'Company link',
@@ -56,6 +61,11 @@ export default defineType({
                         defineI18nField({
                             name: 'description',
                             title: 'Job description',
+                            type: 'markdown'
+                        }),
+                        defineI18nField({
+                            name: 'descriptionShort',
+                            title: 'Short job description',
                             type: 'markdown'
                         }),
                         defineField({

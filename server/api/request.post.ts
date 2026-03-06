@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
 
     const bot = new Bot(process.env.TG_TOKEN)
 
-    const message = await bot.api.sendMessage(config.requests.telegram, /*html*/`<strong>New Request!</strong>
+    const message = await bot.api.sendMessage(config.requests.telegram, /*html*/`<strong>New Request! (${config.head.url})</strong>
 
 <strong>Name</strong>: <code>${body.name || '-'}</code>
 <strong>Email</strong>: <code>${body.email || '-'}</code>
