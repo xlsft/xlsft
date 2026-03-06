@@ -10,3 +10,5 @@ export const useI18n = (ctx: Context) => {
         locale: code
     }
 }
+
+export { locales }
