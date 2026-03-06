@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "sanity dev",
-        "build": "sanity build && bun build sanity.server.ts --outfile dist/server.js"
+        "build": "sanity build"
     },
     "peerDependencies": {
         "typescript": "^5"

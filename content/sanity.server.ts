@@ -1,40 +1,33 @@
-import { Elysia } from "elysia";
-import { staticPlugin } from "@elysiajs/static";
-import { extname } from "path";
+import { Elysia } from "elysia"
+import { staticPlugin } from "@elysiajs/static"
+import { extname, join } from "path"
+import { file as useFile } from "bun"
 
 const types: Record<string, string> = {
-  ".js": "text/javascript",
-  ".mjs": "text/javascript",
-  ".css": "text/css",
-  ".html": "text/html",
-  ".json": "application/json",
-  ".svg": "image/svg+xml",
-  ".png": "image/png",
-  ".ico": "image/x-icon",
-  ".webmanifest": "application/manifest+json",
-};
+    ".js": "text/javascript",
+    ".mjs": "text/javascript",
+    ".css": "text/css",
+    ".html": "text/html",
+    ".json": "application/json",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".ico": "image/x-icon",
+    ".webmanifest": "application/manifest+json",
+}
 
 const app = new Elysia()
-  // раздаём текущую папку
-  .use(staticPlugin({ assets: ".", prefix: "/" }))
 
-  // SPA fallback: если файл реально не существует
-  .get("*", async (c) => {
-    const path = `.${new URL(c.request.url).pathname}`;
-    const file = Bun.file(path);
+app.use(staticPlugin({ assets: "./dist", prefix: "/" }))
 
-    if (await file.exists()) {
-      // выставляем MIME по расширению
-      const type = types[extname(path)] ?? "application/octet-stream";
-      return new Response(file, { headers: { "Content-Type": type } });
-    }
+app.get("*", async (context) => {
+    const path = join("./dist", new URL(context.request.url).pathname)
+    const file = useFile(path)
 
-    // fallback для SPA
-    return new Response(Bun.file("./index.html"), {
-      headers: { "Content-Type": "text/html" },
-    });
-  });
+    if (await file.exists()) return new Response(file, { headers: { "Content-Type": types[extname(path)] ?? "application/octet-stream" } })
 
-app.listen(3333);
+    return new Response(useFile("./dist/index.html"), { headers: { "Content-Type": "text/html" } })
+})
 
-console.log("http://localhost:3333");
+app.listen(3333)
+
+console.log("Listening on http://[::]:3333")

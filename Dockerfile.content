@@ -10,4 +10,4 @@ WORKDIR /app/content
 RUN bun install
 RUN bun run build
 
-ENTRYPOINT [ "bun", "dist/server.js" ]
+ENTRYPOINT [ "bun", "sanity.server.ts" ]
