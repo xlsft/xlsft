@@ -2,8 +2,6 @@ x-environment: &env
   GITHUB_TOKEN: GITHUB_TOKEN
   TG_TOKEN: TG_TOKEN
   HCAPTCHA_TOKEN: HCAPTCHA_TOKEN
-  SANITY_APP: SANITY_APP
-  SANITY_STUDIO_BASEPATH: /
 
 name: container_name
 services:
@@ -15,13 +13,6 @@ services:
       - "3000:3000"
     restart: always
     environment: *env
-  content:
-    build:
-      context: .
-      dockerfile: Dockerfile.content
-    ports:
-      - "3001:3333"
-    restart: always
   bot:
     build:
       context: .
