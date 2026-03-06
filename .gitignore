@@ -23,3 +23,5 @@ build.json
 .env
 .env.*
 !.env.example
+
+docker-compose.yaml
