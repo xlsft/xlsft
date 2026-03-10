@@ -41,12 +41,8 @@
         title: data.value?.name,
         ogTitle: `${data.value?.seo.title} — ${data.value?.name}`,
         description: useMarkdownRemoval(data.value?.description),
-        ogDescription: useMarkdownRemoval(data.value?.description)
-    })
-
-    defineOgImage('AtomsOgProject.takumi', {
-        theme: theme.value as 'dark' | 'light',
-        project: data.value,
+        ogDescription: useMarkdownRemoval(data.value?.description),
+        ogImage: data.value.thumbnail
     })
 
 </script>
