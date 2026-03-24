@@ -1,5 +1,3 @@
-// Типы по схемам
-
 export type I18nString = string
 
 export type Education = {

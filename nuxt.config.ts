@@ -56,7 +56,9 @@ export default defineNuxtConfig({
       '@nuxt/image',
       '@nuxtjs/mdc',
       'nuxt-og-image',
-      'nuxt-gtag'
+      'nuxt-gtag',
+      '@pinia/nuxt',
+      'pinia-plugin-persistedstate/nuxt',
     ],
     i18n: {
         strategy: 'prefix',
