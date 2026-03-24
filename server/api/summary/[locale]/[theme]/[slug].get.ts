@@ -103,14 +103,11 @@ export default defineEventHandler(async (event) => {
                         ]))).sort(([, aItems], [, bItems]) => bItems.length - aItems.length).map(([label, items]) => /*html*/`
                             <div style="${tw`flex flex-wrap gap-2 items-center`}; order:-${items.map((v: any) => v.name).join('').length}">
                                 <span style="${tw`text-xs opacity-50 w-full`}">${label}</span>
-                                ${items.map(item => { 
-                                    const color = item.color.match(/var\(--color-([a-z0-9-]+)\)/)?.[1]
-                                    return /*html*/`
-                                        <span style="${tw`font-bold flex items-center text-xs px-2 py-1 gap-1 !bg-${color}/50 border !border-${color}`}">
-                                            ${item.name}
-                                        </span>
-                                    `.trim()
-                                }).join('\n')}
+                                ${items.map(item => /*html*/`
+                                    <span style="${tw`font-bold flex items-center text-xs px-2 py-1 gap-1 !bg-[${item.color}]/50 border !border-[${item.color}]`}">
+                                        ${item.name}
+                                    </span>
+                                `.trim()).join('\n')}
                             </div>
                         `).join('\n')}
                     </div>
