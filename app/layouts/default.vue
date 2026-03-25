@@ -1,14 +1,30 @@
 <script setup lang="ts">
     import Logo from '~/assets/svg/logo.svg?raw'
     import LogoMini from '~/assets/svg/logo-mini.svg?raw'
-    import { useScroll } from '@vueuse/core';   
+    import { useMediaQuery, useScroll } from '@vueuse/core';   
     import * as locales from '@nuxt/ui/locale'
+    import type { UIMessage } from 'ai'
+    import { isReasoningUIPart, isTextUIPart, isToolUIPart, getToolName } from 'ai'
+    import { Chat } from '@ai-sdk/vue'
+    import { isReasoningStreaming, isToolStreaming } from '@nuxt/ui/utils/ai'
+
+    const chat = new Chat({
+        onError(error) {
+            console.error(error)
+        },
+        onData(data) {
+            console.log(data)
+        }
+    }), modal = ref(false), input = ref('')
+
 
     const { locale, setLocale, locales: i18nLocales, t } = useI18n()
     const theme = useColorMode()
     const scroll = useScroll(document)
     const header = computed(() => window ? parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--ui-header-height')) : 0)
     const config = useRuntimeConfig().public.config
+
+    const fullscreen = useMediaQuery('(max-width: 768px)')
 
     const { data } = await useSanityDynamicQuery(groq`{
         "footer": {
@@ -138,6 +154,70 @@
 </script>
 
 <template>
+    <NuxtModal v-model:open="modal" :fullscreen :ui="{ content: 'sm:max-w-3xl sm:h-[28rem] p-4' }">
+        <template #content>
+            <NuxtChatPalette>
+                <NuxtChatMessages 
+                    :messages="chat.messages" :status="chat.status"  
+                    :assistant="{ avatar: { icon: 'mage:stars-c-fill', ui: { root: 'bg-primary rounded-none *:text-white!' } } }" 
+                    :user="{ ui: { container: 'flex-row-reverse justify-start!' },  avatar: { icon: 'mingcute:user-2-fill', ui: { root: 'bg-border/50 rounded-none' } } }"
+                >
+                    <template #content="{ message }">
+                        <div
+                            :data-part="part.type"
+                            :class="[
+                                'text-sm!',
+                                part.type === 'step-start' ? 'mb-0!' : '',
+                                message.role === 'user' ? 'bg-primary px-2 py-1' : ''
+                            ]"
+                            v-for="(part, index) in message.parts"
+                            :key="`${message.id}-${part.type}-${index}`"
+                        >   
+                            <NuxtChatReasoning
+                                v-if="isReasoningUIPart(part) && part.text"
+                                :text="part.text"
+                                :streaming="isReasoningStreaming(message, index, chat)"
+                            >
+                                <MDC
+                                    :value="part.text"
+                                    :cache-key="`reasoning-${message.id}-${index}`"
+                                    class="*:first:mt-0 *:last:mb-0"
+                                />
+                            </NuxtChatReasoning>
+                            <NuxtChatTool
+                                v-else-if="isToolUIPart(part)"
+                                :text="getToolName(part)"
+                                :streaming="isToolStreaming(part)"
+                            />
+                            <MDC
+                                v-else-if="isTextUIPart(part) && part.text"
+                                :value="part.text"
+                                :cache-key="`${message.id}-${index}`"
+                                class="*:first:mt-0 *:last:mb-0"
+                            />
+                        </div>
+                    </template>
+                </NuxtChatMessages>
+                <template #prompt>
+                    <NuxtChatPrompt
+                        :ui="{
+                            root: 'px-2 border-none!'
+                        }"
+                        :placeholder="t('ai.placeholder')"
+                        v-model="input"
+                        :error="chat.error"
+                        @submit="() => { chat.sendMessage({ text: input }); input = '' }"
+                    >
+                        <NuxtChatPromptSubmit
+                            :status="chat.status"
+                            @stop="chat.stop()"
+                            @reload="chat.regenerate()"
+                        />
+                    </NuxtChatPrompt>
+                </template>
+            </NuxtChatPalette>
+        </template>
+    </NuxtModal>
     <NuxtHeader class="transition-colors duration-500" :ui="{ container: 'max-w-dvw', root: `${header >= scroll.y.value && 'border-bg!'} max-lg:border-default!` }">
         <template #left>
             <NuxtLink to="/" v-html="Logo"/>
@@ -145,7 +225,7 @@
         <template #toggle>
             <NuxtColorModeButton variant="subtle" :ui="{ base: '*:cursor-nw-resize! cursor-nw-resize! hover:opacity-75! transition-opacity' }"/>
             <NuxtLocaleSelect
-                class="cursor-nw-resize!"
+                class="cursor-nw-resize! max-md:hidden"
                 :model-value="locale"
                 :locales="Object.values(locales).filter((nuxtLocale) => i18nLocales.find((i18nLocale) => i18nLocale.code === nuxtLocale.code))"
                 @update:model-value="setLocale($event as 'ru')"
@@ -155,6 +235,8 @@
                     itemTrailingIcon: 'scale-50'
                 }"
             />
+            <NuxtButton variant="outline" color="neutral" class="max-w-8 justify-center min-md:hidden" @click="setLocale(locale === 'en' ? 'ru' : 'en')">{{ locale === 'en' ? '🇷🇺' : '🇺🇸' }}</NuxtButton>
+            <NuxtButton icon="mage:stars-c-fill" @click="modal = !modal">{{ t('ai.ask') }}</NuxtButton>
         </template>
     </NuxtHeader>
     <NuxtContainer class="flex flex-col min-h-(--ui-viewport-height) py-12 max-lg:p-0!">

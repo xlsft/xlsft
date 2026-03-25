@@ -83,5 +83,9 @@ export default {
             label: 'How can i contact you?',
             button: 'Send contact',
         }
+    },
+    ai: {
+        ask: 'Ask AI',
+        placeholder: 'Ask something about candidate'
     }
 }
