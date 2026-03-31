@@ -2,6 +2,7 @@
 
     const { t } = useI18n()
     const config = useRuntimeConfig().public.config
+    const route = useRoute()
 
     definePageMeta({
         colorMode: 'light',
@@ -33,10 +34,10 @@
             id, link,
             "name": name[$locale],
             "logo": logo[$theme].asset->url,
-            "about": about[$locale],
+            "about": ${route.query.short ? `aboutShort` : `about`}[$locale],
             "positions": positions[]{
                 "name": name[$locale],
-                "description": description[$locale],
+                "description": ${route.query.short ? `descriptionShort` : `description`}[$locale],
                 "skills": skills[]->{
                     name, type, color, priority
                 } | order(priority desc),
@@ -104,9 +105,9 @@
         </MoleculesSectionHeader>
         <OrganismsExperienceSection :data v-if="data.experience?.length"/>
 
-        <MoleculesSectionHeader pattern="plus" v-if="data.education?.length">
+        <MoleculesSectionHeader pattern="plus" v-if="data.education?.length && !route.query.short">
             <div>{{ t('sections.education') }}</div>
         </MoleculesSectionHeader>
-        <OrganismsEducationSection :data v-if="data.education?.length" />
+        <OrganismsEducationSection :data v-if="data.education?.length && !route.query.short" />
     </template>
 </template>

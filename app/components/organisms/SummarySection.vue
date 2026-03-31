@@ -6,7 +6,7 @@
 </script>
 
 <template>
-    <section class="p-8 max-lg:p-4 print:p-0! flex max-lg:flex-col-reverse gap-4 relative">
+    <section class="p-8 max-lg:p-4 print:p-0! flex max-lg:flex-col-reverse gap-4 relative min-h-[700px]">
         <div class="flex gap-2 flex-col absolute max-lg:static right-8 bottom-8 *:text-right max-lg:*:text-left print:hidden">
             <NuxtLink v-if="data.links.github?.to" :to="data.links.github.to" target="_blank">{{ t('labels.this_project_on_github') }}</NuxtLink>
             <NuxtLink v-if="data.links.hh?.to" :to="data.links.hh.to" target="_blank">{{ t('labels.this_cv_on_hh') }}</NuxtLink>
@@ -19,7 +19,7 @@
             <span v-for="link in data.allLinks.filter(v => v.to.startsWith('http') && v.to.length < 50)">{{ link.label }}: {{ link.to }}</span>
         </div>
         
-        <div class="grow flex flex-col gap-4">
+        <div class="grow flex flex-col gap-4 ">
             <MDC :value="data.summary.content" class="md"/>
             <div class="flex flex-col gap-1">
                 <div 
