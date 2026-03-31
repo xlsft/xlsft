@@ -19,6 +19,7 @@
 
 
     const { locale, setLocale, locales: i18nLocales, t } = useI18n()
+    const router = useRouter()
     const theme = useColorMode()
     const scroll = useScroll(document)
     const header = computed(() => window ? parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--ui-header-height')) : 0)
@@ -223,6 +224,7 @@
             <NuxtLink to="/" v-html="Logo"/>
         </template>
         <template #toggle>
+            <NuxtButton variant="outline" color="neutral" icon="mingcute:print-line" class="max-w-8 justify-center" to="./print?short=true" target="_blank" :ui="{ leadingIcon: 'text-default!' }"></NuxtButton>
             <NuxtColorModeButton variant="subtle" :ui="{ base: '*:cursor-nw-resize! cursor-nw-resize! hover:opacity-75! transition-opacity' }"/>
             <NuxtLocaleSelect
                 class="cursor-nw-resize! max-md:hidden"

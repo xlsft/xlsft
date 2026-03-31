@@ -3,6 +3,7 @@
     const { t } = useI18n()
     const config = useRuntimeConfig().public.config
     const route = useRoute()
+    const router = useRouter()
 
     definePageMeta({
         colorMode: 'light',
@@ -87,7 +88,7 @@
 
     onMounted(() => window.addEventListener('load', () => {
         window.print()
-        // window.onfocus = () => window.close()
+        window.onfocus = () => window.close()
     }))
     
 </script>
