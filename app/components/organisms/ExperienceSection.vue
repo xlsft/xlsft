@@ -31,15 +31,13 @@
                     <span class="text-lg font-bold"><span v-if="route.query.short" class="text-default/50">{{ company.name }} / </span>{{ position.name }} <span class="text-default/50">/ {{ useExperience(position.duration.from, position.duration.to).period() }}</span></span>
                     
                     <div class="flex flex-wrap gap-1">
-                        <NuxtBadge 
+                        <AtomsBadge 
                             v-for="item in position.skills" 
                             :key="item.name"
-                            variant="outline" color="neutral"
-                            :style="`--badge-color: ${item.color}`"
-                            :ui="{ base: 'hover:bg-(--badge-color)/50 hover:ring-(--badge-color)!'}"
+                            :color="item.color" 
                         >
                             {{ item.name }}
-                        </NuxtBadge>
+                        </AtomsBadge>
                     </div>
 
                     <span class="text-lg font-bold text-default/50" v-if="!route.query.short">{{ t('labels.position_description') }}</span>

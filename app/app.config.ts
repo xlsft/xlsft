@@ -63,6 +63,11 @@ export default defineAppConfig({
             slots: {
                 description: 'text-default/50!'
             }
+        },
+        badge: {
+            slots: {
+                base: 'transition-all'
+            }
         }
     },
 })

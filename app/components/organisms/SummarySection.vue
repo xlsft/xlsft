@@ -6,7 +6,7 @@
 </script>
 
 <template>
-    <section class="p-8 max-lg:p-4 print:p-0! flex max-lg:flex-col-reverse gap-4 relative min-h-[700px]">
+    <section class="p-8 max-lg:p-4 print:p-0! flex max-lg:flex-col-reverse gap-4 relative min-h-[700px] print:min-h-full">
         <div class="flex gap-2 flex-col absolute max-lg:static right-8 bottom-8 *:text-right max-lg:*:text-left print:hidden">
             <NuxtLink v-if="data.links.github?.to" :to="data.links.github.to" target="_blank">{{ t('labels.this_project_on_github') }}</NuxtLink>
             <NuxtLink v-if="data.links.hh?.to" :to="data.links.hh.to" target="_blank">{{ t('labels.this_cv_on_hh') }}</NuxtLink>
@@ -29,17 +29,16 @@
                     ]))"
                     :key
                     class="flex flex-wrap gap-1 items-center" 
-                    :style="`order: -${items.map((v: any) => v.name).join('').length}`" >
+                    :style="`order: -${items.map((v: any) => v.name).join('').length}`"
+                >
                     <span class="text-default/50 text-xs w-full">{{ key }}</span>
-                    <NuxtBadge 
+                    <AtomsBadge 
                         v-for="item in items" 
                         :key="item.name"
-                        variant="outline" color="neutral"
-                        :style="`--badge-color: ${item.color}`"
-                        :ui="{ base: 'hover:bg-(--badge-color)/50 hover:ring-(--badge-color)!'}"
+                        :color="item.color"
                     >
                         {{ item.name }}
-                    </NuxtBadge>
+                    </AtomsBadge>
                 </div>
             </div>
         </div>
@@ -54,7 +53,7 @@
                     placeholder-class="animate-pulse blur-lg scale-150"
                 />
             </div>
-            <OrganismsContactButton class="max-sm:w-full"/>
+            <OrganismsContactButton class="max-sm:w-full max-sm:justify-center!"/>
         </div>
     </section>
 </template>
