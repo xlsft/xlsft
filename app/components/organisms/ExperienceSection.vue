@@ -10,7 +10,7 @@
             <div class="h-full w-px bg-border absolute top-0 left-6 max-lg:hidden" v-if="data.experience.length !== Number(i) + 1"></div>
             <AtomsPattern name="texture" class="[&_div]:scale-3000 overflow-hidden pointer-events-none w-12 h-12 border absolute! top-0 left-0 bg-default z-2 flex items-center justify-center text-default/50 text-sm! max-lg:hidden">{{ (data.experience.length - Number(i) - 1).toString().padStart(2, '0') }}</AtomsPattern>
 
-            <div class="flex flex-col gap-4" :class="route.query.short ? '' : 'break-inside-avoid'">
+            <div class="flex flex-col gap-4">
                 <template v-if="!route.query.short">
                     <NuxtImg v-if="company.logo" :src="company.logo" class="h-12 max-lg:h-6 w-fit flex items-center text-2xl font-bold" loading="lazy" :alt="company.name"/>
                     <span v-else class="h-12 w-fit flex items-center text-2xl font-bold">{{ company.name }}</span>
@@ -26,7 +26,7 @@
                     <NuxtLink v-if="company.link" :to="company.link" target="_blank" class="text-default/50">{{ company.link }}</NuxtLink>
                 </div>
 
-                <div class="flex flex-col relative gap-2" :class="route.query.short ? '' : 'break-inside-avoid'" :key="position.name" v-for="position in company.positions">
+                <div class="flex flex-col relative gap-2 break-inside-avoid" :key="position.name" v-for="position in company.positions">
                     <div class="w-10 h-px bg-border absolute top-3 -left-14" v-if="company.positions.length > 1"></div>
                     <span class="text-lg font-bold"><span v-if="route.query.short" class="text-default/50">{{ company.name }} / </span>{{ position.name }} <span class="text-default/50">/ {{ useExperience(position.duration.from, position.duration.to).period() }}</span></span>
                     
