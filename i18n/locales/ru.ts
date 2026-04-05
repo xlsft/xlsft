@@ -15,7 +15,7 @@ export default {
         skills: 'Навыки',
         experience: 'Коммерческий опыт',
         education: 'Образование',
-        projects: 'Проекты',
+        projects: 'Пет-проекты',
         related_projects: 'Связанные проекты',
         about_project: 'О проекте',
         lets_talk: 'Давайте пообщаемся!'

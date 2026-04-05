@@ -17,7 +17,7 @@ export default {
         skills: 'Skills',
         experience: 'Experience',
         education: 'Education',
-        projects: 'Projects',
+        projects: 'Pet-projects',
         related_projects: 'Related projects',
         about_project: 'About project',
     },
