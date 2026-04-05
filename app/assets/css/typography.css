@@ -14,6 +14,6 @@ h5, h6 { @apply text-xl; }
 
 @media print {
     @page {
-        @apply m-[1cm];
+        margin: 1cm;
     }
 }   
