@@ -11,6 +11,8 @@ export default {
     },
     present: 'Настоящее время',
     sections: {
+        summary: 'Обо мне',
+        skills: 'Навыки',
         experience: 'Коммерческий опыт',
         education: 'Образование',
         projects: 'Проекты',

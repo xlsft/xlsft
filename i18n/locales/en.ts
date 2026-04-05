@@ -13,6 +13,8 @@ export default {
     },
     present: 'Present',
     sections: {
+        summary: 'Summary',
+        skills: 'Skills',
         experience: 'Experience',
         education: 'Education',
         projects: 'Projects',
