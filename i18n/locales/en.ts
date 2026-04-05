@@ -21,6 +21,18 @@ export default {
         related_projects: 'Related projects',
         about_project: 'About project',
     },
+    skills: {
+        frontend: 'frontend',
+        backend: 'backend',
+        testing: 'testing',
+        devops: 'devpps',
+        database: 'databases',
+        state: 'state management',
+        principles: 'development principles',
+        style: 'styling',
+        languages: 'programming languages',
+        other: 'other',
+    },
     labels: {
         print_version: 'Printed version',
         inn: 'INN', ogrn: 'OGRNIP',

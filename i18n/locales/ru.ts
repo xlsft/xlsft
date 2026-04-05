@@ -20,6 +20,18 @@ export default {
         about_project: 'О проекте',
         lets_talk: 'Давайте пообщаемся!'
     },
+    skills: {
+        frontend: 'Фронтенд',
+        backend: 'Бэкенд',
+        testing: 'Тестирование',
+        devops: 'Девопс',
+        database: 'Базы данных',
+        state: 'Управление состоянием',
+        principles: 'Принципы разработки',
+        style: 'Стилизация',
+        languages: 'Языки программирования',
+        other: 'Другое',
+    },
     labels: {
         print_version: 'Печатная версия',
         inn: 'ИНН', ogrn: 'ОГРНИП',
