@@ -30,6 +30,7 @@
         "date-fns": "^4.1.0",
         "grammy": "^1.41.1",
         "hcaptcha": "^0.2.0",
+        "markdown-docx": "^1.5.1",
         "markdown-it": "^14.1.1",
         "markdown-it-mdc": "^0.2.12",
         "maska": "^3.2.0",

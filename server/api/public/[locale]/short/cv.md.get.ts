@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
             "about": about[$locale],
             "positions": positions[]{
                 "name": name[$locale],
-                "description": description[$locale],
+                "description": descriptionShort[$locale],
                 "skills": skills[]->{
                     name, type, color, priority
                 } | order(priority desc),
@@ -41,45 +41,51 @@ export default defineEventHandler(async (event) => {
             "name": name[$locale],
             "faculty": faculty[$locale],
         } | order(year desc),
+        "contact": *[_type == "contact"],
+        "allLinks": *[_type == "link"] {
+            "label": label[$locale],
+            "to": to
+        }
     }`, { locale })
 
     setHeader(event, 'Content-Type', 'text/markdown; charset=utf-8')
 
     return `
         # ${data.summary.title} (${data.summary.status})
-        ## ${data.summary.description}
+        _${data.summary.description}_
 
-        # ${t[locale].sections.summary}
-
-        ${data.summary.content}
+        ${data.summary.content.replace(/^::.*\n?/gm, '\n').replaceAll('#', '##')}
         
-        # ${t[locale].sections.skills}
+        ## ${t[locale].sections.skills}
         ${Object.entries(Object.fromEntries(data.skills.map((group) => [
             group.type, 
             group.items.sort((a, b) => b.priority - a.priority)
         ]))).sort(([, aItems], [, bItems]) => bItems.length - aItems.length).map(([type, items]) => `
-            ## ${type}
-            ${items.map((item) => `- ${item.name}`).join('\n')}
+            ### ${type}
+            ${items.map((item) => `${item.name}`).join(', ')}
         `).join('')}
-        # ${t[locale].sections.experience} (${useExperience(event, 
+        ## ${t[locale].sections.experience} (${useExperience(event, 
             data.experience.at(-1)?.positions.at(-1)?.duration.from!,
             data.experience.at(0)?.positions.at(0)?.duration.to
         ).duration()})
         ${data.experience.map((experience) => `
-            ## ${experience.name}
-            ${experience.about}
+            ### ${experience.name}
             ${experience.positions.map((position) => `
-                ### ${position.name} (${useExperience(event, position.duration.from, position.duration.to).period()})
+                #### ${position.name} (${useExperience(event, position.duration.from, position.duration.to).period()})
                 ${position.description}
                 **${t[locale].labels.stack}:** ${position.skills.map((skill) => skill.name).join(', ')}
             `).join('')}
             ${experience.footer ? `_${experience.footer}_`.replaceAll('\n', '') : ''}
         `).join('')}
 
-        # ${t[locale].sections.education}
+        ## ${t[locale].sections.education}
         ${data.education.map((education) => `
-            ## ${education.name}, ${education.faculty}
+            ### ${education.name}, ${education.faculty}
             **${education.level}**, ${education.specialization} (${education.year})
         `).join('')}
+
+        ## ${t[locale].labels.contact_me}
+
+        ${data.allLinks.map((link) => `- [${link.label}](${link.to})`).join('\n')}
     `.trim().replaceAll('    ', '').replaceAll('\n\n\n', '\n\n').replaceAll('\n\n\n\n', '\n\n')
 })
