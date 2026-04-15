@@ -17,6 +17,7 @@
     "@sanity/client": "^7.16.0",
     "@types/node": "^25.3.3",
     "grammy": "^1.41.1",
+    "socks-proxy-agent": "^10.0.0",
     "telegram-markdown-v2": "^0.0.4",
     "zod": "^4.3.6"
   }

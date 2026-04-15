@@ -1,5 +1,8 @@
 import * as z from 'zod'
 import { Bot } from 'grammy'
+import { SocksProxyAgent as Proxy } from "socks-proxy-agent";
+
+const agent = process.env.SOCKS_PROXY ? new Proxy(process.env.SOCKS_PROXY) : undefined
 
 export default defineEventHandler(async (event) => {
 
@@ -20,7 +23,9 @@ export default defineEventHandler(async (event) => {
     const captcha = useCaptcha()
     if (!body.token || !captcha.verify(body.token)) throw createError({ status: 400, message: 'Captcha token is invalid' })
 
-    const bot = new Bot(process.env.TG_TOKEN)
+    const bot = new Bot(process.env.TG_TOKEN, {
+        client: { baseFetchConfig: { agent, compress: true } }
+    })
 
     const message = await bot.api.sendMessage(config.requests.telegram, /*html*/`<strong>New Request! (${config.head.url})</strong>
 
@@ -29,6 +34,6 @@ export default defineEventHandler(async (event) => {
 <strong>Phone</strong>: <code>${body.phone || '-'}</code>
 <strong>Telegram</strong>: <code>${body.telegram || '-'}</code>
 <strong>Description</strong>: <blockquote>${body.description || '-'}</blockquote>`, { parse_mode: 'HTML' })
-    
+
     return { message }
 })
