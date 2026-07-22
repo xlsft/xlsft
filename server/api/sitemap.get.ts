@@ -1,15 +1,11 @@
 import type { SitemapUrlInput } from '#sitemap/types'
+import { groq } from '@crumbleerp/clarity'
 
 export default defineSitemapEventHandler(async () => {
 
     const client = useClarity()
     const pages = await client.fetch<string[]>(groq`*[_type == "project"].id`)
     if (!pages.length) return []
-
-    const locales = {
-        en: 'en-US',
-        ru: 'ru-RU'
-    }
 
     return Object.entries({
         'en-US': 'en',

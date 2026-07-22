@@ -3,9 +3,9 @@ export default defineEventHandler(async (event) => { try {
     if (!path) throw createError({ statusCode: 400, statusMessage: 'Missing repo path' })
     const url = new URL(`https://api.github.com/repos/${path}`)
 
-    const response = await $fetch<{ stargazers_count: number, topics: string[] }>(url.toString(), { headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }})
+    const response = await $fetch<{ stargazers_count: number, topics: string[] }>(url.toString(), { headers: { Accept: 'application/vnd.github+json', Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }, timeout: 5000 })
     return {
-        starts: response.stargazers_count,
+        stars: response.stargazers_count,
         topics: response.topics
     }
 } catch (error: any) { throw createError({

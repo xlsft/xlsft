@@ -1,4 +1,5 @@
 import * as z from 'zod'
+import { groq } from '@crumbleerp/clarity'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { convertToModelMessages, streamText, type UIMessage } from 'ai';
 
@@ -6,9 +7,10 @@ const provider = createOpenRouter({
     apiKey: process.env.OPENROUTER_TOKEN,
 });
 
-export default defineEventHandler(async (event) => {
+const chatRateLimit = useRateLimit('chat', 10, 60_000)
 
-    const data = await useClarity().fetch<Omit<IndexQuery, 'links'>>(groq`{
+const getChatContext = defineCachedFunction(async (client: ReturnType<typeof useClarity>) => {
+    return await client.fetch<Omit<IndexQuery, 'links'>>(groq`{
         "summary": *[_type == "summary"][0]{
             "title": title,
             "description": description,
@@ -72,18 +74,29 @@ export default defineEventHandler(async (event) => {
             "label": label,
             "to": to
         },
-    }`)
+    }`, {}, { signal: AbortSignal.timeout(10_000) })
+}, {
+    maxAge: 600,
+    swr: true,
+    staleMaxAge: 86400,
+    group: 'chat',
+    name: 'context',
+    getKey: () => 'data'
+})
 
-    data.education[0]?.specialization
+const bodySchema = z.object({
+    messages: z.array(z.custom<UIMessage>()).min(1, 'Messages are required').max(50, 'Too many messages')
+        .refine((messages) => JSON.stringify(messages).length <= 200_000, 'Messages are too large')
+})
 
-    const body = z.object({
-        messages: z.array(z.custom<UIMessage>())
-    }).parse(await readBody(event))
+export default defineEventHandler(async (event) => {
 
+    chatRateLimit(event)
 
-    const language = {
-        ru: 'Русский', en: 'Английский'
-    }
+    const [ data, body ] = await Promise.all([
+        getChatContext(useClarity()),
+        readValidatedBody(event, (body) => bodySchema.parse(body))
+    ])
 
     const system = `
         You are a virtual assistant presenting a candidate based on the object.

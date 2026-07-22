@@ -6,7 +6,7 @@ import type { H3Event } from "h3"
 
 export const useSatori = async (event: H3Event, string: string) => {
     const query = getQuery(event)
-    const width = Math.min(parseInt(String(query.width) || "2000"), 5000)
+    const width = Math.min(parseInt(String(query.width) || "2000"), 2400)
     const url = getRequestURL(event)
     
     const format = (url.pathname.split('.')?.[1] || 'png') as 'svg' | 'png'

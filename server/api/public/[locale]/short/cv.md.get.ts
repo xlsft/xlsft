@@ -1,7 +1,8 @@
 import t from '~~/i18n/locales'
+import { groq } from '@crumbleerp/clarity'
 import { useExperience } from '~~/server/utils/useExperience'
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const locale = getRouterParam(event, 'locale') as keyof typeof t
     const client = useClarity()
     const data = await client.fetch<IndexQuery>(groq`{
@@ -88,4 +89,11 @@ export default defineEventHandler(async (event) => {
 
         ${data.allLinks.map((link) => `- [${link.label}](${link.to})`).join('\n')}
     `.trim().replaceAll('    ', '').replaceAll('\n\n\n', '\n\n').replaceAll('\n\n\n\n', '\n\n')
+}, {
+    maxAge: 600,
+    swr: true,
+    staleMaxAge: 86400,
+    group: 'cv',
+    name: 'md-short',
+    getKey: (event) => getRouterParam(event, 'locale') || 'unknown'
 })

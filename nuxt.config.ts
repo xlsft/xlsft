@@ -10,6 +10,12 @@ export default defineNuxtConfig({
     nitro: {
         preset: 'node-cluster'
     },
+    routeRules: {
+        '/**': { cache: { maxAge: 600, swr: true, staleMaxAge: 86400 } },
+        '/api/**': { cache: false },
+        '/api/sitemap': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
+        '/api/repo/**': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
+    },
     app: {
         head: {
             charset: 'utf-8',

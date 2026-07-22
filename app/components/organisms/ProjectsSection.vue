@@ -11,11 +11,6 @@
         "description": description[$locale]
     } | order(priority desc)`, projectsFilters)
 
-    const projectsStars = projects.value ? Object.fromEntries(await Promise.all(projects.value.filter((project: any) => !!project.repo).map(async (project: any) => {
-        const response = await useGithubRepository<any>(project.repo)
-        return [project.repo, response?.stars]
-    }))) : {}
-
     defineExpose({
         projectsCount: projects.value?.length
     })
@@ -65,10 +60,6 @@
                 <template #title>
                     <div class="flex items-center justify-between w-full gap-2">
                         <span>{{ project.name }}</span>
-                        <div class="flex items-center gap-1 *:text-yellow-500" v-if="projectsStars[project.repo]">
-                            <NuxtIcon name="mingcute:star-fill"/>
-                            <span>{{ projectsStars[project.repo] }}</span>
-                        </div>
                     </div>
                 </template>
                 <template #description>

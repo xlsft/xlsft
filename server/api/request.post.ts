@@ -3,29 +3,34 @@ import { Bot } from 'grammy'
 import { SocksProxyAgent as Proxy } from "socks-proxy-agent";
 
 const agent = process.env.SOCKS_PROXY ? new Proxy(process.env.SOCKS_PROXY) : undefined
+const bot = process.env.TG_TOKEN ? new Bot(process.env.TG_TOKEN, {
+    client: { baseFetchConfig: { agent, compress: true } }
+}) : undefined
+
+const requestRateLimit = useRateLimit('request', 5, 60_000)
+
+const bodySchema = z.object({
+    name: z.string('Name is required'),
+    email: z.string('Email should be a string').optional(),
+    phone: z.string('Phone should be a string').optional(),
+    telegram: z.string('Telegram should be a string').optional(),
+    description: z.string('Description should be a string').optional(),
+    token: z.string('Captcha response is required')
+})
 
 export default defineEventHandler(async (event) => {
 
+    requestRateLimit(event)
+
     const config = useRuntimeConfig().public.config
 
-    if (!process.env.TG_TOKEN) throw createError({ status: 500, message: 'Telegram token is not set' })
+    if (!bot) throw createError({ status: 500, message: 'Telegram token is not set' })
     if (!config.requests.telegram) throw createError({ status: 500, message: 'Response user is not set' })
 
-    const body = z.object({
-        name: z.string('Name is required'),
-        email: z.string('Email should be a string').optional(),
-        phone: z.string('Phone should be a string').optional(),
-        telegram: z.string('Telegram should be a string').optional(),
-        description: z.string('Description should be a string').optional(),
-        token: z.string('Captcha response is required')
-    }).parse(await readBody(event))
+    const body = await readValidatedBody(event, (body) => bodySchema.parse(body))
 
     const captcha = useCaptcha()
-    if (!body.token || !captcha.verify(body.token)) throw createError({ status: 400, message: 'Captcha token is invalid' })
-
-    const bot = new Bot(process.env.TG_TOKEN, {
-        client: { baseFetchConfig: { agent, compress: true } }
-    })
+    if (!body.token || !await captcha.verify(body.token)) throw createError({ status: 400, message: 'Captcha token is invalid' })
 
     const message = await bot.api.sendMessage(config.requests.telegram, /*html*/`<strong>New Request! (${config.head.url})</strong>
 

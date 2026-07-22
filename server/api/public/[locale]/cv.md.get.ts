@@ -1,7 +1,8 @@
 import t from '~~/i18n/locales'
+import { groq } from '@crumbleerp/clarity'
 import { useExperience } from '~~/server/utils/useExperience'
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const locale = getRouterParam(event, 'locale') as keyof typeof t
     const client = useClarity()
     const data = await client.fetch<IndexQuery>(groq`{
@@ -50,7 +51,7 @@ export default defineEventHandler(async (event) => {
 
     setHeader(event, 'Content-Type', 'text/markdown; charset=utf-8')
 
-    return new Blob([`
+    return `
         # ${data.summary.title} (${data.summary.status})
         _${data.summary.description}_
 
@@ -88,5 +89,12 @@ export default defineEventHandler(async (event) => {
         ## ${t[locale].labels.contact_me}
 
         ${data.allLinks.map((link) => `- [${link.label}](${link.to})`).join('\n')}
-    `.trim().replaceAll('    ', '').replaceAll('\n\n\n', '\n\n').replaceAll('\n\n\n\n', '\n\n')], { type: 'text/markdown;charset=utf-8' })
+    `.trim().replaceAll('    ', '').replaceAll('\n\n\n', '\n\n').replaceAll('\n\n\n\n', '\n\n')
+}, {
+    maxAge: 600,
+    swr: true,
+    staleMaxAge: 86400,
+    group: 'cv',
+    name: 'md',
+    getKey: (event) => getRouterParam(event, 'locale') || 'unknown'
 })

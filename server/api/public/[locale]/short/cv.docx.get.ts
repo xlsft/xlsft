@@ -1,9 +1,9 @@
 import t from '~~/i18n/locales'
+import { groq } from '@crumbleerp/clarity'
 import { useExperience } from '~~/server/utils/useExperience'
 import docx, { Packer } from 'markdown-docx';
-import { styles } from 'markdown-docx';
 
-export default defineEventHandler(async (event) => {
+export default defineCachedBinaryHandler(async (event) => {
     const locale = getRouterParam(event, 'locale') as keyof typeof t
     const client = useClarity()
     const data = await client.fetch<IndexQuery>(groq`{
@@ -96,4 +96,7 @@ export default defineEventHandler(async (event) => {
             del: "888888",
         }
     }))
+}, {
+    maxAge: 600,
+    getKey: (event) => `cv-docx-short:${getRouterParam(event, 'locale') || 'unknown'}`
 })

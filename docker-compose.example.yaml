@@ -2,6 +2,7 @@ x-environment: &env
   GITHUB_TOKEN: GITHUB_TOKEN
   TG_TOKEN: TG_TOKEN
   HCAPTCHA_TOKEN: HCAPTCHA_TOKEN
+  REDIS_URL: REDIS_URL
 
 name: container_name
 services:

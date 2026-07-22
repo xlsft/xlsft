@@ -1,4 +1,5 @@
 import { tws } from 'tailwind-to-style'
+import { groq } from '@crumbleerp/clarity'
 import locales from '~~/i18n/locales/index'
 
 import MarkdownIt from 'markdown-it'
@@ -11,7 +12,7 @@ export function tw(strings: TemplateStringsArray, ...values: any[]) {
     return tws(str)
 }
 
-export default defineEventHandler(async (event) => {
+export default defineCachedBinaryHandler(async (event) => {
 
     const config = useRuntimeConfig().public.config
     const [ locale, theme ] = [
@@ -119,4 +120,16 @@ export default defineEventHandler(async (event) => {
             </div>
         </div>
     `)
+}, {
+    maxAge: 3600,
+    getKey: (event) => {
+        const query = getQuery(event)
+        return [
+            'og',
+            getRouterParam(event, 'locale') || 'unknown',
+            getRouterParam(event, 'theme') || 'unknown',
+            getRouterParam(event, 'slug') || 'unknown',
+            String(query.width || '')
+        ].join(':')
+    }
 })
