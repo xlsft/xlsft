@@ -7,6 +7,9 @@ export default defineNuxtConfig({
     css: ['~/assets/css/main.css'],
     vite: { plugins: [ tailwindcss() as any ] },
     site: { url: config.head.url },
+    nitro: {
+        preset: 'node-cluster'
+    },
     app: {
         head: {
             charset: 'utf-8',
