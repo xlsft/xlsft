@@ -52,6 +52,7 @@ export default {
         more_about: "More about",
         current_locale: "Current language",
         back: 'Go back',
+        close: 'Close',
         anonymous: 'Anonymous'
     },
     pages: {

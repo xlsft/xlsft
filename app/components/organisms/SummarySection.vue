@@ -3,6 +3,10 @@
     const { t } = useI18n()
     const props = defineProps<{ data: IndexQuery }>()
     const config = useRuntimeConfig().public.config
+
+    useHead({
+        link: [{ rel: 'preload', as: 'image', href: props.data.summary.image, fetchpriority: 'high' }]
+    })
 </script>
 
 <template>
@@ -48,6 +52,7 @@
                 <NuxtImg 
                     :src="data.summary.image" 
                     :alt="'Photo'"
+                    fetchpriority="high"
                     class="h-fit w-100 min-lg:min-w-100 max-sm:w-full max-lg:w-70 transition-all" 
                     :placeholder="Skeleton" 
                     placeholder-class="animate-pulse blur-lg scale-150"

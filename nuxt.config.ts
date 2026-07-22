@@ -8,10 +8,21 @@ export default defineNuxtConfig({
     vite: { plugins: [ tailwindcss() as any ] },
     site: { url: config.head.url },
     nitro: {
-        preset: 'node-cluster'
+        preset: 'node-cluster',
+        compressPublicAssets: true
     },
     routeRules: {
-        '/**': { cache: { maxAge: 600, swr: true, staleMaxAge: 86400 } },
+        '/**': {
+            cache: { maxAge: 600, swr: true, staleMaxAge: 86400 },
+            headers: {
+                'x-content-type-options': 'nosniff',
+                'cross-origin-opener-policy': 'same-origin',
+                'x-frame-options': 'SAMEORIGIN',
+                'referrer-policy': 'strict-origin-when-cross-origin',
+                'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+                'content-security-policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:; frame-src https:; worker-src 'self' blob:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+            }
+        },
         '/api/**': { cache: false },
         '/api/sitemap': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
         '/api/repo/**': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
@@ -32,6 +43,7 @@ export default defineNuxtConfig({
             link: [
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
                 { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+                { rel: 'preconnect', href: 'https://fucosukalekob.begetcdn.cloud', crossorigin: '' },
             ]
         },
     },
@@ -66,8 +78,6 @@ export default defineNuxtConfig({
       '@nuxtjs/mdc',
       'nuxt-og-image',
       'nuxt-gtag',
-      '@pinia/nuxt',
-      'pinia-plugin-persistedstate/nuxt',
     ],
     i18n: {
         strategy: 'prefix',
@@ -103,7 +113,7 @@ export default defineNuxtConfig({
         clickmap: true,
         trackLinks: true,
         accurateTrackBounce: true,
-        webvisor: true
+        webvisor: false
     },
     gtag: {
         id: config.metrics.gtag

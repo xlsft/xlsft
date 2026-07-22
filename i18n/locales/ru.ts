@@ -50,6 +50,7 @@ export default {
         more_about: "Подробнее",
         current_locale: "Текущий язык",
         back: 'Вернутся назад',
+        close: 'Закрыть',
         anonymous: 'Анонимно'
     },
     pages: {

@@ -39,7 +39,6 @@
     --ui-border: var(--ui-neutral);
     --ui-border-accented: var(--ui-neutral);
     --ui-border-muted: var(--ui-neutral);
-    --ui-text-dimmed: var(--ui-neutral);
 
     --ui-bg-muted: var(--ui-bg);
     --ui-bg-elevated: var(--ui-bg);
@@ -48,6 +47,16 @@
     --ui-text-muted: var(--ui-text-dimmed);
     --ui-text-toned: var(--ui-text-dimmed);
     --ui-text-highlighted: var(--ui-text);
+}
+
+/* контраст текста не должен зависеть от цвета бордеров:
+   #404040/#c2c2c2 на фоне дают contrast < 4.5:1 и фейлят WCAG AA */
+:root {
+    --ui-text-dimmed: #595959;
+}
+
+.dark {
+    --ui-text-dimmed: #9e9e9e;
 }
 
 * {

@@ -143,6 +143,7 @@
                 <NuxtBlogPost
                     v-for="project in (data.related || []).sort((a: any, b: any) => b.priority - a.priority)"
                     :key="project.name"
+                    :title="project.name"
                     variant="outline"
                     :image="project.thumbnail"
                     @click="() => { router.push(`/${locale}/projects/${project.id}`) }"

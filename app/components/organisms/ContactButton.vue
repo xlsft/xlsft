@@ -1,9 +1,11 @@
 <script setup lang="ts">
     import type { HTMLAttributes } from 'vue';
     import SectionHeader from '../molecules/SectionHeader.vue';
-    import Captcha from '@hcaptcha/vue3-hcaptcha';
     import countryCodes from '~/assets/json/phone-codes.json'
     import { vMaska } from 'maska/vue'
+
+    // hcaptcha тянет ~700КБ js, 8 iframe и воркеры — грузим только при первом открытии формы
+    const Captcha = defineAsyncComponent(() => import('@hcaptcha/vue3-hcaptcha'))
 
     const { t, locale } = useI18n()
     const toast = useToast()
@@ -13,6 +15,8 @@
     const captcha = useTemplateRef('captcha')
 
     const open = ref<boolean>(false)
+    const captchaMounted = ref<boolean>(false)
+    watch(open, (value) => { if (value) captchaMounted.value = true })
 
     const form = ref<{
         name?: string, 
@@ -64,7 +68,7 @@
     <NuxtButton size="xl" class="print:hidden w-fit" :class @click="open = !open">{{ t('labels.contact_me') }}</NuxtButton>
     <NuxtModal v-model:open="open" class="max-w-[50dvw] max-lg:max-w-dvw! max-lg:max-h-dvh! max-lg:w-dvw! max-lg:h-dvh! max-lg:ring-0!">
         <template #content>
-            <NuxtButton @click="open = false" icon="mingcute:close-line" variant="outline" color="neutral" class="absolute top-4 right-4 w-8 h-8 z-5 max-sm:hidden" :ui="{ leadingIcon: 'size-4! translate-x-px' }"/>
+            <NuxtButton @click="open = false" icon="mingcute:close-line" variant="outline" color="neutral" class="absolute top-4 right-4 w-8 h-8 z-5 max-sm:hidden" :aria-label="t('labels.close')" :ui="{ leadingIcon: 'size-4! translate-x-px' }"/>
             <SectionHeader no-contact pattern="topography" class="max-sm:p-4! max-sm:h-fit! max-sm:min-h-24!">
                 {{ t('sections.lets_talk') }}
             </SectionHeader>
@@ -159,6 +163,7 @@
     </NuxtModal>
     <Teleport to="body">
         <Captcha
+            v-if="captchaMounted"
             ref="captcha"
             :sitekey="config.captcha.key"
             size="invisible"
