@@ -1,7 +1,7 @@
 <script setup lang="ts">
     import Logo from '~/assets/svg/logo.svg?raw'
     import LogoMini from '~/assets/svg/logo-mini.svg?raw'
-    import { useMediaQuery, useScroll } from '@vueuse/core';   
+    import { useMediaQuery, useScroll } from '@vueuse/core';
     import * as locales from '@nuxt/ui/locale'
     import type { UIMessage } from 'ai'
     import { isReasoningUIPart, isTextUIPart, isToolUIPart, getToolName } from 'ai'
@@ -27,7 +27,7 @@
 
     const fullscreen = useMediaQuery('(max-width: 768px)')
 
-    const { data } = await useSanityDynamicQuery(groq`{
+    const { data } = await useClarityDynamicQuery(groq`{
         "footer": {
             "legal": *[_type == "summary"][0].legal[$locale],
             "links": *[_type == "link"] {
@@ -158,9 +158,9 @@
     <NuxtModal v-model:open="modal" :fullscreen :ui="{ content: 'sm:max-w-3xl sm:h-[28rem] p-4' }">
         <template #content>
             <NuxtChatPalette>
-                <NuxtChatMessages 
-                    :messages="chat.messages" :status="chat.status"  
-                    :assistant="{ avatar: { icon: 'mage:stars-c-fill', ui: { root: 'bg-primary rounded-none *:text-white!' } } }" 
+                <NuxtChatMessages
+                    :messages="chat.messages" :status="chat.status"
+                    :assistant="{ avatar: { icon: 'mage:stars-c-fill', ui: { root: 'bg-primary rounded-none *:text-white!' } } }"
                     :user="{ ui: { container: 'flex-row-reverse justify-start!' },  avatar: { icon: 'mingcute:user-2-fill', ui: { root: 'bg-border/50 rounded-none' } } }"
                 >
                     <template #content="{ message }">
@@ -173,7 +173,7 @@
                             ]"
                             v-for="(part, index) in message.parts"
                             :key="`${message.id}-${part.type}-${index}`"
-                        >   
+                        >
                             <NuxtChatReasoning
                                 v-if="isReasoningUIPart(part) && part.text"
                                 :text="part.text"

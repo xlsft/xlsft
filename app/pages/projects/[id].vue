@@ -8,9 +8,9 @@
     const theme = useColorMode()
 
     const params = ref({ id: route.params.id?.toString() }); watch(() => route.params.id, () => params.value.id = route.params.id?.toString())
-    const { data } = await useSanityDynamicQuery<any>(groq`*[_type == "project" && id == $id] {
+    const { data } = await useClarityDynamicQuery<any>(groq`*[_type == "project" && id == $id] {
         "seo": *[_type == "summary"][0] {
-            "title": title[$locale], 
+            "title": title[$locale],
         },
         id, links, tags, repo,
         "name": name[$locale],
@@ -52,7 +52,7 @@
         v-if="data?.images?.length && data?.images?.length > 1"
         :items="data?.images" v-slot="{ item: src, index }"
         loop autoplay arrows
-        :prev="{ variant: 'outline' }" :next="{ variant: 'outline' }"        
+        :prev="{ variant: 'outline' }" :next="{ variant: 'outline' }"
         :ui="{
             item: 'ps-0! basis-1/2 max-lg:basis-full relative overflow-hidden',
             prev: 'sm:start-8 rounded-none! hover:opacity-75! disabled:opacity-0! disabled:pointer-events-none!',
@@ -62,21 +62,21 @@
         }"
     >
         <AtomsPreview class="relative" :style="{ background: data?.bg }">
-            <NuxtImg 
+            <NuxtImg
                 :src="(src as string)"
-                :alt="data?.name + ` image ${index}`" 
-                class="transition-all select-none h-100 w-full object-contain object-center!" 
-                :placeholder="Skeleton" 
+                :alt="data?.name + ` image ${index}`"
+                class="transition-all select-none h-100 w-full object-contain object-center!"
+                :placeholder="Skeleton"
                 placeholder-class="animate-pulse blur-lg scale-150"
             />
         </AtomsPreview>
     </NuxtCarousel>
     <AtomsPreview v-else class="relative" :style="{ background: data?.bg }">
-        <NuxtImg 
+        <NuxtImg
             :src="(data?.images?.[0] as string)"
-            :alt="data?.name + ` image ${0}`" 
-            class="transition-all select-none h-100 w-full object-contain object-center!" 
-            :placeholder="Skeleton" 
+            :alt="data?.name + ` image ${0}`"
+            class="transition-all select-none h-100 w-full object-contain object-center!"
+            :placeholder="Skeleton"
             placeholder-class="animate-pulse blur-lg scale-150"
         />
     </AtomsPreview>
@@ -108,17 +108,17 @@
             <MDC v-if="data?.description" :value="data?.description" class="md *:m-0! *:text-sm! *:leading-4! text-default/50 *:text-right max-lg:*:text-left!"/>
 
             <h3 class="text-lg!" v-if="repo?.topics || data?.tags">{{ t('labels.tags') }}:</h3>
-            <div class="flex flex-wrap gap-1 justify-end items-center" v-if="data?.tags">  
+            <div class="flex flex-wrap gap-1 justify-end items-center" v-if="data?.tags">
                 <NuxtBadge v-for="tag in data?.tags" :key="tag" variant="outline" color="neutral">{{ tag }}</NuxtBadge>
             </div>
-            <div class="flex flex-wrap gap-1 justify-end items-center" v-if="repo?.topics">  
+            <div class="flex flex-wrap gap-1 justify-end items-center" v-if="repo?.topics">
                 <NuxtBadge v-for="topic in repo?.topics" :key="topic" variant="outline" color="neutral">{{ topic }}</NuxtBadge>
             </div>
 
             <h3 class="text-lg!" v-if="data?.stack">{{ t('labels.stack') }}:</h3>
-            <div id="stack" class="flex flex-wrap gap-1 justify-end items-center" v-if="data?.stack">  
-                <NuxtBadge 
-                    v-for="item in data?.stack" 
+            <div id="stack" class="flex flex-wrap gap-1 justify-end items-center" v-if="data?.stack">
+                <NuxtBadge
+                    v-for="item in data?.stack"
                     :key="item.name"
                     variant="outline" color="neutral"
                     :style="`--badge-color: ${item.color}`"
@@ -127,7 +127,7 @@
                     {{ item.name }}
                 </NuxtBadge>
             </div>
-            
+
             <h3 class="text-lg!" v-if="data?.links">{{ t('labels.links') }}:</h3>
             <NuxtLink v-for="link in data?.links" :key="link" :to="link" class="flex items-center gap-1" v-if="data?.links">
                 {{ link }}
@@ -147,7 +147,7 @@
                     :image="project.thumbnail"
                     @click="() => { router.push(`/${locale}/projects/${project.id}`) }"
                     :ui="{
-                        header: 'border-b group-hover/blog-post:border-primary!', 
+                        header: 'border-b group-hover/blog-post:border-primary!',
                         image: 'grayscale group-hover/blog-post:grayscale-0 group-hover/blog-post:scale-105! transition-all',
                         root: 'hover:ring-primary! *:cursor-nw-resize! cursor-nw-resize!',
                         body: 'p-3! flex flex-col gap-1',
@@ -162,7 +162,7 @@
                     </template>
                     <template #description>
                         <MDC :value="project.description" class="md *:m-0! *:text-xs! *:leading-4! grow"/>
-                        <div class="flex flex-wrap gap-1">  
+                        <div class="flex flex-wrap gap-1">
                             <NuxtBadge v-for="tag in project.tags" :key="tag" variant="outline" color="neutral" size="sm">{{ tag }}</NuxtBadge>
                         </div>
                     </template>

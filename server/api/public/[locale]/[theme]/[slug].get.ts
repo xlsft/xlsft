@@ -15,20 +15,20 @@ export default defineEventHandler(async (event) => {
 
     const config = useRuntimeConfig().public.config
     const [ locale, theme ] = [
-        getRouterParam(event, 'locale'), 
+        getRouterParam(event, 'locale'),
         getRouterParam(event, 'theme')
     ]
     if (!locale || !config.globals.locales.includes(locale)) return createError({ status: 400, message: 'Locale is undefined' })
     if (!theme || !config.globals.themes.includes(theme)) return createError({ status: 400, message: 'Theme is undefined' })
 
-    const client = useSanity()
+    const client = useClarity()
     const data = await client.fetch<Pick<IndexQuery & SeoQuery, 'summary' | 'skills' | 'experience' | 'seo'>>(groq`{
-        "summary": *[_type == "summary"][0]{ 
-            "title": title[$locale], 
-            "description": description[$locale], 
-            "content": content[$locale], 
+        "summary": *[_type == "summary"][0]{
+            "title": title[$locale],
+            "description": description[$locale],
+            "content": content[$locale],
             "image": image.asset->url,
-            "status": status[$locale], 
+            "status": status[$locale],
         },
         "skills": array::unique(*[_type == "skill"] | order(type asc) { "type": type })[]{
             "type": type,
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
         "seo": *[_type == "summary"][0]{
             "title": title[$locale],
             "description": description[$locale]
-        }, 
+        },
     }`, { locale, theme })
 
     const vars = {
@@ -98,7 +98,7 @@ export default defineEventHandler(async (event) => {
                     ${md.render(data.summary.content).replaceAll('response-block', 'div')}
                     <div style="${tw`flex flex-col gap-1`}">
                         ${Object.entries(Object.fromEntries(data.skills.map((group) => [
-                            group.type, 
+                            group.type,
                             group.items.sort((a, b) => b.priority - a.priority)
                         ]))).sort(([, aItems], [, bItems]) => bItems.length - aItems.length).map(([label, items]) => /*html*/`
                             <div style="${tw`flex flex-wrap gap-2 items-center`}; order:-${items.map((v: any) => v.name).join('').length}">

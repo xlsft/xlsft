@@ -1,6 +1,6 @@
 import { Bot, InputFile, type Context } from 'grammy'
 import { Conversation, conversations, createConversation, type ConversationFlavor } from "@grammyjs/conversations";
-import { useSanity } from './utils/useSanity';
+import { useClarity } from './utils/useClarity';
 import { useI18n } from './utils/useI18n';
 import config from '../global.config'
 import { useLocalizedBottomMenu, useLocalizedMenu } from './utils/useLocalizedMenu';
@@ -17,7 +17,7 @@ const agent = process.env.SOCKS_PROXY ? new Proxy(process.env.SOCKS_PROXY) : und
 export const bot = new Bot<ExtendedContext>(process.env.TG_TOKEN!, {
     client: { baseFetchConfig: { agent, compress: true } }
 }); bot.use(conversations())
-export const sanity = useSanity()
+export const sanity = useClarity()
 
 bot.use(createConversation(async (conversation: Conversation, ctx: Context) => {
     try {

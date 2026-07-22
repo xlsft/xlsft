@@ -4,14 +4,14 @@
     const theme = useColorMode()
     const config = useRuntimeConfig().public.config
     const projects = useTemplateRef('projects')
-    
-    const { data } = await useSanityDynamicQuery<IndexQuery>(groq`{
-        "summary": *[_type == "summary"][0]{ 
-            "title": title[$locale], 
-            "description": description[$locale], 
-            "content": content[$locale], 
+
+    const { data } = await useClarityDynamicQuery<IndexQuery>(groq`{
+        "summary": *[_type == "summary"][0]{
+            "title": title[$locale],
+            "description": description[$locale],
+            "content": content[$locale],
             "image": image.asset->url,
-            "status": status[$locale], 
+            "status": status[$locale],
         },
         "skills": array::unique(*[_type == "skill"] | order(type asc) { "type": type })[]{
             "type": type,
@@ -48,7 +48,7 @@
             "name": name[$locale],
             "faculty": faculty[$locale],
         } | order(year desc),
-        "projectTags": array::unique(*[_type == "project"].tags[]), 
+        "projectTags": array::unique(*[_type == "project"].tags[]),
         "allLinks": *[_type == "link"] {
             "label": label[$locale],
             "to": to
@@ -62,19 +62,19 @@
         photo: data.value?.summary.image,
         status: data.value?.summary.status,
         experience: `${t('sections.experience')}: ${useExperience(
-            data.value?.experience?.at(-1)?.positions?.at(-1)?.duration?.from!, 
+            data.value?.experience?.at(-1)?.positions?.at(-1)?.duration?.from!,
             data.value?.experience?.at(0)?.positions?.at(0)?.duration?.to
         ).duration()}`,
         url: config.head.url
     })
 
-    useSeoMeta({ 
+    useSeoMeta({
         title: t('pages.index'),
         ogTitle: `${data.value?.summary.title} — ${t('pages.index')}`,
         description: data.value?.summary.description || '',
         ogDescription: data.value?.summary.description || ''
     })
-    
+
 </script>
 
 <template>
@@ -85,7 +85,7 @@
         <MoleculesSectionHeader pattern="architect" id="experience" v-if="data.experience?.length">
             {{ t('sections.experience') }}<br>
             <span class="text-sm! text-default/50">({{ useExperience(
-                data.experience.at(-1)?.positions.at(-1)?.duration.from!, 
+                data.experience.at(-1)?.positions.at(-1)?.duration.from!,
                 data.experience.at(0)?.positions.at(0)?.duration.to
             ).duration() }})</span>
         </MoleculesSectionHeader>

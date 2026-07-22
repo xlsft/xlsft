@@ -3,9 +3,9 @@
     const route = useRoute()
 
     const params = ref({ id: route.params.id?.toString() }); watch(() => route.params.id, () => params.value.id = route.params.id?.toString())
-    const { data } = await useSanityDynamicQuery<any>(groq`*[_type == "legal" && id == $id] {
+    const { data } = await useClarityDynamicQuery<any>(groq`*[_type == "legal" && id == $id] {
         "seo": *[_type == "summary"][0] {
-            "title": title[$locale], 
+            "title": title[$locale],
         },
         "title": title[$locale],
         "description": description[$locale],

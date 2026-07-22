@@ -10,13 +10,13 @@
         layout: 'empty'
     })
 
-    const { data } = await useSanityDynamicQuery<IndexQuery & SeoQuery>(groq`{
-        "summary": *[_type == "summary"][0]{ 
-            "title": title[$locale], 
-            "description": description[$locale], 
-            "content": content[$locale], 
+    const { data } = await useClarityDynamicQuery<IndexQuery & SeoQuery>(groq`{
+        "summary": *[_type == "summary"][0]{
+            "title": title[$locale],
+            "description": description[$locale],
+            "content": content[$locale],
             "image": image.asset->url,
-            "status": status[$locale], 
+            "status": status[$locale],
         },
         "skills": array::unique(*[_type == "skill"] | order(type asc) { "type": type })[]{
             "type": type,
@@ -57,7 +57,7 @@
         "seo": *[_type == "summary"][0]{
             "title": title[$locale],
             "description": description[$locale]
-        }, 
+        },
         "allLinks": *[_type == "link"] {
             "label": label[$locale],
             "to": to
@@ -71,7 +71,7 @@
         photo: data.value?.summary.image,
         status: data.value?.summary.status,
         experience: `${t('sections.experience')}: ${useExperience(
-            data.value?.experience?.at(-1)?.positions?.at(-1)?.duration?.from!, 
+            data.value?.experience?.at(-1)?.positions?.at(-1)?.duration?.from!,
             data.value?.experience?.at(0)?.positions?.at(0)?.duration?.to
         ).duration()}`,
         url: config.head.url
@@ -84,13 +84,13 @@
         ogTitle: `${data.value?.seo.title} — ${t('labels.print_version')}`,
         ogDescription: data.value?.seo.description
     })
-    
+
 
     onMounted(() => window.addEventListener('load', () => {
         window.print()
         window.onfocus = () => window.close()
     }))
-    
+
 </script>
 
 <template>
@@ -100,7 +100,7 @@
         <MoleculesSectionHeader pattern="architect" v-if="data.experience?.length">
             {{ t('sections.experience') }}<br>
             <span class="text-sm! text-default/50">({{ useExperience(
-                data.experience.at(-1)?.positions.at(-1)?.duration.from!, 
+                data.experience.at(-1)?.positions.at(-1)?.duration.from!,
                 data.experience.at(0)?.positions.at(0)?.duration.to
             ).duration() }})</span>
         </MoleculesSectionHeader>

@@ -4,9 +4,9 @@ import config from './global.config'
 export default defineNuxtConfig({
     compatibilityDate: '2025-05-15',
     devtools: { enabled: true },
-    css: ['~/assets/css/main.css'],  
+    css: ['~/assets/css/main.css'],
     vite: { plugins: [ tailwindcss() as any ] },
-    site: { url: config.head.url }, 
+    site: { url: config.head.url },
     app: {
         head: {
             charset: 'utf-8',
@@ -28,11 +28,11 @@ export default defineNuxtConfig({
     },
     fonts: {
         families: [
-            { 
-                name: 'Cascadia Mono', 
-                weights: [200, 300, 400, 500, 600, 700, 800, 900], 
-                global: true, 
-                provider: 'google' 
+            {
+                name: 'Cascadia Mono',
+                weights: [200, 300, 400, 500, 600, 700, 800, 900],
+                global: true,
+                provider: 'google'
             },
         ],
     },
@@ -50,7 +50,7 @@ export default defineNuxtConfig({
       '@nuxtjs/i18n',
       'yandex-metrika-module-nuxt3',
       '@nuxt/ui',
-      '@nuxtjs/sanity',
+      '@crumbleerp/clarity',
       '@nuxt/fonts',
       '@nuxtjs/seo',
       '@nuxt/image',
@@ -98,10 +98,6 @@ export default defineNuxtConfig({
     },
     gtag: {
         id: config.metrics.gtag
-    },
-    sanity: {
-        projectId: config.cms.project,
-        apiVersion: config.cms.api,
     },
     sitemap: {
         sources: [

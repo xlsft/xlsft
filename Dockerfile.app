@@ -1,11 +1,15 @@
-FROM oven/bun:alpine AS builder
+FROM node:alpine AS builder
 
 WORKDIR /app
-COPY package.json bun.lockb* ./
+RUN npm install -g pnpm
 
-RUN bun install
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+
+RUN pnpm install --frozen-lockfile
 COPY . .
-RUN bun run build
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+RUN pnpm run build
+
 FROM node:alpine AS runtime
 
 WORKDIR /app

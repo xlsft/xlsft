@@ -1,6 +1,6 @@
 import type { AsyncDataOptions } from "#app"
 
-export const useSanityDynamicQuery = async <T = any>(
+export const useClarityDynamicQuery = async <T = any>(
     query: string,
     params?: Ref<Record<string, any>>,
     options: AsyncDataOptions<T> = {}
@@ -8,15 +8,15 @@ export const useSanityDynamicQuery = async <T = any>(
     const theme = useColorMode()
     const route = useRoute()
     const { locale } = useI18n()
-    const sanity = useSanity()
+    const clarity = useClarity()
 
     const constructParams = () => ({ ...params?.value || {}, locale: locale.value || 'ru', theme: theme.value || 'dark' })
 
     const data = useAsyncData<T>(query + route.fullPath, () => {
         const params = constructParams()
-        return sanity.fetch(query, params)
+        return clarity.fetch(query, params)
     }, options)
-    
+
     watch(
         () => params?.value,
         console.info,
@@ -27,6 +27,6 @@ export const useSanityDynamicQuery = async <T = any>(
         const keys = Object.keys(constructParams())
         if (keys.some(key => query.includes(`$${key}`))) data.refresh()
     }, { deep: true })
-    
+
     return data
 }

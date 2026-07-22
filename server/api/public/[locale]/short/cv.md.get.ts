@@ -3,14 +3,14 @@ import { useExperience } from '~~/server/utils/useExperience'
 
 export default defineEventHandler(async (event) => {
     const locale = getRouterParam(event, 'locale') as keyof typeof t
-    const client = useSanity()
+    const client = useClarity()
     const data = await client.fetch<IndexQuery>(groq`{
-        "summary": *[_type == "summary"][0]{ 
-            "title": title[$locale], 
-            "description": description[$locale], 
-            "content": content[$locale], 
+        "summary": *[_type == "summary"][0]{
+            "title": title[$locale],
+            "description": description[$locale],
+            "content": content[$locale],
             "image": image.asset->url,
-            "status": status[$locale], 
+            "status": status[$locale],
         },
         "skills": array::unique(*[_type == "skill"] | order(type asc) { "type": type })[]{
             "type": type,
@@ -55,16 +55,16 @@ export default defineEventHandler(async (event) => {
         _${data.summary.description}_
 
         ${data.summary.content.replace(/^::.*\n?/gm, '\n').replaceAll('#', '##')}
-        
+
         ## ${t[locale].sections.skills}
         ${Object.entries(Object.fromEntries(data.skills.map((group) => [
-            group.type, 
+            group.type,
             group.items.sort((a, b) => b.priority - a.priority)
         ]))).sort(([, aItems], [, bItems]) => bItems.length - aItems.length).map(([type, items]) => `
             ### ${type}
             ${items.map((item) => `${item.name}`).join(', ')}
         `).join('')}
-        ## ${t[locale].sections.experience} (${useExperience(event, 
+        ## ${t[locale].sections.experience} (${useExperience(event,
             data.experience.at(-1)?.positions.at(-1)?.duration.from!,
             data.experience.at(0)?.positions.at(0)?.duration.to
         ).duration()})
