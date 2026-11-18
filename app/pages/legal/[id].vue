@@ -16,7 +16,7 @@
 
     useSeoMeta({
         title: data.value?.title,
-        ogTitle: `${data.value?.seo.title} — ${data.value?.title}`,
+        ogTitle: `${data.value?.seo?.title || ''} — ${data.value?.title}`,
         description: useMarkdownRemoval(data.value?.description),
         ogDescription: useMarkdownRemoval(data.value?.description)
     })

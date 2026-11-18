@@ -8,3 +8,10 @@ dist
 
 .vscode
 .env
+.env.*
+.git
+.nuxt
+.data
+.cache
+research_notes
+reports

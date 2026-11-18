@@ -1,5 +1,8 @@
 import tailwindcss from "@tailwindcss/vite";
+import { createRequire } from 'node:module'
 import config from './global.config'
+
+const satoriRequire = createRequire(createRequire(import.meta.url).resolve('satori'))
 
 export default defineNuxtConfig({
     compatibilityDate: '2025-05-15',
@@ -9,7 +12,10 @@ export default defineNuxtConfig({
     site: { url: config.head.url },
     nitro: {
         preset: 'node-cluster',
-        compressPublicAssets: true
+        compressPublicAssets: true,
+        externals: {
+            traceInclude: [satoriRequire.resolve('harfbuzzjs/hb.wasm')]
+        }
     },
     routeRules: {
         '/**': {
@@ -24,6 +30,8 @@ export default defineNuxtConfig({
             }
         },
         '/api/**': { cache: false },
+        '/vendor/**': { cache: false },
+        '/_fonts/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
         '/api/sitemap': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
         '/api/repo/**': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
     },
@@ -44,6 +52,7 @@ export default defineNuxtConfig({
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
                 { rel: 'icon', type: 'image/png', href: '/favicon.png' },
                 { rel: 'preconnect', href: 'https://fucosukalekob.begetcdn.cloud', crossorigin: '' },
+                { rel: 'preconnect', href: 'https://mc.yandex.ru', crossorigin: '' },
             ]
         },
     },
@@ -53,6 +62,7 @@ export default defineNuxtConfig({
                 name: 'Cascadia Mono',
                 weights: [200, 300, 400, 500, 600, 700, 800, 900],
                 global: true,
+                preload: true,
                 provider: 'google'
             },
         ],
@@ -110,13 +120,15 @@ export default defineNuxtConfig({
     },
     yandexMetrika: {
         id: config.metrics.yandex,
+        metrikaUrl: '/vendor/metrika',
         clickmap: true,
         trackLinks: true,
         accurateTrackBounce: true,
         webvisor: false
     },
     gtag: {
-        id: config.metrics.gtag
+        id: config.metrics.gtag,
+        url: '/vendor/gtag/js'
     },
     sitemap: {
         sources: [

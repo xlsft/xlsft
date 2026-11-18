@@ -5,7 +5,7 @@
     const { t, locale } = useI18n()
     const route = useRoute()
     const router = useRouter()
-    const theme = useColorMode()
+
 
     const params = ref({ id: route.params.id?.toString() }); watch(() => route.params.id, () => params.value.id = route.params.id?.toString())
     const { data } = await useClarityDynamicQuery<any>(groq`*[_type == "project" && id == $id] {
@@ -35,11 +35,15 @@
 
     if (!data.value) throw createError({ status: 404, message: `"${route.params.id?.toString()}" Project not found` })
 
+    const gallery = computed<string[]>(() => (data.value?.images ?? []).filter(Boolean))
+    const selectedImage = ref(0)
+    watch(gallery, () => { selectedImage.value = 0 })
+
     const repo = data.value?.repo ? await useGithubRepository<any>(data.value?.repo) : undefined
 
     useSeoMeta({
         title: data.value?.name,
-        ogTitle: `${data.value?.seo.title} — ${data.value?.name}`,
+        ogTitle: `${data.value?.seo?.title || ''} — ${data.value?.name}`,
         description: useMarkdownRemoval(data.value?.description),
         ogDescription: useMarkdownRemoval(data.value?.description),
         ogImage: data.value.thumbnail
@@ -48,75 +52,30 @@
 </script>
 
 <template>
-    <NuxtCarousel
-        v-if="data?.images?.length && data?.images?.length > 1"
-        :items="data?.images" v-slot="{ item: src, index }"
-        loop autoplay arrows
-        :prev="{ variant: 'outline' }" :next="{ variant: 'outline' }"
-        :ui="{
-            item: 'ps-0! basis-1/2 max-lg:basis-full relative overflow-hidden',
-            prev: 'sm:start-8 rounded-none! hover:opacity-75! disabled:opacity-0! disabled:pointer-events-none!',
-            next: 'sm:end-8 rounded-none! hover:opacity-75! disabled:opacity-0! disabled:pointer-events-none!',
-            container: 'ms-0 max-h-100',
-            root: 'border-b'
-        }"
-    >
-        <AtomsPreview class="relative" :style="{ background: data?.bg }">
-            <NuxtImg
-                :src="(src as string)"
-                :alt="data?.name + ` image ${index}`"
-                class="transition-all select-none h-100 w-full object-contain object-center!"
-                :placeholder="Skeleton"
-                placeholder-class="animate-pulse blur-lg scale-150"
-            />
-        </AtomsPreview>
-    </NuxtCarousel>
-    <AtomsPreview v-else class="relative" :style="{ background: data?.bg }">
-        <NuxtImg
-            :src="(data?.images?.[0] as string)"
-            :alt="data?.name + ` image ${0}`"
-            class="transition-all select-none h-100 w-full object-contain object-center!"
-            :placeholder="Skeleton"
-            placeholder-class="animate-pulse blur-lg scale-150"
-        />
-    </AtomsPreview>
-
-
-    <MoleculesSectionHeader pattern="graph-paper">
-        <div>{{ t('sections.about_project') }}</div>
-    </MoleculesSectionHeader>
-    <section class="p-8 max-lg:p-4 flex max-lg:flex-col-reverse gap-8 max-lg:gap-4">
-
-        <div class="flex flex-col gap-4 grow">
-            <NuxtImg :src="data?.thumbnail" :alt="data?.description" v-if="data?.thumbnail" class="w-full border"/>
-            <div class="flex items-center gap-4">
-                <h1>{{ data?.name }}</h1>
-                <div class="flex items-center gap-1 *:text-yellow-500" v-if="repo?.stars">
-                    <span>{{ repo?.stars }}</span>
-                    <NuxtIcon name="mingcute:star-fill"/>
-                </div>
+    <header class="p-8 max-lg:p-4 border-b">
+        <div class="flex flex-wrap items-center gap-3">
+            <h1>{{ data?.name }}</h1>
+            <div v-if="repo?.stars" class="flex items-center gap-1 text-yellow-500">
+                <span>{{ repo.stars }}</span>
+                <NuxtIcon name="mingcute:star-fill"/>
             </div>
-            <MDC :value="data?.about" class="md *:mt-0! *:last:mt-0!"/>
-            <p class="text-sm text-default/50" v-if="data?.copyright">{{ data?.copyright }}</p>
         </div>
+        <MDC v-if="data?.description" :value="data.description" class="md max-w-prose text-muted"/>
+    </header>
 
-        <div class="flex flex-col items-end max-lg:items-start gap-2 min-w-[30%]!">
-
-            <NuxtBadge v-if="data?.status" :class="data?.images?.length ? `absolute top-8 right-8 max-lg:top-4 max-lg:right-4 z-2` : ''" variant="solid">{{ data?.status }}</NuxtBadge>
-
-            <h3 class="text-lg!" v-if="data?.description">{{ t('labels.about') }}:</h3>
-            <MDC v-if="data?.description" :value="data?.description" class="md *:m-0! *:text-sm! *:leading-4! text-default/50 *:text-right max-lg:*:text-left!"/>
-
-            <h3 class="text-lg!" v-if="repo?.topics || data?.tags">{{ t('labels.tags') }}:</h3>
-            <div class="flex flex-wrap gap-1 justify-end items-center" v-if="data?.tags">
+    <section class="grid gap-8 p-8 max-lg:p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)]">
+        <aside class="flex min-w-0 flex-col items-start gap-3 break-words">
+            <NuxtBadge v-if="data?.status" variant="solid">{{ data.status }}</NuxtBadge>
+            <h3 class="text-lg!" v-if="repo?.topics?.length || data?.tags?.length">{{ t('labels.tags') }}:</h3>
+            <div class="flex flex-wrap gap-1 items-center" v-if="data?.tags">
                 <NuxtBadge v-for="tag in data?.tags" :key="tag" variant="outline" color="neutral">{{ tag }}</NuxtBadge>
             </div>
-            <div class="flex flex-wrap gap-1 justify-end items-center" v-if="repo?.topics">
+            <div class="flex flex-wrap gap-1 items-center" v-if="repo?.topics">
                 <NuxtBadge v-for="topic in repo?.topics" :key="topic" variant="outline" color="neutral">{{ topic }}</NuxtBadge>
             </div>
 
-            <h3 class="text-lg!" v-if="data?.stack">{{ t('labels.stack') }}:</h3>
-            <div id="stack" class="flex flex-wrap gap-1 justify-end items-center" v-if="data?.stack">
+            <h3 class="text-lg!" v-if="data?.stack?.length">{{ t('labels.stack') }}:</h3>
+            <div id="stack" class="flex flex-wrap gap-1 items-center" v-if="data?.stack?.length">
                 <NuxtBadge
                     v-for="item in data?.stack"
                     :key="item.name"
@@ -128,11 +87,44 @@
                 </NuxtBadge>
             </div>
 
-            <h3 class="text-lg!" v-if="data?.links">{{ t('labels.links') }}:</h3>
-            <NuxtLink v-for="link in data?.links" :key="link" :to="link" class="flex items-center gap-1" v-if="data?.links">
+            <h3 class="text-lg!" v-if="data?.links?.length">{{ t('labels.links') }}:</h3>
+            <NuxtLink v-for="link in data?.links" :key="link" :to="link" class="flex items-center gap-1" v-if="data?.links?.length">
                 {{ link }}
             </NuxtLink>
-        </div>
+            <NuxtImg v-if="data?.thumbnail" :src="data.thumbnail" :alt="data.name" class="w-full border"/>
+        </aside>
+
+        <article class="min-w-0 space-y-6">
+            <div v-if="data?.about">
+                <h2>{{ t('sections.about_project') }}</h2>
+                <MDC :value="data.about" class="md max-w-prose overflow-x-auto"/>
+            </div>
+            <p v-if="data?.copyright" class="text-sm text-muted">{{ data.copyright }}</p>
+
+            <section v-if="gallery.length" :aria-label="data.name">
+                <AtomsPreview class="border" :style="{ background: data.bg }">
+                    <NuxtImg
+                        :src="gallery[selectedImage] ?? gallery[0]"
+                        :alt="`${data.name} · ${selectedImage + 1} / ${gallery.length}`"
+                        class="h-80 w-full object-contain sm:h-100"
+                        :placeholder="Skeleton"
+                    />
+                </AtomsPreview>
+                <div v-if="gallery.length > 1" class="mt-3 flex flex-wrap gap-2">
+                    <button
+                        v-for="(src, index) in gallery"
+                        :key="index"
+                        type="button"
+                        :aria-label="`${data.name} · ${index + 1}`"
+                        :aria-pressed="selectedImage === index"
+                        class="size-16 cursor-pointer border p-1 aria-pressed:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                        @click="selectedImage = index"
+                    >
+                        <NuxtImg :src="src" alt="" class="size-full object-contain" :style="{ background: data.bg }"/>
+                    </button>
+                </div>
+            </section>
+        </article>
     </section>
     <template v-if="data.related?.length">
         <MoleculesSectionHeader pattern="graph-paper" id="projects">
@@ -141,8 +133,8 @@
         <section class="flex flex-col relative">
             <NuxtBlogPosts class="p-8 max-lg:p-4" :ui="{ base: 'gap-4! p-8!' }">
                 <NuxtBlogPost
-                    v-for="project in (data.related || []).sort((a: any, b: any) => b.priority - a.priority)"
-                    :key="project.name"
+                    v-for="project in [...data.related].sort((a: any, b: any) => b.priority - a.priority)"
+                    :key="project.id"
                     :title="project.name"
                     variant="outline"
                     :image="project.thumbnail"

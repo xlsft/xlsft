@@ -4,4 +4,4 @@ allowBuilds:
   sharp: true
   vue-demi: true
 minimumReleaseAgeExclude:
-  - '@crumbleerp/clarity@0.1.5'
+  - '@crumbleerp/clarity'

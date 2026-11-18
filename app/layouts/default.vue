@@ -69,7 +69,7 @@
     }`)
 
     if (data.value) useSeoMeta({
-        titleTemplate: chunk => `${data.value?.person?.title}${chunk ? ` — ${chunk}` : ``}`,
+        titleTemplate: chunk => `${data.value?.person?.title || ''}${chunk ? ` — ${chunk}` : ``}`,
         themeColor: config.theme.background[theme.value as 'dark' | 'light'],
     })
 
@@ -79,30 +79,30 @@
             givenName: config.schema.person.firstname,
             familyName: config.schema.person.lastname,
             alternateName: config.schema.person.initials,
-            image: data.value.person.image,
-            description: data.value.person.description,
+            image: data.value?.person?.image,
+            description: data.value?.person?.description,
             jobTitle: config.schema.person.position,
-            telephone: data.value.person.phone,
-            email: data.value.person.email,
+            telephone: data.value?.person?.phone,
+            email: data.value?.person?.email,
             url: config.head.url,
-            sameAs: data.value.person.links,
+            sameAs: data.value?.person?.links,
             worksFor: defineOrganization({
-                name: data.value.person.workplace.name,
-                url: data.value.person.workplace.link,
-                logo: data.value.person.workplace.logo
+                name: data.value?.person?.workplace?.name,
+                url: data.value?.person?.workplace?.link,
+                logo: data.value?.person?.workplace?.logo
             }),
-            knowsAbout: data.value.person.skills?.flatMap((skill: any) => ({
+            knowsAbout: data.value?.person?.skills?.flatMap((skill: any) => ({
                 "@type": 'Thing',
                 name: skill.name
             })) || [],
-            hasOccupation: data.value.person.experience.map((company: any) => company.positions.map((position: any) => ({
+            hasOccupation: data.value?.person?.experience?.map((company: any) => company.positions?.map((position: any) => ({
                 "@type": 'Occupation',
                 name: position.name,
                 description: company.about,
                 responsibilities: position.description,
-                skills: position.skills.map((skill: any) => skill.name),
-                startDate: position.duration.from,
-                endDate: position.duration.to || undefined,
+                skills: position.skills?.map((skill: any) => skill.name),
+                startDate: position.duration?.from,
+                endDate: position.duration?.to || undefined,
                 organization: defineOrganization({
                     name: company.name,
                     url: company.link || undefined,
@@ -118,7 +118,7 @@
         }),
         defineItemList({
             name: 'Проекты',
-            itemListElement: data.value.projects.sort((a: any, b: any) => b.priority - a.priority).map((project: any, index: number) => ({
+            itemListElement: data.value?.projects?.sort((a: any, b: any) => b.priority - a.priority).map((project: any, index: number) => ({
                 "@type": project.repo ? 'SoftwareSourceCode' : 'CreativeWork',
                 position: index + 1,
                 name: project.name,
@@ -180,14 +180,14 @@
                         {{ config.schema.organization.legalName }} {{ t('labels.inn') }} {{ config.schema.organization.inn }} {{ t('labels.ogrn') }} {{ config.schema.organization.ogrn }}
                     </span>
                     <div class="flex w-full gap-1 flex-wrap">
-                        <div class="flex items-center gap-1 flex-wrap group *:text-[10px]!" v-for="link in data.footer.links">
+                        <div class="flex items-center gap-1 flex-wrap group *:text-[10px]!" v-for="link in data?.footer?.links">
                             <NuxtLink :to="link.to" target="_blank">{{ link.label }}</NuxtLink>
                             <span class="group-last:hidden">*</span>
                         </div>
                     </div>
                 </div>
 
-                <MDC :value="data.footer.legal" class="md *:m-0! *:leading-5" />
+                <MDC :value="data?.footer?.legal || ''" class="md *:m-0! *:leading-5" />
             </div>
         </template>
         <template #right>

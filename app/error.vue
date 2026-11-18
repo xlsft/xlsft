@@ -10,11 +10,11 @@
     useRobotsRule({ noindex: true })
 
     useSeoMeta({
-        titleTemplate: chunk => `${seo.value.title || ''}${chunk ? ` — ${chunk}` : ``}`,
+        titleTemplate: chunk => `${seo.value?.title || ''}${chunk ? ` — ${chunk}` : ``}`,
         title: `[${props.error?.status}] ${props.error?.message}`,
-        description: seo.value.description,
-        ogTitle: `${seo.value.title} — [${props.error?.status}] ${props.error?.message}`,
-        ogDescription: seo.value.description
+        description: seo.value?.description,
+        ogTitle: `${seo.value?.title || ''} — [${props.error?.status}] ${props.error?.message}`,
+        ogDescription: seo.value?.description
     })
 </script>
 
