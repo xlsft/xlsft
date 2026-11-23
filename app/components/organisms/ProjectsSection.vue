@@ -209,20 +209,24 @@
                         >
                     </label>
                 </div>
-                <p v-if="error" class="text-sm text-error" role="alert">{{ error }}</p>
-                <div v-if="menu.length" class="flex flex-wrap items-center gap-1 text-sm">
-                    <button
-                        v-for="item in menu"
-                        :key="item.tag"
-                        type="button"
-                        :class="[
-                            'flex items-baseline gap-1.5 px-2 py-0.5 transition-colors',
-                            item.tag === completion ? 'bg-inverted text-inverted' : 'text-success hover:bg-(--ui-border)/40'
-                        ]"
-                        @click.stop="pick(item.tag)"
-                    >
-                        {{ item.tag }}<span :class="['text-xs', item.tag === completion ? 'opacity-60' : 'text-dimmed']">{{ pad(item.count) }}</span>
-                    </button>
+                <!-- строка вывода под командой всегда занимает одну строку фиксированной высоты:
+                     ошибка/меню появляются и исчезают, а шапка секции не прыгает -->
+                <div class="flex h-6 shrink-0 items-center gap-3 overflow-x-auto overflow-y-hidden whitespace-nowrap text-sm">
+                    <p v-if="error" class="shrink-0 text-error" role="alert">{{ error }}</p>
+                    <div v-if="menu.length" class="flex shrink-0 items-center gap-1">
+                        <button
+                            v-for="item in menu"
+                            :key="item.tag"
+                            type="button"
+                            :class="[
+                                'flex items-baseline gap-1.5 px-2 py-0.5 transition-colors',
+                                item.tag === completion ? 'bg-inverted text-inverted' : 'text-success hover:bg-(--ui-border)/40'
+                            ]"
+                            @click.stop="pick(item.tag)"
+                        >
+                            {{ item.tag }}<span :class="['text-xs', item.tag === completion ? 'opacity-60' : 'text-dimmed']">{{ pad(item.count) }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div v-if="allTags.length && !props.noTags" class="grid grid-cols-[repeat(auto-fit,minmax(4rem,1fr))] border-t border-default bg-(--ui-border) gap-px sm:hidden">
