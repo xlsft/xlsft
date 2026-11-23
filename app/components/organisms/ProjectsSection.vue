@@ -172,26 +172,87 @@
 
     const sortedProjects = computed(() => [...filteredProjects.value].sort((a: any, b: any) => b.priority - a.priority))
 
-    // мозаика повторяется блоками по 6 карточек; grid-flow-dense укладывает их без дыр:
-    // [1×4] [2×2] / [1×3] [1×3] / [1×3] [2×2]
-    const big = 'sm:col-span-2 lg:col-span-1 lg:row-span-4'
-    const wide = 'lg:col-span-2 lg:row-span-2'
-    const tall = 'lg:row-span-3'
-    const small = 'lg:row-span-2'
-    const full = 'sm:col-span-2 lg:col-span-3 lg:row-span-2'
-    const blockSpans = [big, wide, tall, tall, tall, wide]
-    // неполный последний блок: свои раскладки по остатку, чтобы прямоугольник закрывался без пустых ячеек
-    const tailSpans: Record<number, string[]> = {
-        1: [full],
-        2: [tall, 'lg:col-span-2 lg:row-span-3'],
-        3: [big, wide, wide],
-        4: [big, wide, small, small],
-        5: [big, wide, small, small, full]
+    // бенто-мозаика на lg собирается упаковщиком, а не повторяющимся шаблоном: каждая следующая плитка
+    // ставится в самую низкую (левую) колонку, форма выбирается случайно с весами, и перебор с откатом
+    // гарантирует, что сетка закрывается ровным прямоугольником без дыр. Генератор детерминирован
+    // (сид — из id проектов), поэтому SSR и клиент получают одну и ту же раскладку
+    type Tile = { col: number, row: number, w: number, h: number }
+    const SHAPES = [
+        { w: 1, h: 4, weight: 3 },
+        { w: 1, h: 3, weight: 4 },
+        { w: 2, h: 2, weight: 3 },
+        { w: 1, h: 2, weight: 1.5 },
+        { w: 2, h: 3, weight: 1 },
+        { w: 3, h: 2, weight: 0.3 }
+    ]
+    const COLS = 3
+    const seeded = (seed: number) => () => {
+        seed = (seed + 0x6D2B79F5) | 0
+        let x = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+        x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x
+        return ((x ^ (x >>> 14)) >>> 0) / 4294967296
     }
-    const tileSpan = (index: number, total: number) => {
-        const tail = total % 6
-        const tailStart = total - tail
-        return tail && index >= tailStart ? tailSpans[tail]![index - tailStart] : blockSpans[index % 6]
+    const hash = (text: string) => [...text].reduce((acc, char) => (Math.imul(acc, 31) + char.charCodeAt(0)) | 0, 7)
+
+    const packTiles = (count: number, seed: number): Tile[] => {
+        const rand = seeded(seed)
+        const heights = Array<number>(COLS).fill(0)
+        const tiles: Tile[] = []
+        let budget = 20000
+        const place = (left: number): boolean => {
+            if (!left) return heights.every(h => h === heights[0])
+            if (--budget < 0) return false
+            const row = Math.min(...heights)
+            const col = heights.indexOf(row)
+            let flat = 1
+            while (col + flat < COLS && heights[col + flat] === row) flat++
+            const prev = tiles.at(-1)
+            // взвешенный случайный порядок (ключ u^(1/w)); повтор формы соседа штрафуется
+            const options = SHAPES
+                .filter(shape => shape.w <= flat)
+                .map(shape => {
+                    const weight = shape.weight * (prev && prev.w === shape.w && prev.h === shape.h ? 0.25 : 1)
+                    return { shape, key: rand() ** (1 / weight) }
+                })
+                .sort((a, b) => b.key - a.key)
+            for (const { shape } of options) {
+                tiles.push({ col: col + 1, row: row + 1, w: shape.w, h: shape.h })
+                for (let i = col; i < col + shape.w; i++) heights[i]! += shape.h
+                // слишком рваный край потом не закрыть красиво
+                if (Math.max(...heights) - Math.min(...heights) <= 4 && place(left - 1)) return true
+                for (let i = col; i < col + shape.w; i++) heights[i]! -= shape.h
+                tiles.pop()
+            }
+            return false
+        }
+        if (place(count)) return tiles
+        // запасной вариант: ровные ряды 1×2, остаток добивается широкими плитками
+        return Array.from({ length: count }, (_, index) => {
+            const row = Math.floor(index / COLS) * 2 + 1
+            const rest = count % COLS
+            if (rest && index >= count - rest) {
+                const w = rest === 1 ? 3 : index === count - 1 ? 2 : 1
+                return { col: rest === 2 && index === count - 1 ? 2 : 1, row, w, h: 2 }
+            }
+            return { col: (index % COLS) + 1, row, w: 1, h: 2 }
+        })
+    }
+
+    const tiles = computed(() => packTiles(
+        sortedProjects.value.length,
+        hash(sortedProjects.value.map(project => project.id).join())
+    ))
+    const tileStyle = (index: number) => {
+        const tile = tiles.value[index]
+        return tile && {
+            '--tile-col': `${tile.col} / span ${tile.w}`,
+            '--tile-row': `${tile.row} / span ${tile.h}`
+        }
+    }
+    // на sm (2 колонки) во всю ширину идут только самые крупные плитки
+    const tileClass = (index: number) => {
+        const tile = tiles.value[index]
+        return tile && (tile.h >= 4 || tile.w === 3) ? 'sm:col-span-2' : ''
     }
 
     const open = (id: string) => router.push(`/${locale.value}/projects/${id}`)
@@ -276,7 +337,7 @@
             <OrganismsContactButton class="ml-auto shrink-0 max-sm:hidden!"/>
         </div>
         <!-- без отступов: карточки стыкуются в одну сетку, общий 1px-бордер даёт outline каждой карточки поверх gap-px -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:auto-rows-[8rem] lg:grid-flow-dense gap-px">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 sm:grid-flow-dense lg:auto-rows-[8rem] gap-px">
             <article
                 v-for="(project, index) in sortedProjects"
                 :key="project.id"
@@ -286,8 +347,10 @@
                 :class="[
                     'group/tile relative flex flex-col min-w-0 bg-default outline-1 outline-solid outline-(--ui-border) transition-colors',
                     'hover:z-10 hover:outline-primary focus-visible:z-10 focus-visible:outline-primary cursor-nw-resize! *:cursor-nw-resize!',
-                    tileSpan(index, sortedProjects.length)
+                    'lg:[grid-column:var(--tile-col)] lg:[grid-row:var(--tile-row)]',
+                    tileClass(index)
                 ]"
+                :style="tileStyle(index)"
                 @click="open(project.id)"
                 @keydown.enter="open(project.id)"
             >
