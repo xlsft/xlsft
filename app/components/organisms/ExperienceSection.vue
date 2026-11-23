@@ -53,7 +53,7 @@
 
                         <div class="conf-kv" v-if="position.skills?.length">
                             <span class="conf-k">stack</span>
-                            <div class="conf-v flex flex-wrap gap-1 pt-0.5 print:block">
+                            <div class="conf-v flex flex-wrap gap-1 print:block">
                                 <AtomsBadge v-for="item in position.skills" :key="item.name" :color="item.color">{{ item.name }}</AtomsBadge>
                             </div>
                         </div>
