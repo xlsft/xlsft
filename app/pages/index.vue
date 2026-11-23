@@ -41,13 +41,6 @@
             } | order(duration.from desc),
             "footer": footer[$locale],
         } | order(positions[0].duration.from desc),
-        "education": *[_type == "education"] {
-            id, link, year,
-            "level": level[$locale],
-            "specialization": specialization[$locale],
-            "name": name[$locale],
-            "faculty": faculty[$locale],
-        } | order(year desc),
         "projectTags": array::unique(*[_type == "project"].tags[]),
         "allLinks": *[_type == "link"] {
             "label": label[$locale],
@@ -92,11 +85,6 @@
             </template>
         </MoleculesHomeSectionHeader>
         <OrganismsExperienceSection :data v-if="data.experience?.length"/>
-
-        <MoleculesHomeSectionHeader :class="sectionBorder" id="education" filename="education.conf" v-if="data.education?.length">
-            ~/{{ t('sections.education') }}
-        </MoleculesHomeSectionHeader>
-        <OrganismsEducationSection :data v-if="data.education?.length" />
         <OrganismsProjectsSection id="projects" :class="sectionBorder" :data/>
     </template>
 </template>

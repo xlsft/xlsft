@@ -94,12 +94,6 @@ export type IndexQuery = {
         })[]
         footer: string
     })[]
-    education: (Omit<Education, 'level' | 'specialization' | 'name' | 'faculty'> & {
-        level: string
-        specialization: string
-        name: string
-        faculty: string
-    })[]
     projectTags: string[]
     allLinks: {
         label: I18nString,
