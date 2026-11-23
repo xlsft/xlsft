@@ -11,7 +11,7 @@
     const scroll = useScroll(document)
     const header = computed(() => window ? parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--ui-header-height')) : 0)
     const config = useRuntimeConfig().public.config
-    const logoVariant = useState('footer-logo-variant', () => (Math.floor(Date.now() / 864e5) % 3) as 0 | 1 | 2)
+    const logoVariant = useState('footer-logo-variant', () => Math.floor(Date.now() / 864e5) % 6)
 
     const { data } = await useClarityDynamicQuery(groq`{
         "footer": {
@@ -192,7 +192,7 @@
         </template>
         <template #right>
             <div class="flex flex-col items-end h-full gap-2 max-lg:items-center">
-                <button type="button" aria-label="xlsft" class="cursor-pointer" @click="logoVariant = ((logoVariant + 1) % 3) as 0 | 1 | 2"><AtomsLogo3d :variant="logoVariant"/></button>
+                <button type="button" aria-label="xlsft" class="cursor-pointer" @click="logoVariant = (logoVariant + 1) % 6"><AtomsLogo3d :variant="logoVariant as 0 | 1 | 2 | 3 | 4 | 5"/></button>
                 <span class="text-[10px]! text-default/50">{{ config.head.author }} @ {{ new Date().getFullYear() }}</span>
             </div>
         </template>
