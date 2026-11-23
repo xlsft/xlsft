@@ -4,7 +4,6 @@
     const sectionBorder = 'border-t-8 border-default'
     const theme = useColorMode()
     const config = useRuntimeConfig().public.config
-    const projects = useTemplateRef('projects')
 
     const { data } = await useClarityDynamicQuery<IndexQuery>(groq`{
         "summary": *[_type == "summary"][0]{
@@ -98,9 +97,6 @@
             ~/{{ t('sections.education') }}
         </MoleculesHomeSectionHeader>
         <OrganismsEducationSection :data v-if="data.education?.length" />
-        <MoleculesSectionHeader pattern="graph-paper" id="projects" v-if="projects?.projectsCount">
-            <div>{{ t('sections.projects') }}</div>
-        </MoleculesSectionHeader>
-        <OrganismsProjectsSection :data ref="projects"/>
+        <OrganismsProjectsSection id="projects" :class="sectionBorder" :data/>
     </template>
 </template>

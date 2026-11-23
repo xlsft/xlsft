@@ -110,8 +110,10 @@ export type IndexQuery = {
 export type ProjectsQuery = (
     Pick<Project, 'id' | 'tags' | 'repo' | 'priority'> & {
         name: string
-        thumbnail: string
+        logo: string
         description: string
+        images: string[] | null
+        bg: string | null
     }
 )[]
 
