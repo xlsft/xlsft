@@ -9,6 +9,11 @@ export default {
         two: 'года',
         more: 'лет',
     },
+    positions: {
+        one: 'позиция',
+        two: 'позиции',
+        more: 'позиций',
+    },
     present: 'Настоящее время',
     sections: {
         summary: 'Обо мне',
@@ -41,7 +46,7 @@ export default {
         error: 'Ошибка',
         success: 'Успех',
         total_positions_duration: 'Общий стаж',
-        position_description: 'Чем занимался на этой позиции',
+        current_position: 'текущая',
         stack: 'Стек технологий',
         tags: 'Теги',
         terminal_results: 'найдено',

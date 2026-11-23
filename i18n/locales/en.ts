@@ -11,6 +11,11 @@ export default {
         two: 'years',
         more: 'years',
     },
+    positions: {
+        one: 'position',
+        two: 'positions',
+        more: 'positions',
+    },
     present: 'Present',
     sections: {
         summary: 'Summary',
@@ -42,7 +47,7 @@ export default {
         error: 'Error',
         success: 'Success',
         total_positions_duration: 'Total experience',
-        position_description: 'Job description',
+        current_position: 'current',
         stack: 'Technology stack',
         tags: 'Tags',
         terminal_results: 'results',
