@@ -171,6 +171,8 @@
                             <span v-for="(segment, index) in highlighted" :key="index" :class="segment.class">{{ segment.text }}</span>
                             <span class="opacity-40">{{ ghost }}</span>
                             <span v-if="!focused && !input" class="h-5 w-2.5 bg-inverted animate-pulse"/>
+                            <!-- плейсхолдер-подсказка, какой аргумент писать; исчезает с первым символом -->
+                            <span v-if="!input" class="text-primary opacity-35" :class="!focused && 'ml-1'">--tag</span>
                         </span>
                         <input
                             ref="inputEl"
