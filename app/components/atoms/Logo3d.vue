@@ -20,6 +20,10 @@
     const HALF_DEPTH = 9
     const CAMERA = 140
     const COLOR = 'var(--ui-primary)'
+    // On a light background translucent strokes wash out, so faint values are pulled towards opaque.
+    const colorMode = useColorMode()
+    const dark = computed(() => colorMode.value === 'dark')
+    const ink = (a: number) => dark.value ? a : 1 - (1 - a) * 0.45
     const LIGHT: V3 = (() => {
         const v: V3 = [-0.45, -0.55, 0.7]
         const l = Math.hypot(...v)
@@ -103,7 +107,7 @@
                 const k = (z + HALF_DEPTH) / (2 * HALF_DEPTH)
                 return {
                     d: toPath(points.map(project)),
-                    style: `fill:${COLOR};fill-opacity:${(0.04 + 0.1 * k).toFixed(3)};stroke:${COLOR};stroke-opacity:${(0.3 + 0.7 * k).toFixed(3)};stroke-width:.6;stroke-linejoin:round`,
+                    style: `fill:${COLOR};fill-opacity:${((0.04 + 0.1 * k) * (dark.value ? 1 : 1.6)).toFixed(3)};stroke:${COLOR};stroke-opacity:${ink(0.3 + 0.7 * k).toFixed(3)};stroke-width:.6;stroke-linejoin:round`,
                 }
             })
     }
@@ -122,13 +126,10 @@
             if (wire) return {
                 d: f.d,
                 style: f.visible
-                    ? `fill:${COLOR};fill-opacity:${f.cap ? 0.12 : 0.05};stroke:${COLOR};stroke-width:.8;stroke-linejoin:round`
-                    : `fill:none;stroke:${COLOR};stroke-opacity:.25;stroke-width:.5;stroke-dasharray:1.5 1.5`,
+                    ? `fill:${COLOR};fill-opacity:${(f.cap ? 0.12 : 0.05) * (dark.value ? 1 : 1.5)};stroke:${COLOR};stroke-width:.8;stroke-linejoin:round`
+                    : `fill:none;stroke:${COLOR};stroke-opacity:${ink(0.25).toFixed(3)};stroke-width:.5;stroke-dasharray:1.5 1.5`,
             }
-            const k = Math.max(0, f.n[0] * LIGHT[0] + f.n[1] * LIGHT[1] + f.n[2] * LIGHT[2])
-            const mix = Math.round(f.cap ? 82 + k * 18 : 40 + k * 45)
-            const color = `color-mix(in oklab, ${COLOR} ${mix}%, black)`
-            return { d: f.d, style: `fill:${color};stroke:${color};stroke-width:.3;stroke-linejoin:round` }
+            return { d: f.d, style: `fill:${COLOR};stroke:${COLOR};stroke-width:.3;stroke-linejoin:round` }
         })
 
     // ── Canvas variants ─────────────────────────────────────────────────────
@@ -177,9 +178,9 @@
             return [p[0], p[1], p[2], r[2]] as const
         }).sort((a, c) => a[3] - c[3])
         for (const [x, y, s, z] of points) {
-            ctx.globalAlpha = Math.max(0.15, Math.min(1, 0.25 + (z + 20) / 40 * 0.75))
+            ctx.globalAlpha = ink(Math.max(0.15, Math.min(1, 0.25 + (z + 20) / 40 * 0.75)))
             ctx.beginPath()
-            ctx.arc(x, y, Math.max(0.15, 0.32 * s), 0, Math.PI * 2)
+            ctx.arc(x, y, Math.max(0.15, (dark.value ? 0.32 : 0.38) * s), 0, Math.PI * 2)
             ctx.fill()
         }
     }
@@ -216,12 +217,12 @@
                 lBuffer[id] = n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2]
             }
         }
-        ctx.font = `500 ${(rh * 1.2).toFixed(2)}px ui-monospace, Menlo, monospace`
+        ctx.font = `${dark.value ? 500 : 700} ${(rh * 1.2).toFixed(2)}px ui-monospace, Menlo, monospace`
         ctx.textBaseline = 'top'
         for (let i = 0; i < cols * rows; i++) {
             if (zBuffer[i]! < -1e8) continue
             const l = Math.max(0, lBuffer[i]!)
-            ctx.globalAlpha = 0.45 + 0.55 * l
+            ctx.globalAlpha = ink(0.45 + 0.55 * l)
             ctx.fillText(chars[Math.min(chars.length - 1, 1 + Math.floor(l * (chars.length - 1)))]!, (i % cols) * cw - VIEW / 2, Math.floor(i / cols) * rh - VIEW / 2)
         }
     }
@@ -245,7 +246,7 @@
     const drawCurrent = (ctx: CanvasRenderingContext2D, t: number, ry: number, rx: number) => {
         const at = (p: V3) => project(rotate(p, ry, rx))
         ctx.lineCap = 'round'
-        ctx.globalAlpha = 0.45
+        ctx.globalAlpha = ink(0.45)
         ctx.lineWidth = 0.4
         ctx.beginPath()
         for (const [a, b] of EDGES) {
