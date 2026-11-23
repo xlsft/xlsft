@@ -20,7 +20,8 @@
     const allTags = computed(() => [...countTags(projects.value || []).keys()])
 
     // терминальный фильтр: строка ввода — единственный источник состояния, и набранные, и кликнутые теги
-    // живут в ней одинаково. Принимает `fe`, `--tag fe`, `--tag=fe`, `-t fe`; каждый тег сужает выборку (AND)
+    // живут в ней одинаково. Принимает `fe`, `--tag fe`, `--tag=fe`, `-T fe`; каждый тег сужает выборку (AND).
+    // `--help`/`-H` печатает однострочную справку, прочие `-…` — ошибка, как у настоящего ls
     const inputEl = ref<HTMLInputElement>()
     const input = ref('')
     const focused = ref(false)
@@ -39,14 +40,18 @@
     const caretStyle = computed(() => ({
         left: `calc(${focused.value ? caret.index : input.value.length}ch - ${focused.value ? caret.scroll : 0}px)`
     }))
-    const error = ref('')
-    watch(input, () => { error.value = '' })
-
-    const FLAG = /^(?:--tag|-t)$/
+    const FLAG = /^(?:--tag|-T)$/
+    const HELP = /^(?:--help|-H)$/
+    const OPTIONS = ['--tag', '--help']
     const SEPARATOR = /^(?:\s+|=)$/
+    const isOption = (token: string) => token.startsWith('-')
     const tokens = computed(() => input.value.split(/(\s+|=)/).filter(Boolean))
-    const typedValues = computed(() => tokens.value.filter(token => !SEPARATOR.test(token) && !FLAG.test(token)))
+    const typedValues = computed(() => tokens.value.filter(token => !SEPARATOR.test(token) && !isOption(token)))
     const activeTags = computed(() => [...new Set(typedValues.value.filter(value => allTags.value.includes(value)))])
+
+    // Enter проверяет и недописанный последний токен; любое редактирование снова откладывает его проверку
+    const submitted = ref(false)
+    watch(input, () => { submitted.value = false })
 
     const filteredProjects = computed(() => (projects.value || [])
         .filter(project => activeTags.value.every(tag => project.tags?.includes(tag))))
@@ -54,7 +59,28 @@
     // токен, который сейчас набирается: последний, если после него нет пробела и это не готовый флаг
     const partial = computed(() => {
         const last = tokens.value.at(-1)
-        return last && !SEPARATOR.test(last) && !FLAG.test(last) ? last : ''
+        return last && !SEPARATOR.test(last) && !FLAG.test(last) && !HELP.test(last) ? last : ''
+    })
+
+    // завершённые токены (за ними уже пробел) проверяются сразу, недописанный — только по Enter
+    const checked = computed(() => {
+        const list = tokens.value.filter(token => !SEPARATOR.test(token))
+        return submitted.value || !partial.value ? list : list.slice(0, -1)
+    })
+    const isBadOption = (token: string) => isOption(token) && !FLAG.test(token) && !HELP.test(token)
+    // `clear` — встроенная команда, а не тег
+    const isUnknownTag = (token: string) => !isOption(token) && !allTags.value.includes(token) && input.value.trim() !== 'clear'
+    const help = computed(() => checked.value.some(token => HELP.test(token)))
+
+    // первая ошибка в духе GNU ls: неизвестная опция, флаг без значения (по Enter), неизвестный тег
+    const error = computed(() => {
+        const badOption = checked.value.find(isBadOption)
+        if (badOption) return `ls: ${t('labels.terminal_bad_option')} '${badOption}'`
+        const last = tokens.value.filter(token => !SEPARATOR.test(token)).at(-1)
+        if (submitted.value && last && FLAG.test(last)) return `ls: ${t('labels.terminal_requires_arg', { option: last })}`
+        const unknown = checked.value.filter(isUnknownTag)
+        if (unknown.length) return `ls: ${unknown.join(', ')}: ${t('labels.terminal_not_found')}`
+        return ''
     })
 
     // меню дополнений в духе zsh: теги, которые ещё что-то оставят в выборке, отфильтрованные по набранному префиксу
@@ -64,23 +90,28 @@
         .sort((a, b) => b[1] - a[1])
         .map(([tag, count]) => ({ tag, count })))
 
-    // что подставит Tab: сначала дописываем сам флаг, потом значение тега
+    // что подставит Tab: сначала дописываем сам флаг (`-` → `--tag`, `--h` → `--help`), потом значение тега
     const completion = computed(() => {
-        if (partial.value.startsWith('-')) return '--tag'.startsWith(partial.value) && partial.value !== '--tag' ? '--tag' : undefined
+        if (isOption(partial.value)) return OPTIONS.find(option => option.startsWith(partial.value) && option !== partial.value)
         return partial.value ? menu.value[0]?.tag : undefined
     })
     // полупрозрачный хвост автокомплита прямо за курсором
     const ghost = computed(() => completion.value?.slice(partial.value.length) || '')
 
     // подсветка синтаксиса: сам input прозрачный, поверх лежит его раскрашенная копия
-    const highlighted = computed(() => tokens.value.map(text => ({
-        text,
-        class: SEPARATOR.test(text) ? ''
-            : FLAG.test(text) ? 'text-primary'
-            : allTags.value.includes(text) ? 'text-success'
-            : text === 'clear' ? 'text-warning'
-            : 'text-default'
-    })))
+    // ошибочные токены красятся красным только когда уже проверены, чтобы не мигать красным посреди набора
+    const highlighted = computed(() => {
+        const bad = new Set(checked.value.filter(token => isBadOption(token) || isUnknownTag(token)))
+        return tokens.value.map(text => ({
+            text,
+            class: SEPARATOR.test(text) ? ''
+                : FLAG.test(text) || HELP.test(text) ? 'text-primary'
+                : allTags.value.includes(text) ? 'text-success'
+                : text === 'clear' ? 'text-warning'
+                : bad.has(text) ? 'text-error'
+                : 'text-default'
+        }))
+    })
 
     const focusInput = () => nextTick(() => {
         const el = inputEl.value
@@ -110,15 +141,14 @@
     const run = () => {
         const command = input.value.trim()
         if (command === 'clear') { input.value = ''; return }
-        const unknown = typedValues.value.filter(value => !allTags.value.includes(value))
-        if (unknown.length) error.value = `ls: ${unknown.join(', ')}: ${t('labels.terminal_not_found')}`
+        submitted.value = true
     }
 
     const onKeydown = (event: KeyboardEvent) => {
         if (event.key === 'Tab' && completion.value) {
             // без подсказки Tab работает как обычно и уводит фокус дальше
             event.preventDefault()
-            if (completion.value === '--tag') input.value = input.value.slice(0, input.value.length - partial.value.length) + '--tag '
+            if (isOption(completion.value)) input.value = input.value.slice(0, input.value.length - partial.value.length) + completion.value + ' '
             else pick(completion.value)
         } else if (event.key === 'Enter') {
             event.preventDefault()
@@ -211,9 +241,10 @@
                 </div>
                 <!-- строка вывода под командой всегда занимает одну строку фиксированной высоты:
                      ошибка/меню появляются и исчезают, а шапка секции не прыгает -->
-                <div class="flex h-6 shrink-0 items-center gap-3 overflow-x-auto overflow-y-hidden whitespace-nowrap text-sm">
+                <div class="flex h-6 shrink-0 items-center gap-3 overflow-x-auto overflow-y-hidden whitespace-nowrap text-sm *:[font-feature-settings:'calt'_0]">
                     <p v-if="error" class="shrink-0 text-error" role="alert">{{ error }}</p>
-                    <div v-if="menu.length" class="flex shrink-0 items-center gap-1">
+                    <p v-else-if="help" class="shrink-0 text-dimmed" role="status">{{ t('labels.terminal_help') }}</p>
+                    <div v-else-if="menu.length" class="flex shrink-0 items-center gap-1">
                         <button
                             v-for="item in menu"
                             :key="item.tag"
