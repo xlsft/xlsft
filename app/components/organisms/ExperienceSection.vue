@@ -19,8 +19,8 @@
 
             <div class="flex flex-col gap-4">
                 <template v-if="!route.query.short">
-                    <NuxtImg v-if="company.logo" :src="company.logo" class="h-12 max-lg:h-6 w-fit flex items-center text-2xl font-bold" loading="lazy" :alt="company.name"/>
-                    <span v-else class="h-12 max-lg:h-6 w-fit flex items-center text-2xl font-bold">{{ company.name }}</span>
+                    <NuxtImg v-if="company.logo" :src="company.logo" class="h-12 max-lg:h-9 w-fit flex items-center text-2xl font-bold" loading="lazy" :alt="company.name"/>
+                    <span v-else class="h-12 max-lg:h-9 w-fit flex items-center text-2xl font-bold">{{ company.name }}</span>
                 </template>
 
                 <div class="flex flex-col items-end gap-2 *:leading-4 *:text-sm! *:text-nowrap absolute top-0 right-0 max-lg:static max-lg:items-start" v-if="!route.query.short">
