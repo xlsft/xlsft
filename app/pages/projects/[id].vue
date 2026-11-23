@@ -102,7 +102,7 @@
             <p v-if="data?.copyright" class="text-sm text-muted">{{ data.copyright }}</p>
 
             <section v-if="gallery.length" :aria-label="data.name">
-                <AtomsPreview class="border" :style="{ background: data.bg }">
+                <AtomsPreview v-model:index="selectedImage" :images="gallery" :label="data.name">
                     <NuxtImg
                         :src="gallery[selectedImage] ?? gallery[0]"
                         :alt="`${data.name} · ${selectedImage + 1} / ${gallery.length}`"
@@ -110,19 +110,7 @@
                         :placeholder="Skeleton"
                     />
                 </AtomsPreview>
-                <div v-if="gallery.length > 1" class="mt-3 flex flex-wrap gap-2">
-                    <button
-                        v-for="(src, index) in gallery"
-                        :key="index"
-                        type="button"
-                        :aria-label="`${data.name} · ${index + 1}`"
-                        :aria-pressed="selectedImage === index"
-                        class="size-16 cursor-pointer border p-1 aria-pressed:border-primary focus-visible:outline-2 focus-visible:outline-primary"
-                        @click="selectedImage = index"
-                    >
-                        <NuxtImg :src="src" alt="" class="size-full object-contain" :style="{ background: data.bg }"/>
-                    </button>
-                </div>
+                <MoleculesImageThumbnails v-model="selectedImage" :images="gallery" :label="data.name" class="mt-3"/>
             </section>
         </article>
     </section>
