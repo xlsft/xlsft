@@ -59,6 +59,12 @@
     --ui-text-dimmed: #9e9e9e;
 }
 
+/* комментарии (`# …`) — самый тусклый текст, но всё ещё проходят AA:
+   #767676 даёт 4.54:1 на белом и 4.6:1 на чёрном */
+:root, .dark {
+    --ui-text-comment: #767676;
+}
+
 * {
     -ms-overflow-style: none;
     scrollbar-width: none;

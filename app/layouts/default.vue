@@ -63,6 +63,9 @@
         } | order(priority desc),
     }`)
 
+    // каждая строка юридических пометок из CMS — отдельный комментарий в legal.conf
+    const legalNotes = computed(() => (data.value?.footer?.legal || '').split('\n').map((line: string) => line.trim()).filter((line: string) => /[\p{L}\p{N}]/u.test(line.replace(/<[^>]*>/g, ''))))
+
     if (data.value) useSeoMeta({
         titleTemplate: chunk => `${data.value?.person?.title || ''}${chunk ? ` — ${chunk}` : ``}`,
         themeColor: config.theme.background[theme.value as 'dark' | 'light'],
@@ -163,27 +166,52 @@
     </NuxtContainer>
     <NuxtFooter :ui="{ container: 'lg:items-start!', right: 'lg:h-full! grow!', left: 'items-start! justify-start!s' }">
         <template #left>
-            <div class="flex flex-col gap-4 *:text-[10px]! *:text-default/50 *:leading-5 max-w-100">
-                <div class="flex flex-col">
-                    <span>
-                        {{ config.schema.organization.legalName }} {{ t('labels.inn') }} {{ config.schema.organization.inn }} {{ t('labels.ogrn') }} {{ config.schema.organization.ogrn }}
-                    </span>
-                    <div class="flex w-full gap-1 flex-wrap">
-                        <div class="flex items-center gap-1 flex-wrap group *:text-[10px]!" v-for="link in data?.footer?.links">
-                            <NuxtLink :to="link.to" target="_blank">{{ link.label }}</NuxtLink>
-                            <span class="group-last:hidden">*</span>
-                        </div>
-                    </div>
+            <!-- реквизиты как legal.conf: та же терминальная подача, что у заголовков секций и experience.conf -->
+            <div class="legal flex flex-col gap-3 text-xs leading-5 max-w-160 w-full">
+                <span aria-hidden="true" class="flex items-center gap-3">
+                    <span class="text-primary">$</span>
+                    <span class="text-default">cat</span>
+                    <span class="text-success">legal.conf</span>
+                </span>
+                <dl class="legal-kv">
+                    <dt>entity</dt><dd>{{ config.schema.organization.legalName }}</dd>
+                    <dt>inn</dt><dd class="tabular-nums">{{ config.schema.organization.inn }}</dd>
+                    <dt>ogrnip</dt><dd class="tabular-nums">{{ config.schema.organization.ogrn }}</dd>
+                    <template v-if="data?.footer?.links?.length">
+                        <dt>contacts</dt>
+                        <dd>
+                            <span class="text-dimmed">[</span><template v-for="(link, index) in data.footer.links" :key="link.to"><NuxtLink :to="link.to" target="_blank" class="text-xs! text-default/75!">{{ link.label.toLowerCase() }}</NuxtLink><span v-if="index < data.footer.links.length - 1" class="text-dimmed">, </span></template><span class="text-dimmed">]</span>
+                        </dd>
+                    </template>
+                </dl>
+                <div class="legal-notes flex flex-col gap-1" v-if="legalNotes.length">
+                    <MDC v-for="note in legalNotes" :key="note" :value="note" class="md"/>
                 </div>
-
-                <MDC :value="data?.footer?.legal || ''" class="md *:m-0! *:leading-5" />
             </div>
         </template>
         <template #right>
             <div class="flex flex-col items-end h-full gap-2 max-lg:items-center">
                 <button type="button" aria-label="xlsft" class="cursor-pointer" @click="logoVariant = (logoVariant + 1) % 6"><AtomsLogo3d :variant="logoVariant as 0 | 1 | 2 | 3 | 4 | 5"/></button>
-                <span class="text-[10px]! text-default/50">{{ config.head.author }} @ {{ new Date().getFullYear() }}</span>
+                <span class="text-xs text-(--ui-text-comment)"># {{ config.head.author }} @ {{ new Date().getFullYear() }}</span>
             </div>
         </template>
     </NuxtFooter>
 </template>
+
+<style scoped>
+    .legal-kv {
+        display: grid;
+        grid-template-columns: 9ch 2ch minmax(0, 1fr);
+        row-gap: 2px;
+        margin: 0;
+    }
+    .legal-kv dt { grid-column: 1; position: relative; color: var(--ui-text-dimmed); }
+    .legal-kv dt::after { content: "="; position: absolute; left: 9ch; color: var(--ui-border); }
+    .legal-kv dd { grid-column: 3; margin: 0; min-width: 0; color: color-mix(in srgb, var(--ui-text) 75%, var(--ui-bg)); }
+
+    /* юридические пометки из CMS — комментарии конфига */
+    .legal-notes :deep(.md) { --legal-note: var(--ui-text-comment); color: var(--legal-note); }
+    .legal-notes :deep(.md > *) { margin: 0 !important; padding-left: 2ch; position: relative; font-size: inherit !important; line-height: inherit !important; }
+    .legal-notes :deep(.md > *::before) { content: "#"; position: absolute; left: 0; color: var(--legal-note); }
+    .legal-notes :deep(strong) { font-weight: 400 !important; color: var(--legal-note); }
+</style>

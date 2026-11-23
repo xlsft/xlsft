@@ -25,7 +25,7 @@
 
                 <div class="flex flex-col items-end gap-2 *:leading-4 *:text-sm! *:text-nowrap absolute top-0 right-0 max-lg:static max-lg:items-start" v-if="!route.query.short">
                     <NuxtLink v-if="company.link" :to="company.link" target="_blank" class="text-default/50">{{ company.link }}</NuxtLink>
-                    <span v-if="company.positions.length > 1" class="text-dimmed"># {{ companyTotal(company) }}</span>
+                    <span v-if="company.positions.length > 1" class="text-(--ui-text-comment)"># {{ companyTotal(company) }}</span>
                 </div>
 
                 <MDC v-if="company.about && !route.query.short" :value="company.about" class="*:my-0! *:leading-4 *:text-xs! *:text-default/50"/>
@@ -37,7 +37,7 @@
                     >
                         <div class="w-10 h-px absolute top-[13px] -left-14 max-lg:hidden" :class="position.duration.to ? 'bg-border' : 'bg-primary'" v-if="company.positions.length > 1"></div>
 
-                        <span :class="position.duration.to ? 'text-dimmed' : 'text-primary'">[[position]] <span class="text-dimmed" v-if="!position.duration.to"># {{ t('labels.current_position') }}</span></span>
+                        <span :class="position.duration.to ? 'text-dimmed' : 'text-primary'">[[position]] <span class="text-(--ui-text-comment)" v-if="!position.duration.to"># {{ t('labels.current_position') }}</span></span>
 
                         <div class="conf-kv">
                             <span class="conf-k">role</span>
@@ -46,7 +46,7 @@
 
                         <div class="conf-kv">
                             <span class="conf-k">period</span>
-                            <span class="conf-v">{{ useExperience(position.duration.from, position.duration.to).range() }} <span class="text-dimmed"># {{ useExperience(position.duration.from, position.duration.to).duration() }}</span></span>
+                            <span class="conf-v">{{ useExperience(position.duration.from, position.duration.to).range() }} <span class="text-(--ui-text-comment)"># {{ useExperience(position.duration.from, position.duration.to).duration() }}</span></span>
                         </div>
 
                         <div class="conf-md" v-if="position.description"><MDC :value="position.description" class="md *:my-0!"/></div>
