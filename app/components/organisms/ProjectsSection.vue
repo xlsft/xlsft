@@ -24,6 +24,21 @@
     const inputEl = ref<HTMLInputElement>()
     const input = ref('')
     const focused = ref(false)
+
+    // своя блочная каретка вместо нативной: одна и та же в фокусе и без него, шрифт моноширинный — позиция в ch
+    const caret = reactive({ index: 0, scroll: 0 })
+    const syncCaret = () => {
+        const el = inputEl.value
+        if (!el || document.activeElement !== el) return
+        caret.index = el.selectionEnd ?? el.value.length
+        caret.scroll = el.scrollLeft
+    }
+    onMounted(() => document.addEventListener('selectionchange', syncCaret))
+    onBeforeUnmount(() => document.removeEventListener('selectionchange', syncCaret))
+    // без фокуса каретка стоит в конце введённого, как в настоящем терминале
+    const caretStyle = computed(() => ({
+        left: `calc(${focused.value ? caret.index : input.value.length}ch - ${focused.value ? caret.scroll : 0}px)`
+    }))
     const error = ref('')
     watch(input, () => { error.value = '' })
 
@@ -170,9 +185,15 @@
                         <span aria-hidden="true" class="pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre">
                             <span v-for="(segment, index) in highlighted" :key="index" :class="segment.class">{{ segment.text }}</span>
                             <span class="opacity-40">{{ ghost }}</span>
-                            <span v-if="!focused && !input" class="h-5 w-2.5 bg-inverted animate-pulse"/>
-                            <!-- плейсхолдер-подсказка, какой аргумент писать; исчезает с первым символом -->
-                            <span v-if="!input" class="text-primary opacity-35" :class="!focused && 'ml-1'">--tag</span>
+                            <!-- плейсхолдер-подсказка, какой аргумент писать (как хвост автокомплита); исчезает с первым символом.
+                                 Отступ в 1ch — место под каретку -->
+                            <span v-if="!input" class="ml-[1ch] opacity-40">--tag</span>
+                            <!-- без фокуса каретка видна только в пустой строке, в фокусе — всегда; символ под ней инвертируется -->
+                            <span
+                                v-if="focused || !input"
+                                class="absolute top-1/2 h-5 w-[1ch] -translate-y-1/2 bg-white mix-blend-difference animate-pulse"
+                                :style="caretStyle"
+                            />
                         </span>
                         <input
                             ref="inputEl"
@@ -181,7 +202,7 @@
                             spellcheck="false"
                             autocomplete="off"
                             autocapitalize="off"
-                            class="w-full border-0 bg-transparent p-0 text-transparent caret-(--ui-text) outline-none cursor-text!"
+                            class="w-full border-0 bg-transparent p-0 text-transparent caret-transparent outline-none cursor-text!"
                             @focus="focused = true"
                             @blur="focused = false"
                             @keydown="onKeydown"
