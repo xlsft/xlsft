@@ -51,11 +51,6 @@
                     duration,
                 } | order(duration.from desc),
             } | order(positions[0].duration.from desc),
-            "education": *[_type == "education"] {
-                link,
-                "name": name[$locale],
-                "faculty": faculty[$locale],
-            } | order(year desc)
         },
         "projects": *[_type == "project"] {
             id, priority,
@@ -109,12 +104,6 @@
                     logo: company.logo || undefined
                 })
             }))),
-            "alumniOf": data.value.education?.map((education: any) => ({
-                "@type": "EducationalOrganization",
-                name: education.name,
-                department: education.faculty,
-                sameAs: education.link || undefined,
-            })),
         }),
         defineItemList({
             name: 'Проекты',

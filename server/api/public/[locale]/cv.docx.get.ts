@@ -37,13 +37,6 @@ export default defineCachedBinaryHandler(async (event) => {
             "logo": logo.light.asset->url,
             "footer": footer[$locale],
         } | order(positions[0].duration.from desc),
-        "education": *[_type == "education"] {
-            id, link, year,
-            "level": level[$locale],
-            "specialization": specialization[$locale],
-            "name": name[$locale],
-            "faculty": faculty[$locale],
-        } | order(year desc),
         "contact": *[_type == "contact"],
         "allLinks": *[_type == "link"] {
             "label": label[$locale],
@@ -73,11 +66,6 @@ export default defineCachedBinaryHandler(async (event) => {
                 **${t[locale].labels.stack}:** ${position.skills.map((skill) => skill.name).join(', ')}
             `).join('')}
             ${experience.footer ? `_${experience.footer}_`.replaceAll('\n', '') : ''}
-        `).join('')}
-        ## ${t[locale].sections.education}
-        ${data.education.map((education) => `
-            ### ${education.name}, ${education.faculty}
-            **${education.level}**, ${education.specialization} (${education.year})
         `).join('')}
         ## ${t[locale].labels.contact_me}
         ${data.allLinks.map((link) => `- [${link.label}](${link.to})`).join('\n')}

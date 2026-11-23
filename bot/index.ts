@@ -103,8 +103,7 @@ export const commands = {
             }`, {
             reply_markup: useLocalizedMenu(ctx, ({ markup, t }) => markup
                 .text(t.sections.experience, `section:experience`)
-                .text(t.sections.education, `section:education`).row()
-                .text(t.sections.projects, `section:project`)
+                .text(t.sections.projects, `section:project`).row()
                 .text(t.labels.contact_me, `action:contact`).row()
                 .url(t.labels.more_about, config.head.url).primary().row()
                 .text(`${t.labels.current_locale}: ${flag}`, 'action:localeSwitch')
@@ -166,30 +165,6 @@ export const sections = {
                     markup.url(`${item.name}`, `${config.head.url}/projects/${item.id}`).row()
                 })
 
-                markup.text(t.labels.back, 'action:back').danger()
-                return markup
-            })
-        })
-    }),
-    education: defineSection('education', async ({ ctx, locale, t }) => {
-        const data = await sanity.fetch<{ id: string, year: number, level: string, specialization: string, name: string, faculty: string }[]>(`
-        *[_type == "education"] {
-            id, year,
-            "level": level[$locale],
-            "specialization": specialization[$locale],
-            "name": name[$locale],
-            "faculty": faculty[$locale],
-        } | order(year desc)`, { locale })
-
-
-        defineEventResponse(ctx, `# ${t.sections.education}
-
-        ${data.map(education => `
-            ${education.name} __/ ${education.faculty} / ${education.year}__
-            ${education.level}, ${education.specialization}
-        `.trim()).join('\n\n')}
-        `, {
-            reply_markup: useLocalizedMenu(ctx, ({ markup, t }) => {
                 markup.text(t.labels.back, 'action:back').danger()
                 return markup
             })
