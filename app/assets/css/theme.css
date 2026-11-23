@@ -70,10 +70,14 @@ body {
     background: var(--ui-bg) !important;
 }
 
-* {
-    border-color: var(--ui-border);
-    outline-color: var(--ui-border);
-    cursor: crosshair;
+/* в base-слое, чтобы это были только значения по умолчанию: правило вне слоёв перебивает любые
+   утилиты (border-primary, outline-primary, hover:… и т.п.), и цветные рамки молча не работают */
+@layer base {
+    * {
+        border-color: var(--ui-border);
+        outline-color: var(--ui-border);
+        cursor: crosshair;
+    }
 }
 
 * ::selection {
