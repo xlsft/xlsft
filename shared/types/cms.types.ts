@@ -1,5 +1,7 @@
 export type I18nString = string
 
+export type ThemedImage = { dark: string | null, light: string | null }
+
 export type Education = {
     id: string
     level: I18nString
@@ -85,7 +87,7 @@ export type IndexQuery = {
     }
     experience: (Omit<Experience, 'positions' | 'name' | 'about' | 'logo' | 'footer'> & {
         name: string
-        logo: string
+        logo: ThemedImage
         about: string
         positions: (Omit<Position, 'name' | 'description' | 'skills'> & {
         name: string
@@ -104,7 +106,7 @@ export type IndexQuery = {
 export type ProjectsQuery = (
     Pick<Project, 'id' | 'tags' | 'repo' | 'priority'> & {
         name: string
-        logo: string
+        logo: ThemedImage
         description: string
         images: string[] | null
         bg: string | null

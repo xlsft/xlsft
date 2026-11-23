@@ -7,7 +7,7 @@
     const { data: projects } = await useClarityDynamicQuery<ProjectsQuery>(groq`*[_type == "project"] {
         id, tags, repo, priority,
         "name": name[$locale],
-        "logo": logo[$theme].asset->url,
+        "logo": { "dark": logo.dark.asset->url, "light": logo.light.asset->url },
         "description": description[$locale],
         "images": images[].asset->url,
         "bg": bg.hex
@@ -162,7 +162,7 @@
 
     // доминантный цвет каждого логотипа (считается на сервере и кэшируется) — им красится сетка плитки при наведении
     const { data: logoColors } = await useAsyncData('project-logo-colors', async () => {
-        const logos = [...new Set((projects.value || []).map(p => p.logo).filter(Boolean))]
+        const logos = [...new Set((projects.value || []).flatMap(p => [p.logo?.dark, p.logo?.light]).filter(Boolean) as string[])]
         const entries = await Promise.all(logos.map(async (src) => {
             const { color } = await $fetch<{ color: string | null }>('/api/logo-color', { query: { src } }).catch(() => ({ color: null }))
             return [src, color] as const
@@ -295,17 +295,20 @@
                 <div class="relative grow min-h-0 overflow-clip max-lg:aspect-video flex items-center justify-center p-8">
                     <div
                         aria-hidden="true"
-                        :style="{ '--logo-color': logoColors?.[project.logo] || 'var(--ui-text)' }"
-                        class="absolute inset-0 opacity-20 transition-opacity duration-300 [--grid-line:var(--ui-border)] group-hover/tile:[--grid-line:var(--logo-color)] group-focus-visible/tile:[--grid-line:var(--logo-color)] group-hover/tile:opacity-50 group-focus-visible/tile:opacity-50 bg-[linear-gradient(var(--grid-line)_1px,transparent_1px),linear-gradient(90deg,var(--grid-line)_1px,transparent_1px)] bg-size-[24px_24px] bg-center"
+                        :style="{
+                            '--logo-color-dark': logoColors?.[project.logo?.dark || project.logo?.light || ''] || 'var(--ui-text)',
+                            '--logo-color-light': logoColors?.[project.logo?.light || project.logo?.dark || ''] || 'var(--ui-text)'
+                        }"
+                        class="[--logo-color:var(--logo-color-light)] dark:[--logo-color:var(--logo-color-dark)] absolute inset-0 opacity-20 transition-opacity duration-300 [--grid-line:var(--ui-border)] group-hover/tile:[--grid-line:var(--logo-color)] group-focus-visible/tile:[--grid-line:var(--logo-color)] group-hover/tile:opacity-50 group-focus-visible/tile:opacity-50 bg-[linear-gradient(var(--grid-line)_1px,transparent_1px),linear-gradient(90deg,var(--grid-line)_1px,transparent_1px)] bg-size-[24px_24px] bg-center"
                     />
                     <MoleculesScreenshotsDeck v-if="project.images?.length" :images="project.images" :name="project.name" :bg="project.bg"/>
-                    <img
-                        v-if="project.logo"
+                    <AtomsThemedImage
+                        v-if="project.logo?.dark || project.logo?.light"
                         :src="project.logo"
                         alt=""
                         loading="lazy"
                         class="relative max-h-[55%] max-w-[70%] object-contain grayscale transition-all duration-300 group-hover/tile:grayscale-0 group-hover/tile:scale-110 group-focus-visible/tile:grayscale-0"
-                    >
+                    />
                 </div>
                 <div class="flex flex-col border-t border-default bg-default px-6 py-4 transition-colors group-hover/tile:border-primary group-focus-visible/tile:border-primary">
                     <div class="flex items-center justify-between gap-3">

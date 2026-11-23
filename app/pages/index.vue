@@ -29,7 +29,7 @@
         "experience": *[_type == "experience"]{
             id, link,
             "name": name[$locale],
-            "logo": logo[$theme].asset->url,
+            "logo": { "dark": logo.dark.asset->url, "light": logo.light.asset->url },
             "about": about[$locale],
             "positions": positions[]{
                 "name": name[$locale],

@@ -15,8 +15,7 @@
         id, links, tags, repo,
         "name": name[$locale],
         "description": description[$locale],
-        "thumbnail": thumbnail[$theme].asset->url,
-        "logo": logo[$theme].asset->url,
+        "thumbnail": { "dark": thumbnail.dark.asset->url, "light": thumbnail.light.asset->url },
         "images": images[].asset->url,
         "bg": bg.hex,
         "about": about[$locale],
@@ -28,7 +27,7 @@
         "related": related[]->{
             id, tags, repo, priority,
             "name": name[$locale],
-            "thumbnail": thumbnail[$theme].asset->url,
+            "thumbnail": { "dark": thumbnail.dark.asset->url, "light": thumbnail.light.asset->url },
             "description": description[$locale]
         }
     }[0]`, params);
@@ -46,7 +45,7 @@
         ogTitle: `${data.value?.seo?.title || ''} — ${data.value?.name}`,
         description: useMarkdownRemoval(data.value?.description),
         ogDescription: useMarkdownRemoval(data.value?.description),
-        ogImage: data.value.thumbnail
+        ogImage: data.value.thumbnail?.dark || data.value.thumbnail?.light || undefined
     })
 
 </script>
@@ -91,7 +90,7 @@
             <NuxtLink v-for="link in data?.links" :key="link" :to="link" class="flex items-center gap-1" v-if="data?.links?.length">
                 {{ link }}
             </NuxtLink>
-            <NuxtImg v-if="data?.thumbnail" :src="data.thumbnail" :alt="data.name" class="w-full border"/>
+            <AtomsThemedImage v-if="data?.thumbnail?.dark || data?.thumbnail?.light" :src="data.thumbnail" :alt="data.name" class="w-full border"/>
         </aside>
 
         <article class="min-w-0 space-y-6">
@@ -125,7 +124,7 @@
                     :key="project.id"
                     :title="project.name"
                     variant="outline"
-                    :image="project.thumbnail"
+                    :image="project.thumbnail?.dark || project.thumbnail?.light || undefined"
                     @click="() => { router.push(`/${locale}/projects/${project.id}`) }"
                     :ui="{
                         header: 'border-b group-hover/blog-post:border-primary!',
@@ -136,6 +135,9 @@
                         title: 'text-sm!'
                     }"
                 >
+                    <template #header="{ ui }" v-if="project.thumbnail?.dark || project.thumbnail?.light">
+                        <AtomsThemedImage :src="project.thumbnail" :alt="project.name" :class="ui.image({ class: 'grayscale group-hover/blog-post:grayscale-0 group-hover/blog-post:scale-105! transition-all' })"/>
+                    </template>
                     <template #title>
                         <div class="flex items-center justify-between w-full gap-2">
                             <span>{{ project.name }}</span>

@@ -19,7 +19,7 @@
 
             <div class="flex flex-col gap-4">
                 <template v-if="!route.query.short">
-                    <NuxtImg v-if="company.logo" :src="company.logo" class="h-12 max-lg:h-9 w-fit flex items-center text-2xl font-bold" loading="lazy" :alt="company.name"/>
+                    <AtomsThemedImage v-if="company.logo?.dark || company.logo?.light" :src="company.logo" class="h-12 max-lg:h-9 w-fit flex items-center text-2xl font-bold" loading="lazy" :alt="company.name"/>
                     <span v-else class="h-12 max-lg:h-9 w-fit flex items-center text-2xl font-bold">{{ company.name }}</span>
                 </template>
 
