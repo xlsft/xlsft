@@ -1,6 +1,5 @@
 <script setup lang="ts">
     import Logo from '~/assets/svg/logo.svg?raw'
-    import LogoMini from '~/assets/svg/logo-mini.svg?raw'
     import { useScroll } from '@vueuse/core';
     import * as locales from '@nuxt/ui/locale'
 
@@ -12,6 +11,7 @@
     const scroll = useScroll(document)
     const header = computed(() => window ? parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--ui-header-height')) : 0)
     const config = useRuntimeConfig().public.config
+    const logoVariant = useState('footer-logo-variant', () => (Math.floor(Date.now() / 864e5) % 3) as 0 | 1 | 2)
 
     const { data } = await useClarityDynamicQuery(groq`{
         "footer": {
@@ -192,7 +192,7 @@
         </template>
         <template #right>
             <div class="flex flex-col items-end h-full gap-2 max-lg:items-center">
-                <NuxtLink to="/" v-html="LogoMini" aria-label="xlsft" :prefetch="false"/>
+                <button type="button" aria-label="xlsft" class="cursor-pointer" @click="logoVariant = ((logoVariant + 1) % 3) as 0 | 1 | 2"><AtomsLogo3d :variant="logoVariant"/></button>
                 <span class="text-[10px]! text-default/50">{{ config.head.author }} @ {{ new Date().getFullYear() }}</span>
             </div>
         </template>
