@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
     const { t } = useI18n()
+    const sectionBorder = 'border-t-8 border-default'
     const theme = useColorMode()
     const config = useRuntimeConfig().public.config
     const projects = useTemplateRef('projects')
@@ -82,18 +83,20 @@
     <template v-if="data">
         <OrganismsSummarySection :data v-if="data.summary"/>
 
-        <MoleculesSectionHeader pattern="architect" id="experience" v-if="data.experience?.length">
-            {{ t('sections.experience') }}<br>
-            <span class="text-sm! text-default/50">({{ useExperience(
-                data.experience.at(-1)?.positions.at(-1)?.duration.from!,
-                data.experience.at(0)?.positions.at(0)?.duration.to
-            ).duration() }})</span>
-        </MoleculesSectionHeader>
+        <MoleculesHomeSectionHeader :class="sectionBorder" id="experience" filename="experience.conf" echo="($DURATION)" v-if="data.experience?.length">
+            ~/{{ t('sections.experience') }}
+            <template #detail>
+                <span class="text-sm! text-default/50">({{ useExperience(
+                    data.experience.at(-1)?.positions.at(-1)?.duration.from!,
+                    data.experience.at(0)?.positions.at(0)?.duration.to
+                ).duration() }})</span>
+            </template>
+        </MoleculesHomeSectionHeader>
         <OrganismsExperienceSection :data v-if="data.experience?.length"/>
 
-        <MoleculesSectionHeader pattern="plus" id="education" v-if="data.education?.length">
-            <div>{{ t('sections.education') }}</div>
-        </MoleculesSectionHeader>
+        <MoleculesHomeSectionHeader :class="sectionBorder" id="education" filename="education.conf" v-if="data.education?.length">
+            ~/{{ t('sections.education') }}
+        </MoleculesHomeSectionHeader>
         <OrganismsEducationSection :data v-if="data.education?.length" />
         <MoleculesSectionHeader pattern="graph-paper" id="projects" v-if="projects?.projectsCount">
             <div>{{ t('sections.projects') }}</div>
