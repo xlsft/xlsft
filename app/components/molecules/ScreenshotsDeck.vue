@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    const props = defineProps<{ images: string[], name: string, bg?: string }>()
+    const props = defineProps<{ images: string[], name: string, id?: string, bg?: string }>()
     const { t } = useI18n()
 
     const open = ref(false)
@@ -47,6 +47,6 @@
             </button>
         </NuxtTooltip>
 
-        <MoleculesImageViewer v-model:open="open" v-model:index="current" :images :label="name"/>
+        <MoleculesImageViewer v-model:open="open" v-model:index="current" :images :label="name" :id/>
     </div>
 </template>

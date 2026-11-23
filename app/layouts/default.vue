@@ -3,7 +3,7 @@
     import { useScroll } from '@vueuse/core';
     import * as locales from '@nuxt/ui/locale'
 
-    const chatOpen = ref(false)
+    const assistant = useAssistant()
 
     const { locale, setLocale, locales: i18nLocales, t } = useI18n()
     const router = useRouter()
@@ -133,7 +133,8 @@
 </script>
 
 <template>
-    <LazyOrganismsChatModal v-if="chatOpen" v-model:open="chatOpen"/>
+    <LazyOrganismsChatModal v-if="assistant.open.value" v-model:open="assistant.open.value"/>
+    <OrganismsAssistantCat/>
     <NuxtHeader class="transition-colors duration-500" :ui="{ container: 'max-w-dvw', root: `${header >= scroll.y.value && 'border-bg!'} max-lg:border-default!` }">
         <template #left>
             <NuxtLink to="/" v-html="Logo" aria-label="xlsft" :prefetch="false"/>
@@ -153,7 +154,6 @@
                 }"
             />
             <NuxtButton variant="outline" color="neutral" class="max-w-8 justify-center min-md:hidden" @click="setLocale(locale === 'en' ? 'ru' : 'en')">{{ locale === 'en' ? '🇷🇺' : '🇺🇸' }}</NuxtButton>
-            <NuxtButton icon="mage:stars-c-fill" @click="chatOpen = !chatOpen">{{ t('ai.ask') }}</NuxtButton>
         </template>
     </NuxtHeader>
     <NuxtContainer class="flex flex-col min-h-(--ui-viewport-height) py-12 max-lg:p-0!">

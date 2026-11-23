@@ -13,6 +13,8 @@ export default defineNuxtConfig({
     nitro: {
         preset: 'node-cluster',
         compressPublicAssets: true,
+        // заявки из чата переживают рестарт процесса, даже если Telegram недоступен
+        storage: { 'chat:requests': { driver: 'fs', base: './.data/chat-requests' } },
         externals: {
             traceInclude: [satoriRequire.resolve('harfbuzzjs/hb.wasm')]
         }

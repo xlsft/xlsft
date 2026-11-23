@@ -67,7 +67,7 @@ export default {
         viewer_close: 'close',
         about: 'About',
         links: 'Links',
-        contact_me: 'Contact me!',
+        contact_me: 'Contact',
         lets_talk: 'Let`s talk!',
         more_about: "More about",
         current_locale: "Current language",
@@ -121,6 +121,47 @@ export default {
     },
     ai: {
         ask: 'Ask AI',
-        placeholder: 'Ask something about candidate'
+        title: 'AI assistant',
+        working: 'Working…',
+        errors: {
+            unavailable: 'The assistant is unavailable right now. Please try again shortly or get in touch directly.',
+            rate_limit: 'Too many requests. Please wait a minute and try again.',
+            generic: 'Could not get a response. Please retry or get in touch directly.',
+            retry: 'Retry',
+        },
+        tooltip: 'Ask about the candidate or get in touch',
+        placeholder: 'Ask a question or leave a message',
+        reset: 'New chat',
+        contact_intent: 'I want to contact the candidate',
+        greeting: "Hi! I'm an AI assistant. I can tell you about the candidate, show his experience and projects, or pass your message on so he can get back to you.",
+        legal: {
+            leading: 'By sending messages you agree to the',
+            privacy: 'Privacy policy',
+            and: 'and',
+            processing: 'Personal data processing',
+        },
+        chips: {
+            about: 'Tell about the candidate',
+            experience: 'Show experience',
+            projects: 'Show projects',
+            contact: 'Contact the candidate',
+        },
+        blocks: {
+            now: 'now',
+            open: 'Open',
+            request: 'Request for the candidate',
+            request_saved: 'Saved and sent',
+            request_updated: 'Updated',
+            request_failed: 'Request was not saved',
+            name: 'Name', email: 'E-mail', phone: 'Phone', telegram: 'Telegram', message: 'Message',
+        },
+        tools: {
+            show_experience: 'Collecting experience',
+            show_projects: 'Collecting projects',
+            show_skills: 'Collecting skills',
+            show_contacts: 'Collecting contacts',
+            submit_request: 'Creating request',
+            update_request: 'Updating request',
+        }
     }
 }

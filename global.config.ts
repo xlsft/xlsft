@@ -3,6 +3,12 @@ export default {
         themes: ['dark', 'light'],
         locales: ['ru', 'en'],
     },
+    ai: {
+        // порядок = приоритет: первый основной, остальные — фоллбеки (см. server/utils/useAiRegistry.ts)
+        providers: ['deepseek', 'opencode'],
+        // как часто проверять доступность моделей
+        recheckMinutes: 10,
+    },
     requests: {
         telegram: 5072212559,
     },

@@ -76,7 +76,7 @@
         <OrganismsSummarySection :data v-if="data.summary"/>
 
         <MoleculesHomeSectionHeader :class="sectionBorder" id="experience" filename="experience.conf" echo="($DURATION)" v-if="data.experience?.length">
-            ~/{{ t('sections.experience') }}
+            ~/experience
             <template #detail>
                 <span class="text-sm! text-default/50">({{ useExperience(
                     data.experience.at(-1)?.positions.at(-1)?.duration.from!,

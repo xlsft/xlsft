@@ -101,7 +101,7 @@
             <p v-if="data?.copyright" class="text-sm text-muted">{{ data.copyright }}</p>
 
             <section v-if="gallery.length" :aria-label="data.name">
-                <AtomsPreview v-model:index="selectedImage" :images="gallery" :label="data.name">
+                <AtomsPreview v-model:index="selectedImage" :images="gallery" :label="data.name" :id="data.id">
                     <NuxtImg
                         :src="gallery[selectedImage] ?? gallery[0]"
                         :alt="`${data.name} · ${selectedImage + 1} / ${gallery.length}`"

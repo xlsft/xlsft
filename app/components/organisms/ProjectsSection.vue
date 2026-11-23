@@ -172,89 +172,6 @@
 
     const sortedProjects = computed(() => [...filteredProjects.value].sort((a: any, b: any) => b.priority - a.priority))
 
-    // бенто-мозаика на lg собирается упаковщиком, а не повторяющимся шаблоном: каждая следующая плитка
-    // ставится в самую низкую (левую) колонку, форма выбирается случайно с весами, и перебор с откатом
-    // гарантирует, что сетка закрывается ровным прямоугольником без дыр. Генератор детерминирован
-    // (сид — из id проектов), поэтому SSR и клиент получают одну и ту же раскладку
-    type Tile = { col: number, row: number, w: number, h: number }
-    const SHAPES = [
-        { w: 1, h: 4, weight: 3 },
-        { w: 1, h: 3, weight: 4 },
-        { w: 2, h: 2, weight: 3 },
-        { w: 1, h: 2, weight: 1.5 },
-        { w: 2, h: 3, weight: 1 },
-        { w: 3, h: 2, weight: 0.3 }
-    ]
-    const COLS = 3
-    const seeded = (seed: number) => () => {
-        seed = (seed + 0x6D2B79F5) | 0
-        let x = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-        x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x
-        return ((x ^ (x >>> 14)) >>> 0) / 4294967296
-    }
-    const hash = (text: string) => [...text].reduce((acc, char) => (Math.imul(acc, 31) + char.charCodeAt(0)) | 0, 7)
-
-    const packTiles = (count: number, seed: number): Tile[] => {
-        const rand = seeded(seed)
-        const heights = Array<number>(COLS).fill(0)
-        const tiles: Tile[] = []
-        let budget = 20000
-        const place = (left: number): boolean => {
-            if (!left) return heights.every(h => h === heights[0])
-            if (--budget < 0) return false
-            const row = Math.min(...heights)
-            const col = heights.indexOf(row)
-            let flat = 1
-            while (col + flat < COLS && heights[col + flat] === row) flat++
-            const prev = tiles.at(-1)
-            // взвешенный случайный порядок (ключ u^(1/w)); повтор формы соседа штрафуется
-            const options = SHAPES
-                .filter(shape => shape.w <= flat)
-                .map(shape => {
-                    const weight = shape.weight * (prev && prev.w === shape.w && prev.h === shape.h ? 0.25 : 1)
-                    return { shape, key: rand() ** (1 / weight) }
-                })
-                .sort((a, b) => b.key - a.key)
-            for (const { shape } of options) {
-                tiles.push({ col: col + 1, row: row + 1, w: shape.w, h: shape.h })
-                for (let i = col; i < col + shape.w; i++) heights[i]! += shape.h
-                // слишком рваный край потом не закрыть красиво
-                if (Math.max(...heights) - Math.min(...heights) <= 4 && place(left - 1)) return true
-                for (let i = col; i < col + shape.w; i++) heights[i]! -= shape.h
-                tiles.pop()
-            }
-            return false
-        }
-        if (place(count)) return tiles
-        // запасной вариант: ровные ряды 1×2, остаток добивается широкими плитками
-        return Array.from({ length: count }, (_, index) => {
-            const row = Math.floor(index / COLS) * 2 + 1
-            const rest = count % COLS
-            if (rest && index >= count - rest) {
-                const w = rest === 1 ? 3 : index === count - 1 ? 2 : 1
-                return { col: rest === 2 && index === count - 1 ? 2 : 1, row, w, h: 2 }
-            }
-            return { col: (index % COLS) + 1, row, w: 1, h: 2 }
-        })
-    }
-
-    const tiles = computed(() => packTiles(
-        sortedProjects.value.length,
-        hash(sortedProjects.value.map(project => project.id).join())
-    ))
-    const tileStyle = (index: number) => {
-        const tile = tiles.value[index]
-        return tile && {
-            '--tile-col': `${tile.col} / span ${tile.w}`,
-            '--tile-row': `${tile.row} / span ${tile.h}`
-        }
-    }
-    // на sm (2 колонки) во всю ширину идут только самые крупные плитки
-    const tileClass = (index: number) => {
-        const tile = tiles.value[index]
-        return tile && (tile.h >= 4 || tile.w === 3) ? 'sm:col-span-2' : ''
-    }
-
     const open = (id: string) => router.push(`/${locale.value}/projects/${id}`)
 
 </script>
@@ -262,13 +179,13 @@
 <template>
     <section class="flex flex-col relative" v-if="projects?.length" :aria-label="t('sections.projects')">
         <h2 class="px-6 py-4 text-xl! font-bold sm:hidden">
-            ~/Projects
+            ~/projects
         </h2>
         <!-- фильтр в виде команды терминала: ввод с подсветкой синтаксиса, Tab дополняет, ниже меню дополнений -->
         <div class="flex items-center justify-between gap-0 border-b border-default max-sm:flex-col max-sm:items-stretch sm:gap-4 sm:p-4 lg:px-8 lg:py-6">
             <div v-if="allTags.length && !props.noTags" class="hidden min-w-0 flex-1 flex-col gap-3 sm:flex">
                 <div class="flex items-center gap-3 text-base cursor-text!" @click="focusInput">
-                    <span class="shrink-0 text-dimmed">~/Projects</span>
+                    <span class="shrink-0 text-dimmed">~/projects</span>
                     <span class="shrink-0 text-primary" aria-hidden="true">$</span>
                     <span class="shrink-0">ls</span>
                     <label class="relative flex min-w-0 flex-1 items-center">
@@ -336,60 +253,6 @@
             </div>
             <OrganismsContactButton class="ml-auto shrink-0 max-sm:hidden!"/>
         </div>
-        <!-- без отступов: карточки стыкуются в одну сетку, общий 1px-бордер даёт outline каждой карточки поверх gap-px -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 sm:grid-flow-dense lg:auto-rows-[8rem] gap-px">
-            <article
-                v-for="(project, index) in sortedProjects"
-                :key="project.id"
-                tabindex="0"
-                role="link"
-                :aria-label="project.name"
-                :class="[
-                    'group/tile relative flex flex-col min-w-0 bg-default outline-1 outline-solid outline-(--ui-border) transition-colors',
-                    'hover:z-10 hover:outline-primary focus-visible:z-10 focus-visible:outline-primary cursor-nw-resize! *:cursor-nw-resize!',
-                    'lg:[grid-column:var(--tile-col)] lg:[grid-row:var(--tile-row)]',
-                    tileClass(index)
-                ]"
-                :style="tileStyle(index)"
-                @click="open(project.id)"
-                @keydown.enter="open(project.id)"
-            >
-                <!-- фон плитки рисуется классами: ровная сетка, при наведении — цвета логотипа; поверх — прозрачный логотип из поля logo -->
-                <div class="relative grow min-h-0 overflow-clip max-lg:aspect-video flex items-center justify-center p-8">
-                    <div
-                        aria-hidden="true"
-                        :style="{
-                            '--logo-color-dark': logoColors?.[project.logo?.dark || project.logo?.light || ''] || 'var(--ui-text)',
-                            '--logo-color-light': logoColors?.[project.logo?.light || project.logo?.dark || ''] || 'var(--ui-text)'
-                        }"
-                        class="[--logo-color:var(--logo-color-light)] dark:[--logo-color:var(--logo-color-dark)] absolute inset-0 opacity-20 transition-opacity duration-300 [--grid-line:var(--ui-border)] group-hover/tile:[--grid-line:var(--logo-color)] group-focus-visible/tile:[--grid-line:var(--logo-color)] group-hover/tile:opacity-50 group-focus-visible/tile:opacity-50 bg-[linear-gradient(var(--grid-line)_1px,transparent_1px),linear-gradient(90deg,var(--grid-line)_1px,transparent_1px)] bg-size-[24px_24px] bg-center"
-                    />
-                    <MoleculesScreenshotsDeck v-if="project.images?.length" :images="project.images" :name="project.name" :bg="project.bg"/>
-                    <AtomsThemedImage
-                        v-if="project.logo?.dark || project.logo?.light"
-                        :src="project.logo"
-                        alt=""
-                        loading="lazy"
-                        class="relative max-h-[55%] max-w-[70%] object-contain grayscale transition-all duration-300 group-hover/tile:grayscale-0 group-hover/tile:scale-110 group-focus-visible/tile:grayscale-0"
-                    />
-                </div>
-                <div class="flex flex-col border-t border-default bg-default px-6 py-4 transition-colors group-hover/tile:border-primary group-focus-visible/tile:border-primary">
-                    <div class="flex items-center justify-between gap-3">
-                        <h3 class="text-sm! font-bold truncate">{{ project.name }}</h3>
-                        <span aria-hidden="true" class="text-dimmed transition-colors group-hover/tile:text-primary group-focus-visible/tile:text-primary">↗</span>
-                    </div>
-                    <div class="grid grid-rows-[1fr] lg:grid-rows-[0fr] lg:group-hover/tile:grid-rows-[1fr] lg:group-focus-visible/tile:grid-rows-[1fr] transition-[grid-template-rows] duration-300">
-                        <div class="min-h-0 overflow-hidden">
-                            <div class="flex flex-col gap-3 pt-2">
-                                <MDC :value="project.description" class="md *:m-0! *:text-xs! *:leading-4! text-dimmed"/>
-                                <div class="flex flex-wrap gap-1">
-                                    <NuxtBadge v-for="tag in project.tags" :key="tag" variant="outline" color="neutral" size="sm">{{ tag }}</NuxtBadge>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </article>
-        </div>
+        <MoleculesProjectsGrid :projects="sortedProjects" :logo-colors @open="open"/>
     </section>
 </template>

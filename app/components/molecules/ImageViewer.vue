@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    const props = defineProps<{ images: string[], label: string }>()
+    const props = defineProps<{ images: string[], label: string, id?: string }>()
     const open = defineModel<boolean>('open', { required: true })
     const index = defineModel<number>('index', { default: 0 })
     const { t } = useI18n()
@@ -186,11 +186,11 @@
                 <div class="flex size-full max-w-7xl flex-col border-default bg-default sm:border">
                     <header class="flex h-12 shrink-0 items-stretch border-b border-default">
                         <p class="flex min-w-0 flex-1 items-center gap-3 px-4 text-sm sm:px-5">
-                            <span class="truncate text-dimmed max-sm:hidden">~/Projects/{{ label }}/screenshots</span>
+                            <span class="truncate text-dimmed max-sm:hidden">~/projects/{{ id ?? label }}/screenshots</span>
                             <span class="shrink-0 text-primary max-sm:hidden" aria-hidden="true">$</span>
                             <span class="shrink-0 max-sm:hidden" aria-hidden="true">open</span>
                             <span class="shrink-0 text-success max-sm:hidden" aria-hidden="true">{{ filename }}</span>
-                            <span class="truncate font-bold sm:hidden">{{ label }}</span>
+                            <span class="truncate font-bold sm:hidden">{{ id ?? label }}</span>
                         </p>
                         <span class="flex shrink-0 items-center border-l border-default px-4 text-sm tabular-nums" aria-hidden="true">
                             {{ pad(index + 1) }}<span class="text-dimmed">/{{ pad(images.length) }}</span>

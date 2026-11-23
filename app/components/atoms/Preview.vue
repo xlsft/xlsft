@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    defineProps<{ images: string[], label: string }>()
+    defineProps<{ images: string[], label: string, id?: string }>()
     const index = defineModel<number>('index', { required: true })
     const { t } = useI18n()
     const visible = ref(false)
@@ -37,6 +37,6 @@
         <button type="button" class="block w-full cursor-zoom-in!" :aria-label="`${t('labels.view_screenshots', { count: images.length })} — ${label}`" @click="actions.open">
             <slot />
         </button>
-        <MoleculesImageViewer :open="visible" v-model:index="index" :images :label @update:open="value => value ? actions.open() : actions.close()"/>
+        <MoleculesImageViewer :open="visible" v-model:index="index" :images :label :id @update:open="value => value ? actions.open() : actions.close()"/>
     </div>
 </template>
