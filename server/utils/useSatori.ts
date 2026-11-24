@@ -13,10 +13,13 @@ const sniffImageType = (buffer: Buffer) => {
     return null
 }
 
-// ассеты CMS адресуются по хэшу содержимого, поэтому data URL можно держать в памяти воркера сколько угодно
-const images = ((globalThis as any).__satoriImages ??= new Map<string, Promise<string>>()) as Map<string, Promise<string>>
+export type FetchedImage = { buffer: Buffer, type: string }
 
-const loadImage = (src: string) => {
+// ассеты CMS адресуются по хэшу содержимого, поэтому картинки можно держать в памяти воркера сколько угодно
+const images = ((globalThis as any).__serverImages ??= new Map<string, Promise<FetchedImage>>()) as Map<string, Promise<FetchedImage>>
+
+/** Загрузка картинки для серверного рендера (satori, docx) с кэшем на воркер и типом по сигнатуре файла */
+export const fetchImage = (src: string) => {
     const cached = images.get(src)
     if (cached) return cached
     const promise = (async () => {
@@ -25,13 +28,18 @@ const loadImage = (src: string) => {
         const buffer = Buffer.from(await response.arrayBuffer())
         // S3 отдаёт content-type по расширению, а под .webp лежат и JPEG — тип берём по сигнатуре
         const type = sniffImageType(buffer) || response.headers.get('content-type') || 'application/octet-stream'
-        return `data:${type};base64,${buffer.toString('base64')}`
+        return { buffer, type }
     })()
     // неудачную загрузку не кэшируем, чтобы следующий рендер попробовал снова
     promise.catch(() => images.delete(src))
     if (images.size >= 100) images.delete(images.keys().next().value!)
     images.set(src, promise)
     return promise
+}
+
+const loadImage = async (src: string) => {
+    const { buffer, type } = await fetchImage(src)
+    return `data:${type};base64,${buffer.toString('base64')}`
 }
 
 /**
