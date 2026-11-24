@@ -68,7 +68,9 @@
         .map(group => ({
             type: group.type,
             items: [...group.items].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
-        })))
+        }))
+        // категории — по убыванию числа навыков; при равенстве остаётся алфавитный порядок из запроса
+        .sort((a, b) => b.items.length - a.items.length))
     const packages = computed(() => groups.value.reduce((total, group) => total + group.items.length, 0))
     const shell = computed(() => groups.value.find(group => group.type === 'frontend')
         ?.items.slice(0, 3).map(skill => skill.name).join(', '))
