@@ -19,11 +19,14 @@ export default defineCachedBinaryHandler(async (event) => {
         getRouterParam(event, 'locale'),
         getRouterParam(event, 'theme')
     ]
-    if (!locale || !config.globals.locales.includes(locale)) return createError({ status: 400, message: 'Locale is undefined' })
-    if (!theme || !config.globals.themes.includes(theme)) return createError({ status: 400, message: 'Theme is undefined' })
+    // throw, а не return: иначе объект ошибки уйдёт в бинарный кэш как тело ответа
+    if (!locale || !config.globals.locales.includes(locale)) throw createError({ status: 400, message: 'Locale is undefined' })
+    if (!theme || !config.globals.themes.includes(theme)) throw createError({ status: 400, message: 'Theme is undefined' })
 
+    const timing = useServerTiming(event)
     const client = useClarity()
-    const data = await client.fetch<Pick<IndexQuery & SeoQuery, 'summary' | 'skills' | 'experience' | 'seo'>>(groq`{
+    // только то, что реально рисуется на картинке
+    const data = await timing('cms', () => client.fetch<Pick<IndexQuery, 'summary' | 'skills'>>(groq`{
         "summary": *[_type == "summary"][0]{
             "title": title[$locale],
             "description": description[$locale],
@@ -39,26 +42,7 @@ export default defineCachedBinaryHandler(async (event) => {
                 priority
             }
         },
-        "experience": *[_type == "experience"]{
-            id, link,
-            "name": name[$locale],
-            "logo": logo[$theme].asset->url,
-            "about": about[$locale],
-            "positions": positions[]{
-                "name": name[$locale],
-                "description": description[$locale],
-                "skills": skills[]->{
-                    name, type, color, priority
-                } | order(priority desc),
-                duration,
-            } | order(duration.from desc),
-            "footer": footer[$locale],
-        } | order(positions[0].duration.from desc),
-        "seo": *[_type == "summary"][0]{
-            "title": title[$locale],
-            "description": description[$locale]
-        },
-    }`, { locale, theme })
+    }`, { locale }))
 
     const vars = {
         background: config.theme.background[theme as keyof typeof config.theme.background],
@@ -119,7 +103,7 @@ export default defineCachedBinaryHandler(async (event) => {
                 ${locales[locale as keyof typeof locales].labels.contact_me}
             </div>
         </div>
-    `)
+    `, timing)
 }, {
     maxAge: 3600,
     getKey: (event) => {
