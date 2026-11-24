@@ -35,12 +35,16 @@ export default {
         api: '2026-02-27',
         dataset: 'production',
     },
+    clarity: {
+        endpoint: 'https://cv.xlsft.com/admin',
+        dataset: 'cv',
+    },
     metrics: {
         yandex: 103237740,
         gtag: 'GTM-TFT8VB5P',
     },
     head: {
-        url: 'https://cv.xlsft.ru',
+        url: 'https://cv.xlsft.com',
         author: 'xlsft',
         address: {
             locality: 'Липецк',
@@ -63,8 +67,8 @@ export default {
             legalAddress: '398005, Липецкая область, Г.Липецк, Ул.Суворова, д.3, кв.19',
             inn: '482308004814',
             ogrn: '323480000011992',
-            url: 'https://xlsft.ru',
-            email: 'dev@xlsft.ru',
+            url: 'https://xlsft.com',
+            email: 'dev@xlsft.com',
             logo: 'https://cdn.sanity.io/images/d5cxszmz/production/dd1cb4829f950c4e116d511ccf77af3b5c2ed26a-480x100.svg',
             phone: '+7 (999) 750-66-23'
         }
