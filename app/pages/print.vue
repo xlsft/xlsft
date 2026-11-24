@@ -10,7 +10,8 @@
         layout: 'empty'
     })
 
-    const { data } = await useClarityDynamicQuery<IndexQuery & SeoQuery>(groq`{
+    type PrintData = Omit<IndexQuery, 'skills'> & SeoQuery & { skills: Skill[] }
+    const { data: records } = await useClarityDynamicQuery<PrintData>(groq`{
         "summary": *[_type == "summary"][0]{
             "title": title[$locale],
             "description": description[$locale],
@@ -18,14 +19,7 @@
             "image": image.asset->url,
             "status": status[$locale],
         },
-        "skills": array::unique(*[_type == "skill"] | order(type asc) { "type": type })[]{
-            "type": type,
-            "items": *[_type == "skill" && type == ^.type] | order(name asc){
-                name,
-                color,
-                priority
-            }
-        },
+        "skills": *[_type == "skill"] | order(type asc, name asc) { type, name, color, priority },
         "links": {
             "hh": *[_type == "link" && id == "hh"][0] { "label": label[$locale], to },
             "github": *[_type == "link" && id == "github"][0] { "label": label[$locale], to },
@@ -56,6 +50,21 @@
             "to": to
         },
     }`)
+
+    // навыки плоским списком → группы по типу, как на главной
+    const data = computed(() => {
+        if (!records.value) return null
+        const categories = new Map<string, Skill[]>()
+        for (const skill of records.value.skills ?? []) {
+            const items = categories.get(skill.type)
+            if (items) items.push(skill)
+            else categories.set(skill.type, [skill])
+        }
+        return {
+            ...records.value,
+            skills: Array.from(categories, ([type, items]) => ({ type, items }))
+        }
+    })
 
     if (data.value?.summary) defineOgImage('AtomsOgIndex.takumi', {
         theme: 'light',
@@ -88,15 +97,17 @@
 
 <template>
     <template v-if="data">
-        <OrganismsSummarySection :data v-if="data.summary"/>
+        <OrganismsTerminalProfile :data print v-if="data.summary"/>
 
-        <MoleculesSectionHeader pattern="architect" v-if="data.experience?.length">
-            {{ t('sections.experience') }}<br>
-            <span class="text-sm! text-default/50">({{ useExperience(
-                data.experience.at(-1)?.positions.at(-1)?.duration.from!,
-                data.experience.at(0)?.positions.at(0)?.duration.to
-            ).duration() }})</span>
-        </MoleculesSectionHeader>
+        <MoleculesHomeSectionHeader class="border-t border-default break-inside-avoid break-after-avoid" filename="experience.conf" echo="($DURATION)" v-if="data.experience?.length">
+            ~/experience
+            <template #detail>
+                <span class="text-sm! text-default/50">({{ useExperience(
+                    data.experience.at(-1)?.positions.at(-1)?.duration.from!,
+                    data.experience.at(0)?.positions.at(0)?.duration.to
+                ).duration() }})</span>
+            </template>
+        </MoleculesHomeSectionHeader>
         <OrganismsExperienceSection :data v-if="data.experience?.length"/>
     </template>
 </template>

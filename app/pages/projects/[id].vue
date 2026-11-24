@@ -4,8 +4,8 @@
 
     const { t, locale } = useI18n()
     const route = useRoute()
-    const router = useRouter()
 
+    const sectionBorder = 'border-t-8 border-default'
 
     const params = ref({ id: route.params.id?.toString() }); watch(() => route.params.id, () => params.value.id = route.params.id?.toString())
     const { data } = await useClarityDynamicQuery<any>(groq`*[_type == "project" && id == $id] {
@@ -17,19 +17,12 @@
         "description": description[$locale],
         "thumbnail": { "dark": thumbnail.dark.asset->url, "light": thumbnail.light.asset->url },
         "images": images[].asset->url,
-        "bg": bg.hex,
         "about": about[$locale],
         "stack": stack[]->{
             name, type, color, priority
         } | order(priority desc),
         "status": status[$locale],
-        "copyright": copyright[$locale],
-        "related": related[]->{
-            id, tags, repo, priority,
-            "name": name[$locale],
-            "thumbnail": { "dark": thumbnail.dark.asset->url, "light": thumbnail.light.asset->url },
-            "description": description[$locale]
-        }
+        "copyright": copyright[$locale]
     }[0]`, params);
 
     if (!data.value) throw createError({ status: 404, message: `"${route.params.id?.toString()}" Project not found` })
@@ -39,6 +32,23 @@
     watch(gallery, () => { selectedImage.value = 0 })
 
     const repo = data.value?.repo ? await useGithubRepository<any>(data.value?.repo) : undefined
+
+    // теги из CMS и топики репозитория — одним списком, без повторов
+    const tags = computed<string[]>(() => [...new Set([...(data.value?.tags ?? []), ...(repo?.topics ?? [])])])
+
+    // stack.tsv: строка на категорию, как bat stack.tsv в профиле на главной
+    const stackGroups = computed(() => {
+        const groups = new Map<string, string[]>()
+        for (const item of data.value?.stack ?? []) {
+            const type = item.type || 'other'
+            const names = groups.get(type)
+            if (names) names.push(item.name)
+            else groups.set(type, [item.name])
+        }
+        return Array.from(groups, ([type, items]) => ({ type, items }))
+    })
+
+    const host = (link: string) => { try { return new URL(link).host.replace(/^www\./, '') } catch { return link } }
 
     useSeoMeta({
         title: data.value?.name,
@@ -51,106 +61,171 @@
 </script>
 
 <template>
-    <header class="p-8 max-lg:p-4 border-b">
-        <div class="flex flex-wrap items-center gap-3">
-            <h1>{{ data?.name }}</h1>
-            <div v-if="repo?.stars" class="flex items-center gap-1 text-yellow-500">
-                <span>{{ repo.stars }}</span>
-                <NuxtIcon name="mingcute:star-fill"/>
+    <!-- шапка-команда, как у секций главной: путь ведёт обратно к списку проектов -->
+    <MoleculesHomeSectionHeader>
+        <template #command>
+            <code class="command">
+                <NuxtLink :to="`/${locale}#projects`" class="text-dimmed! no-underline! hover:text-primary! transition-colors">~/projects/</NuxtLink><span class="text-default">{{ data.id }}</span> <span class="text-primary">$</span> cat <span class="text-success">readme.md</span>
+            </code>
+        </template>
+    </MoleculesHomeSectionHeader>
+
+    <!-- широкий thumbnail на клетке -->
+    <div v-if="data.thumbnail?.dark || data.thumbnail?.light" class="paper relative border-b border-default p-8 max-sm:p-4">
+        <AtomsThemedImage :src="data.thumbnail" :alt="data.name" fetchpriority="high" class="relative w-full aspect-[4/1] object-cover border border-default bg-default"/>
+    </div>
+
+    <!-- название + project.conf: ячейки стыкуются через gap-px, общий бордер не рвётся -->
+    <div class="grid gap-px bg-(--ui-border) lg:grid-cols-2">
+        <div class="flex min-w-0 flex-col justify-center gap-3 bg-default p-8 max-sm:p-4">
+            <div class="flex flex-wrap items-center gap-3">
+                <h1 class="leading-tight! max-sm:text-3xl!">{{ data.name }}</h1>
+            </div>
+            <MDC v-if="data.description" :value="data.description" class="md max-w-prose *:my-0!"/>
+        </div>
+
+        <div class="conf flex min-w-0 flex-col justify-center gap-0.5 bg-default p-8 max-sm:p-4">
+            <span class="text-primary">[project] <span class="comment"># project.conf</span></span>
+            <dl class="m-0">
+                <div v-if="data.status" class="conf-kv"><dt class="conf-k">status</dt><dd class="conf-v text-primary!">"{{ data.status }}"</dd></div>
+                <div v-if="data.repo" class="conf-kv">
+                    <dt class="conf-k">repo</dt>
+                    <dd class="conf-v">
+                        <NuxtLink :to="`https://github.com/${data.repo}`" target="_blank" class="act">{{ data.repo }}</NuxtLink>
+                        <span v-if="repo?.stars" class="comment"> # ★ {{ repo.stars }}</span>
+                    </dd>
+                </div>
+                <div v-if="data.links?.length" class="conf-kv">
+                    <dt class="conf-k">links</dt>
+                    <dd class="conf-v">
+                        <template v-for="(link, index) in data.links" :key="link"><NuxtLink :to="link" target="_blank" class="act">{{ host(link) }}</NuxtLink><span v-if="index < data.links.length - 1" class="comment">, </span></template>
+                    </dd>
+                </div>
+                <div v-if="tags.length" class="conf-kv">
+                    <dt class="conf-k">tags</dt>
+                    <dd class="conf-v"><span class="comment">[</span><template v-for="(tag, index) in tags" :key="tag"><span class="text-success">{{ tag }}</span><span v-if="index < tags.length - 1" class="comment">, </span></template><span class="comment">]</span></dd>
+                </div>
+                <div v-if="data.stack?.length" class="conf-kv">
+                    <dt class="conf-k">stack</dt>
+                    <dd class="conf-v">{{ data.stack.length }} <a href="#stack" class="act ml-[1ch]">[+] stack.tsv</a></dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <template v-if="data.about || stackGroups.length">
+        <MoleculesHomeSectionHeader :class="sectionBorder">
+            <template #command>
+                <code class="command">
+                    <span class="text-dimmed">~/projects/{{ data.id }}</span> <span class="text-primary">$</span>
+                    <template v-if="data.about"> cat <span class="text-success">about.md</span></template>
+                    <template v-if="data.about && stackGroups.length"><span class="text-dimmed"> &amp;&amp;</span></template>
+                    <template v-if="stackGroups.length"> bat <span class="text-success">stack.tsv</span></template>
+                </code>
+            </template>
+        </MoleculesHomeSectionHeader>
+
+        <div class="flex flex-wrap gap-px bg-(--ui-border)">
+            <article v-if="data.about" class="flex min-w-0 flex-[999_1_560px] flex-col gap-4 bg-default p-8 max-sm:p-4">
+                <h2 class="text-lg! leading-[26px]">{{ t('sections.about_project') }}</h2>
+                <MDC :value="data.about" class="md about max-w-[72ch] overflow-x-auto"/>
+                <p v-if="data.copyright" class="comment text-sm"># {{ data.copyright }}</p>
+            </article>
+
+            <!-- вывод bat: гуттер с номерами строк, первая строка tsv — заголовок -->
+            <!-- линия гуттера рисуется ячейкой на всю высоту, а сама таблица липнет к шапке, пока читается about -->
+            <div v-if="stackGroups.length" id="stack" class="stack relative flex min-w-0 flex-[1_1_340px] items-start bg-default scroll-mt-24">
+                <table class="tsv" :aria-label="t('labels.stack')">
+                    <thead>
+                        <tr><td aria-hidden="true" class="line">1</td><th scope="col">category<span aria-hidden="true" class="tab">⇥</span></th><th scope="col">items</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(group, index) in stackGroups" :key="group.type">
+                            <td aria-hidden="true" class="line">{{ index + 2 }}</td>
+                            <th scope="row">{{ group.type }}<span aria-hidden="true" class="tab">⇥</span></th>
+                            <td>
+                                <template v-for="(name, nameIndex) in group.items" :key="name"><span>{{ name }}</span><template v-if="nameIndex < group.items.length - 1"><span aria-hidden="true" class="tab">⇥</span><wbr></template></template>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-        <MDC v-if="data?.description" :value="data.description" class="md max-w-prose text-muted"/>
-    </header>
+    </template>
 
-    <section class="grid gap-8 p-8 max-lg:p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)]">
-        <aside class="flex min-w-0 flex-col items-start gap-3 break-words">
-            <NuxtBadge v-if="data?.status" variant="solid">{{ data.status }}</NuxtBadge>
-            <h3 class="text-lg!" v-if="repo?.topics?.length || data?.tags?.length">{{ t('labels.tags') }}:</h3>
-            <div class="flex flex-wrap gap-1 items-center" v-if="data?.tags">
-                <NuxtBadge v-for="tag in data?.tags" :key="tag" variant="outline" color="neutral">{{ tag }}</NuxtBadge>
-            </div>
-            <div class="flex flex-wrap gap-1 items-center" v-if="repo?.topics">
-                <NuxtBadge v-for="topic in repo?.topics" :key="topic" variant="outline" color="neutral">{{ topic }}</NuxtBadge>
-            </div>
+    <template v-if="gallery.length">
+        <MoleculesHomeSectionHeader :class="sectionBorder">
+            <template #command>
+                <code class="command">
+                    <span class="text-dimmed">~/projects/{{ data.id }}</span> <span class="text-primary">$</span> ls <span class="text-success">screenshots/</span>
+                    <span class="comment text-sm"> # {{ String(selectedImage).padStart(2, '0') }} / {{ String(gallery.length - 1).padStart(2, '0') }}</span>
+                </code>
+            </template>
+        </MoleculesHomeSectionHeader>
 
-            <h3 class="text-lg!" v-if="data?.stack?.length">{{ t('labels.stack') }}:</h3>
-            <div id="stack" class="flex flex-wrap gap-1 items-center" v-if="data?.stack?.length">
-                <NuxtBadge
-                    v-for="item in data?.stack"
-                    :key="item.name"
-                    variant="outline" color="neutral"
-                    :style="`--badge-color: ${item.color}`"
-                    :ui="{ base: 'hover:bg-(--badge-color)/50 hover:ring-(--badge-color)!'}"
-                >
-                    {{ item.name }}
-                </NuxtBadge>
-            </div>
-
-            <h3 class="text-lg!" v-if="data?.links?.length">{{ t('labels.links') }}:</h3>
-            <NuxtLink v-for="link in data?.links" :key="link" :to="link" class="flex items-center gap-1" v-if="data?.links?.length">
-                {{ link }}
-            </NuxtLink>
-            <AtomsThemedImage v-if="data?.thumbnail?.dark || data?.thumbnail?.light" :src="data.thumbnail" :alt="data.name" class="w-full border"/>
-        </aside>
-
-        <article class="min-w-0 space-y-6">
-            <div v-if="data?.about">
-                <h2>{{ t('sections.about_project') }}</h2>
-                <MDC :value="data.about" class="md max-w-prose overflow-x-auto"/>
-            </div>
-            <p v-if="data?.copyright" class="text-sm text-muted">{{ data.copyright }}</p>
-
-            <section v-if="gallery.length" :aria-label="data.name">
-                <AtomsPreview v-model:index="selectedImage" :images="gallery" :label="data.name" :id="data.id">
-                    <NuxtImg
-                        :src="gallery[selectedImage] ?? gallery[0]"
-                        :alt="`${data.name} · ${selectedImage + 1} / ${gallery.length}`"
-                        class="h-80 w-full object-contain sm:h-100"
-                        :placeholder="Skeleton"
-                    />
-                </AtomsPreview>
-                <MoleculesImageThumbnails v-model="selectedImage" :images="gallery" :label="data.name" class="mt-3"/>
-            </section>
-        </article>
-    </section>
-    <template v-if="data.related?.length">
-        <MoleculesSectionHeader pattern="graph-paper" id="projects">
-            <div>{{ t('sections.related_projects') }}</div>
-        </MoleculesSectionHeader>
-        <section class="flex flex-col relative">
-            <NuxtBlogPosts class="p-8 max-lg:p-4" :ui="{ base: 'gap-4! p-8!' }">
-                <NuxtBlogPost
-                    v-for="project in [...data.related].sort((a: any, b: any) => b.priority - a.priority)"
-                    :key="project.id"
-                    :title="project.name"
-                    variant="outline"
-                    :image="project.thumbnail?.dark || project.thumbnail?.light || undefined"
-                    @click="() => { router.push(`/${locale}/projects/${project.id}`) }"
-                    :ui="{
-                        header: 'border-b group-hover/blog-post:border-primary!',
-                        image: 'grayscale group-hover/blog-post:grayscale-0 group-hover/blog-post:scale-105! transition-all',
-                        root: 'hover:ring-primary! *:cursor-nw-resize! cursor-nw-resize!',
-                        body: 'p-3! flex flex-col gap-1',
-                        description: 'm-0! flex flex-col gap-4 grow',
-                        title: 'text-sm!'
-                    }"
-                >
-                    <template #header="{ ui }" v-if="project.thumbnail?.dark || project.thumbnail?.light">
-                        <AtomsThemedImage :src="project.thumbnail" :alt="project.name" :class="ui.image({ class: 'grayscale group-hover/blog-post:grayscale-0 group-hover/blog-post:scale-105! transition-all' })"/>
-                    </template>
-                    <template #title>
-                        <div class="flex items-center justify-between w-full gap-2">
-                            <span>{{ project.name }}</span>
-                        </div>
-                    </template>
-                    <template #description>
-                        <MDC :value="project.description" class="md *:m-0! *:text-xs! *:leading-4! grow"/>
-                        <div class="flex flex-wrap gap-1">
-                            <NuxtBadge v-for="tag in project.tags" :key="tag" variant="outline" color="neutral" size="sm">{{ tag }}</NuxtBadge>
-                        </div>
-                    </template>
-                </NuxtBlogPost>
-            </NuxtBlogPosts>
+        <section :aria-label="data.name" class="paper relative flex flex-col gap-3 p-8 max-sm:p-4">
+            <AtomsPreview v-model:index="selectedImage" :images="gallery" :label="data.name" :id="data.id" class="relative">
+                <NuxtImg
+                    :src="gallery[selectedImage] ?? gallery[0]"
+                    :alt="`${data.name} · ${selectedImage + 1} / ${gallery.length}`"
+                    class="h-80 w-full border border-default bg-default object-contain sm:h-120"
+                    :placeholder="Skeleton"
+                />
+            </AtomsPreview>
+            <MoleculesImageThumbnails v-model="selectedImage" :images="gallery" :label="data.name" class="relative"/>
         </section>
     </template>
+
+    <!-- все остальные проекты — тот же блок, что на главной, без открытого -->
+    <OrganismsProjectsSection id="projects" :class="sectionBorder" :exclude="data.id"/>
 </template>
+
+<style scoped>
+    .command { font: inherit; font-size: 16px; line-height: 1.6; }
+    .comment { color: var(--ui-text-comment); }
+
+    /* клетка 24px — та же, что под фото профиля и в плитках проектов */
+    .paper::before {
+        content: ""; position: absolute; inset: 0; opacity: .6; pointer-events: none;
+        background: linear-gradient(var(--ui-border) 1px, transparent 1px), linear-gradient(90deg, var(--ui-border) 1px, transparent 1px);
+        background-size: 24px 24px; background-position: center;
+    }
+
+    /* project.conf — как experience.conf и legal.conf: ключ / "=" / значение */
+    .conf { --conf-key: 9ch; --conf-gap: 2ch; font-size: 15px; line-height: 26px; }
+    .conf-kv { display: grid; grid-template-columns: var(--conf-key) var(--conf-gap) minmax(0, 1fr); }
+    .conf-k { position: relative; color: var(--ui-text-dimmed); }
+    .conf-k::after { content: "="; position: absolute; left: var(--conf-key); color: var(--ui-border); }
+    .conf-v { grid-column: 3; min-width: 0; margin: 0; overflow-wrap: anywhere; color: color-mix(in srgb, var(--ui-text) 78%, var(--ui-bg)); }
+
+    /* кликабельное в выводе — цвет комментария, при наведении — основной (перебивает глобальный стиль ссылок) */
+    .act { font: inherit; font-size: inherit !important; line-height: inherit !important; color: var(--ui-text-comment) !important; text-decoration: none !important; opacity: 1 !important; transition: color .15s; }
+    .act:hover { color: var(--ui-text) !important; }
+    .act:focus-visible { outline: 1px solid var(--ui-primary); outline-offset: 2px; }
+
+    .about { font-size: 14px; line-height: 22px; }
+
+    .stack { --gutter: calc(32px + 3ch + 16px); }
+    .stack::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--gutter) - 1px); width: 1px; background: var(--ui-border); pointer-events: none; }
+    .tsv { position: sticky; top: var(--ui-header-height); width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 14px; line-height: 26px; }
+    .tsv th, .tsv td { text-align: left; vertical-align: top; padding: 0; font-weight: 400; }
+    .tsv thead > tr > * { padding-top: 20px; }
+    .tsv tbody tr:last-child > * { padding-bottom: 24px; }
+    .tsv .line { width: var(--gutter); padding-right: 16px; text-align: right; color: var(--ui-text-comment); font-variant-numeric: tabular-nums; }
+    .tsv tr > :nth-child(2) { width: calc(24px + 12ch); padding-left: 24px; }
+    .tsv tr > :last-child { padding-right: 32px; }
+    .tsv thead th { color: var(--ui-text-comment); }
+    .tsv tbody td:last-child { color: color-mix(in srgb, var(--ui-text) 78%, var(--ui-bg)); }
+    .tsv tbody th { color: var(--ui-warning); }
+    .tsv .tab { margin: 0 .5ch; color: var(--ui-border); }
+
+    @media (max-width: 650px) {
+        .command { font-size: 13px; }
+        .conf { font-size: 13px; line-height: 22px; }
+        .stack { --gutter: calc(16px + 2ch + 10px); }
+        .tsv { font-size: 12px; line-height: 20px; }
+        .tsv .line { padding-right: 10px; }
+        .tsv tr > :nth-child(2) { width: calc(12px + 10ch); padding-left: 12px; }
+        .tsv tr > :last-child { padding-right: 16px; }
+    }
+</style>

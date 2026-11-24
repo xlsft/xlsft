@@ -1,10 +1,11 @@
 <script setup lang="ts">
     const { t, locale } = useI18n()
-    const props = defineProps<{ data: IndexQuery, noTags?: boolean }>()
+    // exclude — id проекта, который не показываем (открытый на странице проекта)
+    const props = defineProps<{ data?: IndexQuery, noTags?: boolean, exclude?: string }>()
     const router = useRouter()
 
     // грузим все проекты один раз и фильтруем локально: счётчики тегов считаются из тех же данных, переключение мгновенное
-    const { data: projects } = await useClarityDynamicQuery<ProjectsQuery>(groq`*[_type == "project"] {
+    const { data: allProjects } = await useClarityDynamicQuery<ProjectsQuery>(groq`*[_type == "project"] {
         id, tags, repo, priority,
         "name": name[$locale],
         "logo": { "dark": logo.dark.asset->url, "light": logo.light.asset->url },
@@ -12,6 +13,7 @@
         "images": images[].asset->url,
         "bg": bg.hex
     } | order(priority desc)`)
+    const projects = computed(() => (allProjects.value || []).filter(project => project.id !== props.exclude))
 
     const countTags = (list: ProjectsQuery) => list.reduce((counts, project) => {
         for (const tag of project.tags || []) counts.set(tag, (counts.get(tag) || 0) + 1)
@@ -222,18 +224,19 @@
                 <div class="flex h-6 shrink-0 items-center gap-3 overflow-x-auto overflow-y-hidden whitespace-nowrap text-sm *:[font-feature-settings:'calt'_0]">
                     <p v-if="error" class="shrink-0 text-error" role="alert">{{ error }}</p>
                     <p v-else-if="help" class="shrink-0 text-dimmed" role="status">{{ t('labels.terminal_help') }}</p>
-                    <div v-else-if="menu.length" class="flex shrink-0 items-center gap-1">
+                    <div v-else-if="menu.length" class="flex shrink-0 items-center gap-4">
+                        <!-- пункты меню — ссылки без фона и паддинга, чтобы первый тег стоял ровно по левому краю строки -->
                         <button
                             v-for="item in menu"
                             :key="item.tag"
                             type="button"
                             :class="[
-                                'flex items-baseline gap-1.5 px-2 py-0.5 transition-colors',
-                                item.tag === completion ? 'bg-inverted text-inverted' : 'text-success hover:bg-(--ui-border)/40'
+                                'flex items-baseline gap-1.5 p-0 text-success underline-offset-4 transition-colors hover:underline',
+                                item.tag === completion && 'underline'
                             ]"
                             @click.stop="pick(item.tag)"
                         >
-                            {{ item.tag }}<span :class="['text-xs', item.tag === completion ? 'opacity-60' : 'text-dimmed']">{{ pad(item.count) }}</span>
+                            {{ item.tag }}<span class="text-xs text-dimmed">{{ pad(item.count) }}</span>
                         </button>
                     </div>
                 </div>
