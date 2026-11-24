@@ -1,6 +1,5 @@
 <script setup lang="ts">
     const { t } = useI18n()
-    const route = useRoute()
     // collapsible — компании можно сворачивать до шапки (логотип, последняя роль, период);
     // по умолчанию раскрыты только места с текущей позицией. На print-странице не передаётся — там всё раскрыто
     const props = defineProps<{ data: IndexQuery, collapsible?: boolean }>()
@@ -37,7 +36,7 @@
             <AtomsPattern name="texture" class="[&_div]:scale-3000 overflow-hidden pointer-events-none w-12 h-12 border absolute! top-0 left-0 bg-default z-2 flex items-center justify-center text-default/50 text-sm! max-lg:hidden">{{ (data.experience.length - Number(i) - 1).toString().padStart(2, '0') }}</AtomsPattern>
 
             <div class="flex flex-col">
-                <header v-if="!route.query.short" class="company-head group" :class="collapsible && 'cursor-pointer'" @click="toggle(company)">
+                <header class="company-head group" :class="collapsible && 'cursor-pointer'" @click="toggle(company)">
                     <div class="company-logo flex items-center h-12 max-lg:h-9 min-w-0">
                         <AtomsThemedImage v-if="company.logo?.dark || company.logo?.light" :src="company.logo" class="h-full w-fit" loading="lazy" :alt="company.name"/>
                         <!-- нет логотипа — собираем похожий: знак с первой буквой + название -->
@@ -67,8 +66,8 @@
                 <div class="company-body" :class="isCollapsed(company) && 'is-collapsed'" :inert="isCollapsed(company) || undefined">
                     <div class="company-body-inner flex flex-col gap-4">
                         <!-- отступ от шапки — контентом, а не padding: padding не схлопывается при 0fr -->
-                        <div v-if="!route.query.short" aria-hidden="true"></div>
-                        <MDC v-if="company.about && !route.query.short" :value="company.about" class="*:my-0! *:leading-4 *:text-xs! *:text-default/50"/>
+                        <div aria-hidden="true"></div>
+                        <MDC v-if="company.about" :value="company.about" class="*:my-0! *:leading-4 *:text-xs! *:text-default/50"/>
 
                         <div class="flex flex-col gap-6 mt-2">
                             <div class="conf flex flex-col gap-0.5 relative break-inside-avoid text-[15px] leading-[26px] max-lg:text-sm max-lg:leading-[22px] max-lg:gap-2.5 print:gap-0.5" :key="position.name" v-for="position in company.positions"
@@ -81,7 +80,7 @@
 
                                 <div class="conf-kv">
                                     <span class="conf-k">role</span>
-                                    <h3 class="conf-v text-lg! max-lg:text-base! leading-[26px] font-bold text-default"><span v-if="route.query.short" class="text-dimmed">{{ company.name }} / </span>{{ position.name }}</h3>
+                                    <h3 class="conf-v text-lg! max-lg:text-base! leading-[26px] font-bold text-default">{{ position.name }}</h3>
                                 </div>
 
                                 <div class="conf-kv">
@@ -100,7 +99,7 @@
 
                         </div>
 
-                        <MDC v-if="company.footer && !route.query.short" :value="company.footer" class="md *:my-0! *:text-sm *:text-default/50"/>
+                        <MDC v-if="company.footer" :value="company.footer" class="md *:my-0! *:text-sm *:text-default/50"/>
                     </div>
                 </div>
             </div>

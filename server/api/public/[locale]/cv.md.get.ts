@@ -24,10 +24,10 @@ export default defineCachedEventHandler(async (event) => {
         "experience": *[_type == "experience"]{
             id, link,
             "name": name[$locale],
-            "about": about[$locale],
+            "about": aboutShort[$locale],
             "positions": positions[]{
                 "name": name[$locale],
-                "description": description[$locale],
+                "description": descriptionShort[$locale],
                 "skills": skills[]->{
                     name, type, color, priority
                 } | order(priority desc),

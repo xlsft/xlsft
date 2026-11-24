@@ -140,7 +140,7 @@
             <NuxtLink to="/" v-html="Logo" aria-label="xlsft" :prefetch="false"/>
         </template>
         <template #toggle>
-            <NuxtButton variant="outline" color="neutral" icon="mingcute:print-line" class="max-w-8 justify-center" to="./print?short=true" target="_blank" :aria-label="t('labels.print_version')" :ui="{ leadingIcon: 'text-default!' }"></NuxtButton>
+            <NuxtButton variant="outline" color="neutral" icon="mingcute:print-line" class="max-w-8 justify-center" to="./print" target="_blank" :aria-label="t('labels.print_version')" :ui="{ leadingIcon: 'text-default!' }"></NuxtButton>
             <NuxtColorModeButton variant="subtle" :ui="{ base: '*:cursor-nw-resize! cursor-nw-resize! hover:opacity-75! transition-opacity' }"/>
             <NuxtLocaleSelect
                 class="cursor-nw-resize! max-md:hidden"

@@ -2,8 +2,6 @@
 
     const { t } = useI18n()
     const config = useRuntimeConfig().public.config
-    const route = useRoute()
-    const router = useRouter()
 
     definePageMeta({
         colorMode: 'light',
@@ -29,10 +27,10 @@
             id, link,
             "name": name[$locale],
             "logo": { "dark": logo.dark.asset->url, "light": logo.light.asset->url },
-            "about": ${route.query.short ? `aboutShort` : `about`}[$locale],
+            "about": aboutShort[$locale],
             "positions": positions[]{
                 "name": name[$locale],
-                "description": ${route.query.short ? `descriptionShort` : `description`}[$locale],
+                "description": descriptionShort[$locale],
                 "skills": skills[]->{
                     name, type, color, priority
                 } | order(priority desc),
