@@ -2,10 +2,9 @@
     import { usePreferredReducedMotion } from "@vueuse/core"
 
     const { t } = useI18n()
-    // print — печатная версия: stack.tsv сразу раскрыт, переключатель скрыт, у ссылок видны адреса
-    const props = defineProps<{ data: IndexQuery, print?: boolean }>()
+    const props = defineProps<{ data: IndexQuery }>()
     const config = useRuntimeConfig().public.config
-    const stackOpen = ref(!!props.print)
+    const stackOpen = ref(false)
     const tailTokens = [
         { text: ' |', color: 'text-dimmed' },
         { text: ' tail ', color: 'text-default' },

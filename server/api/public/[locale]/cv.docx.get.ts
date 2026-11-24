@@ -1,4 +1,5 @@
+// кэш на 3 дня, сбрасывается при перезапуске (см. server/plugins/reset-cv-cache.ts)
 export default defineCachedBinaryHandler(event => useCvDocx(event), {
-    maxAge: 600,
-    getKey: (event) => `cv-docx:v34:${getRouterParam(event, 'locale') || 'unknown'}`
+    maxAge: CV_CACHE_SECONDS,
+    getKey: (event) => `cv-docx:${getRouterParam(event, 'locale') || 'unknown'}`
 })

@@ -16,6 +16,15 @@ WORKDIR /app
 # ИИ-ассистент ходит в бесплатные модели через OpenCode CLI 2.x (см. server/utils/useAiOpencode.ts);
 # нужен AI_MCP_SECRET в окружении — общий секрет между приложением и локальным opencode
 RUN npm install -g @opencode/cli@2.0.24
+# cv.pdf — docx из useCvDocx, сконвертированный LibreOffice (см. server/utils/useDocxToPdf.ts).
+# Встроенные в docx шрифты LibreOffice в headless не подхватывает, поэтому Cascadia Code ставим в систему
+# из официального релиза (в Alpine есть только Nerd Font-версия с другим именем семейства); DejaVu — запасной шрифт
+RUN apk add --no-cache libreoffice-writer ttf-dejavu fontconfig \
+    && wget -qO /tmp/cascadia.zip https://github.com/microsoft/cascadia-code/releases/download/v2407.24/CascadiaCode-2407.24.zip \
+    && mkdir -p /usr/share/fonts/cascadia \
+    && unzip -q -j -o /tmp/cascadia.zip ttf/static/CascadiaCode-Regular.ttf ttf/static/CascadiaCode-Bold.ttf -d /usr/share/fonts/cascadia \
+    && rm /tmp/cascadia.zip && fc-cache -f
+ENV LIBREOFFICE_BIN=/usr/lib/libreoffice/program/soffice
 COPY --from=builder /app/.output /app/.output
 COPY --from=builder /app/node_modules /app/node_modules
 COPY package.json ./

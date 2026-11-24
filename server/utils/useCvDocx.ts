@@ -11,7 +11,7 @@ import locales from '~~/i18n/locales'
 import globalConfig from '~~/global.config'
 
 /**
- * CV в .docx на одну страницу в стиле /print: тонкая шапка (фото | о себе | контакты, ниже навыки)
+ * CV в .docx на одну страницу в стиле главной: тонкая шапка (фото | о себе | контакты, ниже навыки)
  * и experience.conf с короткими описаниями позиций (descriptionShort).
  * Данные те же, что и раньше, меняется только оформление. Всё рисуется таблицами без сеток —
  * так Word, LibreOffice и Google Docs раскладывают одинаково.
@@ -27,7 +27,7 @@ type CvData = {
     links: Record<string, { label: string, to: string } | null>
 }
 
-// печатная тема (светлая) из app/assets/css/theme.css
+// светлая тема из app/assets/css/theme.css
 const color = {
     text: '000000', value: '383838', dimmed: '595959', comment: '767676', border: 'C2C2C2', bg: 'FFFFFF',
     // брендовый акцент — из global.config, чтобы не разъезжался с сайтом
@@ -388,7 +388,8 @@ export const useCvDocx = async (event: H3Event) => {
         ...(photo ? [cell({ width: photoWidth, align: VerticalAlign.TOP, borders: { right: line() }, children: [
             new Paragraph({
                 children: [new ImageRun({ type: photo.type, data: photo.data, transformation: { width: photoPx, height: photoPx } })],
-                spacing: { before: 0, after: 0, line: photoPx * 15, lineRule: LineRuleType.EXACT },
+                // минимальная, а не точная высота: при точной LibreOffice обрезает картинку по строке
+                spacing: { before: 0, after: 0, line: photoPx * 15, lineRule: LineRuleType.AT_LEAST },
             }),
         ] })] : []),
         cell({ width: aboutWidth, align: VerticalAlign.CENTER, margins: { top: 80, bottom: 80, left: 200, right: 200 }, children: [
@@ -509,7 +510,13 @@ export const useCvDocx = async (event: H3Event) => {
                 // «текущая» не пишем: «— настоящее время» в периоде говорит то же самое
                 const marker = company.positions.length > 1 ? `# ${positionRange}, ${positionDuration}` : ''
                 // [[position]] нужен, только когда позиций несколько
-                if (company.positions.length > 1) entries.push({ key: '[[position]]', eq: false, keyColor: current ? color.primary : color.dimmed, lines: [marker ? [{ text: marker, style: { color: color.comment } }] : []] })
+                if (company.positions.length > 1) {
+                    // зазор и над второй и следующими позициями — сверху их отделяет только граница строки таблицы
+                    if (positionIndex) entries.push({ key: '', eq: false, lines: [[]], gap: true })
+                    entries.push({ key: '[[position]]', eq: false, keyColor: current ? color.primary : color.dimmed, lines: [marker ? [{ text: marker, style: { color: color.comment } }] : []] })
+                    // такой же небольшой зазор, как под строкой компании
+                    entries.push({ key: '', eq: false, lines: [[]], gap: true })
+                }
                 add('role', [{ text: position.name, style: { color: color.text, bold: true } }])
 
                 // описание: первый абзац — summary, список — scope (первое жирное — подключ), цитата — result

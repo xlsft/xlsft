@@ -80,6 +80,7 @@
 
 <template>
     <template v-if="data">
+        <BlocksProfile />
         <OrganismsTerminalProfile :data v-if="data.summary"/>
 
         <MoleculesHomeSectionHeader :class="sectionBorder" id="experience" filename="experience.conf" echo="($DURATION)" v-if="data.experience?.length">

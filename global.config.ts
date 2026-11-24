@@ -47,9 +47,9 @@ export default {
         url: 'https://cv.xlsft.com',
         author: 'xlsft',
         address: {
-            locality: 'Липецк',
-            region: 'Липецкая область',
-            postal: '398005',
+            locality: 'Санкт-Петербург',
+            region: 'Ленинградская область',
+            postal: '195112',
             country: 'Россия',
         }
     },

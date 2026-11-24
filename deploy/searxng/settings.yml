@@ -1,0 +1,30 @@
+# Self-hosted SearXNG для веб-поиска ИИ-ассистента (инструмент web_search).
+# Наружу не публикуется: доступен только приложению по внутренней сети.
+use_default_settings: true
+
+general:
+  instance_name: cv-assistant-search
+
+server:
+  # секрет задаётся переменной окружения SEARXNG_SECRET
+  limiter: false
+  image_proxy: false
+  public_instance: false
+
+search:
+  safe_search: 1
+  autocomplete: ''
+  # приложение ходит за format=json — без этого SearXNG отвечает 403
+  formats:
+    - html
+    - json
+
+engines:
+  - name: wikipedia
+    disabled: false
+  - name: duckduckgo
+    disabled: false
+  - name: brave
+    disabled: false
+  - name: yandex
+    disabled: false

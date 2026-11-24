@@ -79,7 +79,7 @@
 
     // OpenCode исполняет MCP-инструменты через общий инструмент execute: действие видно только в коде вызова
     // (tools.cv.show_projects(...)), поэтому определяем его и по имени инструмента, и по коду
-    const blockTools = ['show_experience', 'show_projects', 'show_skills', 'show_contacts', 'submit_request', 'update_request']
+    const blockTools = ['show_experience', 'show_projects', 'show_project', 'show_repos', 'show_skills', 'show_contacts', 'show_downloads', 'match_vacancy', 'web_search', 'submit_request', 'update_request']
     // есть ли в сообщении то, что видит посетитель (текст или блок), а не только скрытые рассуждения и служебные вызовы
     const hasVisible = (message: UIMessage) => message.parts.some(part =>
         (isTextUIPart(part) && !!part.text) || (isToolUIPart(part) && !!blockTool(part)))
@@ -87,7 +87,7 @@
         const named = blockTools.find(name => getToolName(part).endsWith(name))
         if (named) return named
         const code = (part as { input?: { code?: unknown } }).input?.code
-        return typeof code === 'string' ? code.match(new RegExp(`tools\\.cv\\.(${blockTools.join('|')})`))?.[1] : undefined
+        return typeof code === 'string' ? code.match(new RegExp(`tools\\.cv\\.(${blockTools.join('|')})\\b`))?.[1] : undefined
     }
 </script>
 

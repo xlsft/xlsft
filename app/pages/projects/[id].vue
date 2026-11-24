@@ -61,7 +61,6 @@
 </script>
 
 <template>
-    <!-- шапка-команда, как у секций главной: путь ведёт обратно к списку проектов -->
     <MoleculesHomeSectionHeader>
         <template #command>
             <code class="command">
@@ -70,13 +69,11 @@
         </template>
     </MoleculesHomeSectionHeader>
 
-    <!-- широкий thumbnail на клетке -->
     <div v-if="data.thumbnail?.dark || data.thumbnail?.light" class="paper relative border-b border-default p-8 max-sm:p-4">
         <AtomsThemedImage :src="data.thumbnail" :alt="data.name" fetchpriority="high" class="relative w-full aspect-[4/1] object-cover border border-default bg-default"/>
     </div>
 
-    <!-- название + project.conf: ячейки стыкуются через gap-px, общий бордер не рвётся -->
-    <div class="grid gap-px bg-(--ui-border) lg:grid-cols-2">
+    <div class="grid gap-px bg-border lg:grid-cols-2">
         <div class="flex min-w-0 flex-col justify-center gap-3 bg-default p-8 max-sm:p-4">
             <div class="flex flex-wrap items-center gap-3">
                 <h1 class="leading-tight! max-sm:text-3xl!">{{ data.name }}</h1>
@@ -87,7 +84,10 @@
         <div class="conf flex min-w-0 flex-col justify-center gap-0.5 bg-default p-8 max-sm:p-4">
             <span class="text-primary">[project] <span class="comment"># project.conf</span></span>
             <dl class="m-0">
-                <div v-if="data.status" class="conf-kv"><dt class="conf-k">status</dt><dd class="conf-v text-primary!">"{{ data.status }}"</dd></div>
+                <div v-if="data.status" class="conf-kv">
+                    <dt class="conf-k">status</dt>
+                    <dd class="conf-v text-primary!">"{{ data.status }}"</dd>
+                </div>
                 <div v-if="data.repo" class="conf-kv">
                     <dt class="conf-k">repo</dt>
                     <dd class="conf-v">

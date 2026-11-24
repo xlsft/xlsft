@@ -1,7 +1,7 @@
 <script setup lang="ts">
     const { t } = useI18n()
     // collapsible — компании можно сворачивать до шапки (логотип, последняя роль, период);
-    // по умолчанию раскрыты только места с текущей позицией. На print-странице не передаётся — там всё раскрыто
+    // по умолчанию раскрыты только места с текущей позицией.
     const props = defineProps<{ data: IndexQuery, collapsible?: boolean }>()
 
     type Company = IndexQuery['experience'][number]

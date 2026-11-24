@@ -140,7 +140,8 @@
             <NuxtLink to="/" v-html="Logo" aria-label="xlsft" :prefetch="false"/>
         </template>
         <template #toggle>
-            <NuxtButton variant="outline" color="neutral" icon="mingcute:print-line" class="max-w-8 justify-center" to="./print" target="_blank" :aria-label="t('labels.print_version')" :ui="{ leadingIcon: 'text-default!' }"></NuxtButton>
+            <!-- «Скачать» ведёт в ИИ-ассистента: он покажет файлы резюме (PDF, DOCX, Markdown) -->
+            <NuxtButton variant="outline" color="neutral" icon="mingcute:download-2-line" class="max-w-8 justify-center" :aria-label="t('labels.download_cv')" :ui="{ leadingIcon: 'text-default!' }" @click="assistant.ask(t('ai.download_intent'))"></NuxtButton>
             <NuxtColorModeButton variant="subtle" :ui="{ base: '*:cursor-nw-resize! cursor-nw-resize! hover:opacity-75! transition-opacity' }"/>
             <NuxtLocaleSelect
                 class="cursor-nw-resize! max-md:hidden"

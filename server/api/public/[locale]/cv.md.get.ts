@@ -78,9 +78,8 @@ export default defineCachedEventHandler(async (event) => {
         ${data.allLinks.map((link) => `- [${link.label}](${link.to})`).join('\n')}
     `.trim().replaceAll('    ', '').replaceAll('\n\n\n', '\n\n').replaceAll('\n\n\n\n', '\n\n')
 }, {
-    maxAge: 600,
-    swr: true,
-    staleMaxAge: 86400,
+    // 3 дня; кэш в памяти процесса, поэтому перезапуск контейнера его сбрасывает
+    maxAge: CV_CACHE_SECONDS,
     group: 'cv',
     name: 'md',
     getKey: (event) => getRouterParam(event, 'locale') || 'unknown'
