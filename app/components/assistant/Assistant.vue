@@ -3,6 +3,7 @@
     import { useLocalStorage } from '@vueuse/core'
     import { DefaultChatTransport, isReasoningUIPart, isTextUIPart, isToolUIPart, type UIMessage } from 'ai'
     import type { Component } from 'vue'
+    import { uuid } from '~/lib/uuid'
     import { ASSISTANT_SEND_WINDOW, ASSISTANT_STORE_LIMIT, useAssistantStore, type AssistantTool } from '~/stores/assistant'
 
     const { t, locale } = useI18n()
@@ -22,7 +23,7 @@
         update_request: resolveComponent('AssistantRequest') as Component,
     }
 
-    const session = useLocalStorage<string>('assistant:session', crypto.randomUUID())
+    const session = useLocalStorage<string>('assistant:session', uuid())
     const stored = useLocalStorage<UIMessage[]>('assistant:messages', [])
 
     const { messages: history, status, error, sendMessage, regenerate, stop } = useChat<UIMessage>({
@@ -50,7 +51,7 @@
             stop()
             history.value = []
             stored.value = []
-            session.value = crypto.randomUUID()
+            session.value = uuid()
         },
         send(text: string): void {
             const value = text.trim()
