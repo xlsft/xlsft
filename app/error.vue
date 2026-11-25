@@ -1,20 +1,21 @@
 <script setup lang="ts">
-    import type { NuxtError } from '#app';
-    const props = defineProps({ error: Object as () => NuxtError })
+    import type { NuxtError } from '#app'
+    import { useCmsStore } from '~/stores/cms'
 
-    const { data: seo } = await useClarityDynamicQuery<any>(groq`*[_type == "summary"][0]{
-        "title": title[$locale],
-        "description": description[$locale]
-    }`)
+    const props = defineProps<{ error?: NuxtError }>()
+
+    const cmsStore = useCmsStore()
+
+    const { data: seo } = await cmsStore.summary()
 
     useRobotsRule({ noindex: true })
 
     useSeoMeta({
-        titleTemplate: chunk => `${seo.value?.title || ''}${chunk ? ` — ${chunk}` : ``}`,
+        titleTemplate: (chunk) => `${seo.value?.title ?? ''}${chunk ? ` — ${chunk}` : ''}`,
         title: `[${props.error?.status}] ${props.error?.message}`,
         description: seo.value?.description,
-        ogTitle: `${seo.value?.title || ''} — [${props.error?.status}] ${props.error?.message}`,
-        ogDescription: seo.value?.description
+        ogTitle: `${seo.value?.title ?? ''} — [${props.error?.status}] ${props.error?.message}`,
+        ogDescription: seo.value?.description,
     })
 </script>
 

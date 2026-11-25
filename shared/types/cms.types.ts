@@ -1,8 +1,8 @@
 export type I18nString = string
 
-export type ThemedImage = { dark: string | null, light: string | null }
+export interface ThemedImage { dark?: string, light?: string }
 
-export type Education = {
+export interface Education {
     id: string
     level: I18nString
     name: I18nString
@@ -12,21 +12,21 @@ export type Education = {
     year: number
 }
 
-export type Skill = {
+export interface Skill {
     name: string
     type: string
     color: string
     priority: number
 }
 
-export type Link = {
+export interface Link {
     id: string
     label: I18nString
     short: I18nString
     to: string
 }
 
-export type Position = {
+export interface Position {
     name: I18nString
     skills: Skill[]
     description: I18nString
@@ -36,24 +36,24 @@ export type Position = {
     }
 }
 
-export type Experience = {
+export interface Experience {
     id: string
     name: I18nString
-    logo: string // theme -> image url
+    logo: string
     about: I18nString
     link: string
     positions: Position[]
     footer: I18nString
 }
 
-export type Project = {
+export interface Project {
     id: string
     name: I18nString
-    thumbnail: string // theme -> image url
-    logo: string // theme -> image url
+    thumbnail: string
+    logo: string
     description: I18nString
-    images: string[] // image urls
-    bg: string // color
+    images: string[]
+    bg: string
     about: I18nString
     related: { _ref: string }[]
     status: I18nString
@@ -65,16 +65,16 @@ export type Project = {
     copyright: I18nString
 }
 
-export type Summary = {
+export interface Summary {
     content: I18nString
-    image: string // image url
+    image: string
     status: I18nString
     title: I18nString
     description: I18nString
     legal: I18nString
 }
 
-export type IndexQuery = {
+export interface IndexQuery {
     summary: Pick<Summary, 'title' | 'description' | 'content' | 'status'> & { image: string }
     skills: {
         type: string
@@ -96,9 +96,8 @@ export type IndexQuery = {
         })[]
         footer: string
     })[]
-    projectTags: string[]
     allLinks: {
-        label: I18nString,
+        label: I18nString
         to: string
     }[]
 }
@@ -108,14 +107,19 @@ export type ProjectsQuery = (
         name: string
         logo: ThemedImage
         description: string
-        images: string[] | null
-        bg: string | null
+        images?: string[]
+        bg?: string
     }
 )[]
 
-export type SeoQuery = {
-    seo: Pick<Summary, 'title' | 'description'> & {
-        title: string
-        description: string
-    }
+export interface Tile {
+    id: string
+    name: string
+    description?: string
+    tags?: string[]
+    bg?: string
+    logo?: ThemedImage
+    images?: string[]
 }
+
+export type Company = IndexQuery['experience'][number]

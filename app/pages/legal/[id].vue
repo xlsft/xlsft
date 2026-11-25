@@ -1,33 +1,39 @@
 <script setup lang="ts">
     import useMarkdownRemoval from 'remove-markdown'
+    import { useCmsStore } from '~/stores/cms'
+
     const route = useRoute()
+    const theme = useColorMode()
+    const config = useRuntimeConfig().public
+    const cmsStore = useCmsStore()
+    const id = computed<string>(() => route.params.id?.toString() ?? '')
 
-    const params = ref({ id: route.params.id?.toString() }); watch(() => route.params.id, () => params.value.id = route.params.id?.toString())
-    const { data } = await useClarityDynamicQuery<any>(groq`*[_type == "legal" && id == $id] {
-        "seo": *[_type == "summary"][0] {
-            "title": title[$locale],
-        },
-        "title": title[$locale],
-        "description": description[$locale],
-        "content": content[$locale],
-    }[0]`, params);
+    const { data } = await cmsStore.legal(id)
 
-    if (!data.value) throw createError({ status: 404, message: `"${route.params.id?.toString()}" Document not found` })
+    if (!data.value) throw createError({ status: 404, message: `"${id.value}" Document not found` })
+
+    defineOgImage('OgLegal.takumi', {
+        theme: theme.value as 'dark' | 'light',
+        site: config.site.url.replace(/^https?:\/\//, ''),
+        id: id.value,
+        title: data.value.title,
+        description: useMarkdownRemoval(data.value.description ?? ''),
+        author: data.value.author,
+    })
 
     useSeoMeta({
-        title: data.value?.title,
-        ogTitle: `${data.value?.seo?.title || ''} — ${data.value?.title}`,
-        description: useMarkdownRemoval(data.value?.description),
-        ogDescription: useMarkdownRemoval(data.value?.description)
+        title: () => data.value?.title,
+        ogTitle: () => `${data.value?.author ?? ''} — ${data.value?.title}`,
+        description: () => useMarkdownRemoval(data.value?.description ?? ''),
+        ogDescription: () => useMarkdownRemoval(data.value?.description ?? ''),
     })
 </script>
 
 <template>
-    <MoleculesSectionHeader pattern="plus" no-contact>
-        {{ data.title }}
-    </MoleculesSectionHeader>
-    <section class="p-8 max-lg:p-4 flex flex-col gap-4">
-        <p class="text-sm! text-default/50">{{ data.description }}</p>
-        <MDC :value="data.content" class="md *:mt-0!"/>
-    </section>
+    <LayoutSection v-if="data" name="legal" :heading="data.title" :contact="false" class="border-t-0!">
+        <div class="p-8 max-lg:p-4 flex flex-col gap-4">
+            <p class="text-sm! text-default/50">{{ data.description }}</p>
+            <MDC :value="data.content ?? ''" class="md *:mt-0!"/>
+        </div>
+    </LayoutSection>
 </template>
