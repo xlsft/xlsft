@@ -62,7 +62,7 @@
     const info = computed<ReturnType<typeof cmsStore.fetch>>(() => cmsStore.fetch(data.value))
 
     const groups = computed<{ type: string, items: Skill[] }[]>(() => cmsStore.group(data.value?.skills)
-        .map((group) => ({ type: group.type, items: [...group.items].sort((a, b) => b.priority - a.priority) }))
+        .map((group) => ({ type: group.type, items: [...group.items].sort(byPriority) }))
         .sort((a, b) => b.items.length - a.items.length))
     const packages = computed<number>(() => groups.value.reduce((total, group) => total + group.items.length, 0))
     const shell = computed<string | undefined>(() => groups.value.find((group) => group.type === 'frontend')?.items.slice(0, 3).map((skill) => skill.name).join(', '))

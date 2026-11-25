@@ -7,7 +7,7 @@ import { icons } from '~~/server/static/icons'
 
 interface ProfileData {
     summary: { title: string, description: string, content: string, image: string, status: string }
-    skills: { type: string, name: string, priority: number }[]
+    skills: { type: string, name: string, priority?: number }[]
     experience: { name: string, positions: { duration: { from: string, to?: string } }[] }[]
     links: Record<string, { label: string, to: string } | null>
 }
@@ -98,7 +98,7 @@ export default defineCachedBinaryHandler(async (event) => {
     const identity = titleMatch ? { role: titleMatch[1]!, user: titleMatch[2]! } : { role: summary.title || '', user: '' }
 
     const groups = Object.entries(Object.groupBy(data.skills ?? [], skill => skill.type))
-        .map(([type, items]) => ({ type, items: [...items!].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0)) }))
+        .map(([type, items]) => ({ type, items: [...items!].sort(byPriority) }))
         .filter(group => group.items.length)
         // как на главной: по убыванию числа навыков, при равенстве — по алфавиту
         .sort((a, b) => b.items.length - a.items.length)

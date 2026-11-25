@@ -18,7 +18,7 @@ import locales from '~~/i18n/locales'
 
 interface CvData {
     summary: { title: string, description: string, content: string, image: string, status: string }
-    skills: { type: string, name: string, priority: number }[]
+    skills: { type: string, name: string, priority?: number }[]
     experience: {
         name: string, link?: string, logo?: string
         positions: { name: string, description?: string, duration: { from: string, to?: string }, skills?: { name: string }[] }[]
@@ -336,7 +336,7 @@ export const useCvDocx = (event: H3Event): { build: () => Promise<Buffer> } => {
             "positions": positions[]{
                 "name": name[$locale],
                 "description": descriptionShort[$locale],
-                "skills": skills[]->{ name, priority } | order(priority desc),
+                "skills": skills[]->{ name, priority } | order(coalesce(priority, 0) desc, name asc),
                 duration,
             } | order(duration.from desc),
             "logo": logo.light.asset->url,
@@ -357,7 +357,7 @@ export const useCvDocx = (event: H3Event): { build: () => Promise<Buffer> } => {
         const titleMatch = (summary.title || '').match(/^(.*?)\s*\(([^()]+)\)\s*$/)
         const identity = titleMatch ? { role: titleMatch[1]!, user: titleMatch[2]! } : { role: summary.title || '', user: '' }
         const groups = Object.entries(Object.groupBy(data.skills ?? [], skill => skill.type))
-            .map(([type, items]) => ({ type, items: [...items!].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0)) }))
+            .map(([type, items]) => ({ type, items: [...items!].sort(byPriority) }))
             .filter(group => group.items.length)
             .sort((a, b) => b.items.length - a.items.length)
         const uptime = total(experience.at(-1)?.positions?.at(-1)?.duration?.from, experience.at(0)?.positions?.at(0)?.duration?.to)?.duration() ?? ''

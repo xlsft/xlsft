@@ -6,7 +6,7 @@ export type AssistantData = Awaited<ReturnType<typeof fetchAssistantData>>
 
 const fetchAssistantData = async (locale: string) => dedupeSkills(await useClarity().fetch<{
     summary: { title: string, description: string, status: string, content: string }
-    skills: { type: string, items: { name: string, priority: number }[] }[]
+    skills: { type: string, items: { name: string, priority?: number }[] }[]
     experience: {
         id: string, link?: string, name: string, logo?: Themed, about?: string
         positions: { name: string, description?: string, from: string, to?: string, skills: string[] }[]
@@ -23,7 +23,7 @@ const fetchAssistantData = async (locale: string) => dedupeSkills(await useClari
     },
     "skills": array::unique(*[_type == "skill"] | order(type asc) { "type": type })[]{
         "type": type,
-        "items": *[_type == "skill" && type == ^.type] | order(priority desc){ name, priority }
+        "items": *[_type == "skill" && type == ^.type] | order(coalesce(priority, 0) desc, name asc){ name, priority }
     },
     "experience": *[_type == "experience"]{
         id, link,

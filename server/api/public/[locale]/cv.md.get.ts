@@ -29,7 +29,7 @@ export default defineCachedEventHandler(async (event) => {
                 "description": descriptionShort[$locale],
                 "skills": skills[]->{
                     name, type, color, priority
-                } | order(priority desc),
+                } | order(coalesce(priority, 0) desc, name asc),
                 duration,
             } | order(duration.from desc),
             "footer": footer[$locale],
@@ -52,7 +52,7 @@ export default defineCachedEventHandler(async (event) => {
         ## ${t[locale].sections.skills}
         ${Object.entries(Object.fromEntries(data.skills.map((group) => [
         group.type,
-        group.items.sort((a, b) => b.priority - a.priority)
+        group.items.sort(byPriority)
     ]))).sort(([, aItems], [, bItems]) => bItems.length - aItems.length).map(([type, items]) => `
             ### ${type}
             ${items.map((item) => `${item.name}`).join(', ')}

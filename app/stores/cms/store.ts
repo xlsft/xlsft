@@ -51,7 +51,7 @@ export const useCmsStore = defineStore('cms', () => {
             "positions": positions[]{
                 "name": name[$locale],
                 "description": description[$locale],
-                "skills": skills[]->{ name, type, color, priority } | order(priority desc),
+                "skills": skills[]->{ name, type, color, priority } | order(coalesce(priority, 0) desc, name asc),
                 duration,
             } | order(duration.from desc),
             "footer": footer[$locale],
@@ -83,7 +83,7 @@ export const useCmsStore = defineStore('cms', () => {
         about: (id: MaybeRefOrGetter<string>): CmsQueryResult<CmsAbout> => query<CmsAbout>(groq`*[_type == "project" && id == $id][0] {
             "about": about[$locale],
             "copyright": copyright[$locale],
-            "stack": stack[]->{ name, type, priority } | order(priority desc),
+            "stack": stack[]->{ name, type, priority } | order(coalesce(priority, 0) desc, name asc),
         }`, () => ({ id: toValue(id) })),
         screenshots: (id: MaybeRefOrGetter<string>): CmsQueryResult<CmsScreenshots> => query<CmsScreenshots>(groq`*[_type == "project" && id == $id][0] {
             "name": name[$locale],
@@ -120,7 +120,7 @@ export const useCmsStore = defineStore('cms', () => {
                 "positions": positions[]{
                     "name": name[$locale],
                     "description": description[$locale],
-                    "skills": skills[]->{ name } | order(priority desc),
+                    "skills": skills[]->{ name } | order(coalesce(priority, 0) desc, name asc),
                     duration,
                 } | order(duration.from desc),
             } | order(positions[0].duration.from desc),

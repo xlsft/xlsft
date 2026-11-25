@@ -16,7 +16,7 @@ export interface Skill {
     name: string
     type: string
     color: string
-    priority: number
+    priority?: number
 }
 
 export interface Link {
