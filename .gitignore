@@ -23,11 +23,3 @@ build.json
 .env
 .env.*
 !.env.example
-
-docker-compose.yaml
-
-# Local recovery artifacts
-/research_notes/
-/reports/cv-xlsft-recovery.zip
-/reports/cv-xlsft-recovery.zip.sha256
-/reports/Восстановление данных сайта резюме.md

@@ -1,0 +1,98 @@
+name: cv-xlsft-com
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    environment:
+      NUXT_CLARITY_TOKEN: ${NUXT_CLARITY_TOKEN}
+      NUXT_GITHUB_TOKEN: ${NUXT_GITHUB_TOKEN}
+      NUXT_TELEGRAM_TOKEN: ${NUXT_TELEGRAM_TOKEN}
+      NUXT_HCAPTCHA_SECRET: ${NUXT_HCAPTCHA_SECRET}
+      NUXT_DEEPSEEK_TOKEN: ${NUXT_DEEPSEEK_TOKEN}
+      NUXT_AI_SECRET: ${NUXT_AI_SECRET}
+      NUXT_SEARXNG_URL: http://searxng:8080
+    depends_on:
+      - searxng
+    networks:
+      - default
+      - traefik
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik
+      traefik.http.routers.cv.rule: Host(`cv.xlsft.com`)
+      traefik.http.routers.cv.priority: "10"
+      traefik.http.routers.cv.entrypoints: websecure
+      traefik.http.routers.cv.tls.certresolver: letsencrypt
+      traefik.http.services.cv.loadbalancer.server.port: "3000"
+
+  clarity:
+    image: crumbleerp/clarity:40c71ad@sha256:dd4e211980ae420a9c82c5c6dc2795be46014caf9b2f14373d291c9b796198e2
+    restart: unless-stopped
+    environment:
+      NUXT_APP_BASE_URL: /admin/
+      NUXT_DATABASE_URL: postgresql://clarity:${POSTGRES_PASSWORD}@postgres:5432/clarity
+      NUXT_PUBLIC_DATASET: cv
+      NUXT_PUBLIC_API_BASE_URL: https://cv.xlsft.com/admin
+      NUXT_ROOT_USERNAME: admin
+      NUXT_ROOT_PASSWORD: ${CLARITY_ROOT_PASSWORD}
+      NUXT_SESSION_SECRET: ${CLARITY_SESSION_SECRET}
+      NUXT_CORS_ORIGINS: https://cv.xlsft.com
+      NUXT_S3_ENDPOINT: https://s3.ru1.storage.beget.cloud
+      NUXT_S3_REGION: ru1
+      NUXT_S3_BUCKET: 3f3deb6e7eb1-cv-xlsft-ru
+      NUXT_S3_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      NUXT_S3_SECRET_KEY: ${STORAGE_SECRET_KEY}
+      NUXT_S3_PUBLIC_URL: https://s3.ru1.storage.beget.cloud/3f3deb6e7eb1-cv-xlsft-ru
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - default
+      - traefik
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik
+      traefik.http.routers.cv-admin.rule: Host(`cv.xlsft.com`) && (Path(`/admin`) || PathPrefix(`/admin/`))
+      traefik.http.routers.cv-admin.priority: "100"
+      traefik.http.routers.cv-admin.entrypoints: websecure
+      traefik.http.routers.cv-admin.tls.certresolver: letsencrypt
+      traefik.http.services.cv-admin.loadbalancer.server.port: "3000"
+      traefik.http.routers.cv-admin.middlewares: cv-legacy-media
+      traefik.http.middlewares.cv-legacy-media.redirectregex.regex: ^https?://cv\.xlsft\.com/admin/media/(.*)
+      traefik.http.middlewares.cv-legacy-media.redirectregex.replacement: https://s3.ru1.storage.beget.cloud/3f3deb6e7eb1-cv-xlsft-ru/$${1}
+      traefik.http.middlewares.cv-legacy-media.redirectregex.permanent: "true"
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: clarity
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: clarity
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clarity -d clarity"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  searxng:
+    image: searxng/searxng:latest
+    restart: unless-stopped
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET}
+      SEARXNG_BASE_URL: http://searxng:8080/
+    volumes:
+      - ./config/searxng.yml:/etc/searxng/settings.yml:ro
+
+volumes:
+  postgres-data:
+
+networks:
+  traefik:
+    external: true
+    name: traefik
