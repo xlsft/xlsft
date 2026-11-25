@@ -41,7 +41,7 @@ export interface AssistantProject {
 export interface AssistantRepo {
     repo: string
     name: string
-    github?: { language?: string, stars?: number, forks?: number, topics?: string[] }
+    github?: { description?: string, language?: string, stars?: number, forks?: number, topics?: string[] }
 }
 
 export interface AssistantSkills { type: string, items: string[] }

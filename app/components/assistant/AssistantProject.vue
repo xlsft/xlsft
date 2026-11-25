@@ -47,7 +47,7 @@
                     <dt class="text-dimmed">repo</dt><span aria-hidden="true" class="text-line">=</span>
                     <dd class="m-0 flex min-w-0 gap-ch">
                         <a :href="`https://github.com/${project.repo}`" target="_blank" class="terminal-link truncate">github.com/{{ project.repo }}</a>
-                        <span v-if="project.github?.stars !== undefined" class="shrink-0 text-warning">★ {{ project.github.stars }}</span>
+                        <span v-if="project.github?.stars !== undefined" class="flex shrink-0 items-center gap-ch-half text-warning"><NuxtIcon name="mingcute:star-line" class="size-3.5"/>{{ project.github.stars }}</span>
                     </dd>
                 </div>
                 <div v-for="(link, index) in project.links ?? []" :key="link" :class="pair">
