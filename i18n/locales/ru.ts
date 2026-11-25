@@ -70,8 +70,8 @@ export default {
         terminal_not_found: 'тег не найден',
         terminal_complete: 'дополнить',
         terminal_bad_option: 'неизвестная опция',
-        terminal_requires_arg: "опции '{option}' нужен аргумент",
-        terminal_help: "использование: ls [-T{'|'}--tag <тег>]... [-H{'|'}--help] · Tab — дополнить · Enter — проверить · Esc — сбросить",
+        terminal_requires_arg: 'опции \'{option}\' нужен аргумент',
+        terminal_help: 'использование: ls [-T{\'|\'}--tag <тег>]... [-H{\'|\'}--help] · Tab — дополнить · Enter — проверить · Esc — сбросить',
         view_screenshots: 'Смотреть скриншоты ({count})',
         previous: 'Назад',
         next: 'Вперёд',
@@ -80,8 +80,8 @@ export default {
         about: 'О проекте',
         links: 'Ссылки',
         contact_me: 'Связаться',
-        more_about: "Подробнее",
-        current_locale: "Текущий язык",
+        more_about: 'Подробнее',
+        current_locale: 'Текущий язык',
         back: 'Вернутся назад',
         close: 'Закрыть',
         anonymous: 'Анонимно'
@@ -114,8 +114,8 @@ export default {
             placeholder: 'Как можно к вам обращаться?'
         },
         legal: {
-            leading: 'Нажимая кнопку «Оставить заявку» вы соглашаетесь с', 
-            privacy: 'Политикой конфиденциальности', 
+            leading: 'Нажимая кнопку «Оставить заявку» вы соглашаетесь с',
+            privacy: 'Политикой конфиденциальности',
             and: 'и',
             processing: 'Обработкой персональных данных'
         },

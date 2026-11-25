@@ -1,5 +1,3 @@
-import { success } from "zod";
-
 export default {
     months: {
         one: 'month',
@@ -71,8 +69,8 @@ export default {
         terminal_not_found: 'tag not found',
         terminal_complete: 'complete',
         terminal_bad_option: 'unrecognized option',
-        terminal_requires_arg: "option '{option}' requires an argument",
-        terminal_help: "usage: ls [-T{'|'}--tag <tag>]... [-H{'|'}--help] · Tab — complete · Enter — check · Esc — clear",
+        terminal_requires_arg: 'option \'{option}\' requires an argument',
+        terminal_help: 'usage: ls [-T{\'|\'}--tag <tag>]... [-H{\'|\'}--help] · Tab — complete · Enter — check · Esc — clear',
         view_screenshots: 'View screenshots ({count})',
         previous: 'Previous',
         next: 'Next',
@@ -83,8 +81,8 @@ export default {
         web: 'Web',
         contact_me: 'Contact',
         lets_talk: 'Let`s talk!',
-        more_about: "More about",
-        current_locale: "Current language",
+        more_about: 'More about',
+        current_locale: 'Current language',
         back: 'Go back',
         close: 'Close',
         anonymous: 'Anonymous'
@@ -117,8 +115,8 @@ export default {
             placeholder: 'How can i call you?'
         },
         legal: {
-            leading: 'Pressing "Send request" button you accept:', 
-            privacy: 'Privacy policy', 
+            leading: 'Pressing "Send request" button you accept:',
+            privacy: 'Privacy policy',
             and: 'and',
             processing: 'Personal Data Processing Policy'
         },
@@ -148,7 +146,7 @@ export default {
         reset: 'New chat',
         contact_intent: 'I want to contact the candidate',
         download_intent: 'Send me the CV in a printable format',
-        greeting: "Hi! I'm an AI assistant. I can tell you about the candidate, show his experience and projects, or pass your message on so he can get back to you.",
+        greeting: 'Hi! I\'m an AI assistant. I can tell you about the candidate, show his experience and projects, or pass your message on so he can get back to you.',
         legal: {
             leading: 'By sending messages you agree to the',
             privacy: 'Privacy policy',
