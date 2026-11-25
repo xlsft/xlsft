@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="min-w-0 self-baseline text-sm col-start-1 row-start-2 max-lg:col-span-2">
-                    <span v-if="collapsed" class="text-base font-bold text-default">{{ props.company.positions.at(0)?.name }}</span>
+                    <span v-if="collapsed" class="text-default">{{ props.company.positions.at(0)?.name }}</span>
                     <span v-else class="flex flex-wrap gap-x-4 gap-y-1">
                         <NuxtLink v-if="props.company.link" :to="props.company.link" target="_blank" class="text-default/50 hover:text-default transition-colors" @click.stop>{{ props.company.link }}</NuxtLink>
                         <span class="text-comment text-nowrap"># {{ methods.total() }}</span>
