@@ -13,9 +13,8 @@
         defineOgImage('OgIndex.takumi', {
             theme: theme.value as 'dark' | 'light',
             site: config.site.url.replace(/^https?:\/\//, ''),
-            contact: t('labels.contact_me'),
             photo: data.value.summary.image,
-            rows: [
+            lines: [
                 { key: t('profile.user'), value: info.user },
                 { key: t('profile.role'), value: info.role },
                 { key: t('profile.host'), value: info.host },

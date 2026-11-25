@@ -1,5 +1,5 @@
 <script setup lang="ts">
-    import useMarkdownRemoval from 'remove-markdown'
+    import { plain } from '~/lib/markdown'
     import { useCmsStore } from '~/stores/cms'
 
     const route = useRoute()
@@ -17,8 +17,8 @@
         site: config.site.url.replace(/^https?:\/\//, ''),
         id: id.value,
         name: data.value.name,
-        description: useMarkdownRemoval(data.value.description ?? ''),
-        thumbnail: data.value.thumbnail?.[theme.value as 'dark' | 'light'] ?? data.value.thumbnail?.dark ?? data.value.thumbnail?.light,
+        description: plain(data.value.description),
+        thumbnail: data.value.thumbnail,
         status: data.value.status,
         repo: data.value.repo,
         tags: [...new Set(data.value.tags ?? [])],
@@ -27,8 +27,8 @@
     useSeoMeta({
         title: () => data.value?.name,
         ogTitle: () => `${data.value?.author ?? ''} — ${data.value?.name}`,
-        description: () => useMarkdownRemoval(data.value?.description ?? ''),
-        ogDescription: () => useMarkdownRemoval(data.value?.description ?? ''),
+        description: () => plain(data.value?.description),
+        ogDescription: () => plain(data.value?.description),
     })
 </script>
 
