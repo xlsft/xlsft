@@ -1,12 +1,12 @@
-import * as z from 'zod'
 import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from 'ai'
+import * as z from 'zod'
 
-const chatRateLimit = useRateLimit('chat', 12, 60_000)
+const limit = useRateLimit('chat', 12, 60_000)
 
 // ограничения на расход токенов и времени
-const WINDOW_MESSAGES = 10         // сколько последних сообщений вообще смотрим
-const WINDOW_CHARS = 5_000         // и бюджет по символам текста в «плавающем окне»
-const REQUEST_TIMEOUT_MS = 90_000  // потолок на весь ответ вместе с вызовами инструментов
+const WINDOW_MESSAGES = 10 // сколько последних сообщений вообще смотрим
+const WINDOW_CHARS = 5_000 // и бюджет по символам текста в «плавающем окне»
+const REQUEST_TIMEOUT_MS = 90_000 // потолок на весь ответ вместе с вызовами инструментов
 
 const bodySchema = z.object({
     sessionId: z.uuid(),
@@ -47,34 +47,35 @@ const isFailureFrame = (frame: string) => /"type":"error"|"type":"abort"|"finish
 
 export default defineEventHandler(async (event) => {
 
-    chatRateLimit(event)
+    limit.check(event)
 
     const body = await readValidatedBody(event, (body) => bodySchema.parse(body))
 
-    const registry = useAiRegistry()
-    const candidates = await registry.candidates()
+    const ai = useAi()
+    const candidates = await ai.candidates()
     if (!candidates.length) throw createError({ status: 503, message: 'Assistant is temporarily unavailable' })
 
-    const data = await useAssistantData(body.locale)
+    const data = await useAssistantData(body.locale).load()
     const current = await useAssistantRequests(body.sessionId).get()
-    const config = useRuntimeConfig().public.config
+    const person = useRuntimeConfig().public.schema.person
+    const tools = useTools({ locale: body.locale, session: body.sessionId })
     const messages = await convertToModelMessages(slideWindow(body.messages), { ignoreIncompleteToolCalls: true })
 
     const compact = {
-        candidate: { name: config.schema.person.fullname, position: config.schema.person.position, summary: data.summary?.description, status: data.summary?.status },
+        candidate: { name: person.fullname, position: person.position, summary: data.summary?.description, status: data.summary?.status },
         about: data.summary?.content?.replace(/^::.*$/gm, '').replace(/\s+/g, ' ').slice(0, 900),
         skills: data.skills.map(group => `${group.type}: ${group.items.slice(0, 12).map(item => item.name).join(', ')}`),
-        experience: data.experience.map(c => `${c.id}: ${c.name} — ${c.positions.map(p => `${p.name} (${p.from?.slice(0, 7)}–${p.to?.slice(0, 7) || 'now'})`).join('; ')}`),
+        experience: data.experience.map(c => `${c.id}: ${c.name} — ${c.positions.map(p => `${p.name} (${p.from?.slice(0, 7)}–${p.to?.slice(0, 7) ?? 'now'})`).join('; ')}`),
         projects: data.projects.map(p => `${p.id}: ${p.name}${p.tags?.length ? ` [${p.tags.join(', ')}]` : ''}`),
     }
 
     // как модель вызывает инструменты зависит от провайдера
     const toolsSection = (mode: 'native' | 'mcp') => [
         mode === 'mcp' ? `- Use ONLY the "execute" tool and ONLY to call tools.cv.* — nothing else, never web search. Call directly, one call per step, e.g. \`return await tools.cv.show_projects({ locale: "${body.locale}" });\`` : '',
-        describeAssistantTools(mode, { locale: body.locale, session: body.sessionId }),
+        tools.describe(mode),
     ].filter(Boolean).join('\n')
 
-    const systemFor = (mode: 'native' | 'mcp') => `You are the AI assistant on the personal CV website of ${config.schema.person.fullname}, ${config.schema.person.position} (the "candidate"). You talk to random visitors: recruiters, clients, curious people. You are NOT a coding agent and have no file, shell or browser access; the web is reachable only through web_search, and the CMS through groq_query.
+    const systemFor = (mode: 'native' | 'mcp') => `You are the AI assistant on the personal CV website of ${person.fullname}, ${person.position} (the "candidate"). You talk to random visitors: recruiters, clients, curious people. You are NOT a coding agent and have no file, shell or browser access; the web is reachable only through web_search, and the CMS through groq_query.
 
 Goals: (1) briefly tell about the candidate, (2) show CV blocks on demand, (3) help the visitor get in touch with the candidate.
 
@@ -104,13 +105,13 @@ ${JSON.stringify(compact)}`
         const result = streamText({
             model: provider.createModel(id, { system }),
             // нативные провайдеры получают промпт и инструменты здесь, opencode — через настройки сессии и MCP
-            ...(native ? { instructions: system, tools: buildAssistantTools({ locale: body.locale, session: body.sessionId }), stopWhen: stepCountIs(6), maxOutputTokens: 700, temperature: 0.3 } : {}),
+            ...(native ? { instructions: system, tools: tools.build(), stopWhen: stepCountIs(6), maxOutputTokens: 700, temperature: 0.3 } : {}),
             messages,
             abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-            onError: ({ error }) => registry.reportFailure(provider.id, id, error),
+            onError: ({ error }) => ai.failure(provider.id, id, error),
             onFinish: ({ finishReason, providerMetadata }) => {
-                if (finishReason === 'error') registry.reportFailure(provider.id, id, JSON.stringify((providerMetadata as any)?.opencode?.error ?? 'finish reason: error'))
-                else registry.reportSuccess(provider.id, id)
+                if (finishReason === 'error') ai.failure(provider.id, id, JSON.stringify((providerMetadata as any)?.opencode?.error ?? 'finish reason: error'))
+                else ai.success(provider.id, id)
             },
         })
         const response = result.toUIMessageStreamResponse()
@@ -133,7 +134,7 @@ ${JSON.stringify(compact)}`
 
     for (const candidate of candidates) {
         const outcome = await attempt(candidate).catch(() => ({ failed: true as const }))
-        if ('failed' in outcome && outcome.failed) { console.warn(`[ai] ${candidate.provider.id}/${candidate.id} failed before first content, trying next`); registry.reportFailure(candidate.provider.id, candidate.id, 'failed before first content'); continue }
+        if ('failed' in outcome && outcome.failed) { console.warn(`[ai] ${candidate.provider.id}/${candidate.id} failed before first content, trying next`); ai.failure(candidate.provider.id, candidate.id, 'failed before first content'); continue }
         const { response, reader, buffered } = outcome as { response: Response, reader: ReadableStreamDefaultReader<Uint8Array>, buffered: Uint8Array[] }
         // отдаём прочитанное и остаток потока
         const stream = new ReadableStream<Uint8Array>({

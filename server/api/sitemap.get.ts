@@ -1,4 +1,3 @@
-import type { SitemapUrlInput } from '#sitemap/types'
 import { groq } from '@crumbleerp/clarity'
 
 export default defineSitemapEventHandler(async () => {
@@ -13,5 +12,5 @@ export default defineSitemapEventHandler(async () => {
     }).map(([sitemap, locale]) => pages.map((id) => ({
         loc: `/${locale}/projects/${id}`,
         _sitemap: sitemap,
-    } as SitemapUrlInput))).flat()
+    }))).flat()
 })

@@ -1,6 +1,6 @@
 import { groq } from '@crumbleerp/clarity'
 
-type Themed = { dark?: string, light?: string }
+interface Themed { dark?: string, light?: string }
 
 export type AssistantData = Awaited<ReturnType<typeof fetchAssistantData>>
 
@@ -51,18 +51,15 @@ const fetchAssistantData = async (locale: string) => dedupeSkills(await useClari
     "links": *[_type == "link"]{ id, "label": label[$locale], "to": to }
 }`, { locale }, { signal: AbortSignal.timeout(10_000) }))
 
-/**
- * array::unique в Clarity не схлопывает объекты: запрос возвращает группу на каждый навык.
- * Оставляем по одной группе на категорию и сортируем по числу навыков, как на главной.
- */
 function dedupeSkills<T extends { skills: { type: string, items: unknown[] }[] }>(data: T): T {
     const groups = new Map(data.skills.map(group => [group.type, group]))
     return { ...data, skills: [...groups.values()].sort((a, b) => b.items.length - a.items.length) }
 }
 
-/** Данные резюме для ассистента: кэшируются по локали, чтобы не ходить в CMS на каждое сообщение. */
-export const useAssistantData = defineCachedFunction(fetchAssistantData, {
+const cached = defineCachedFunction(fetchAssistantData, {
     maxAge: 600, swr: true, staleMaxAge: 86400,
     group: 'chat', name: 'assistant-v3',
     getKey: (locale: string) => locale
 })
+
+export const useAssistantData = (locale: string): { load: () => Promise<AssistantData> } => ({ load: () => cached(locale) })

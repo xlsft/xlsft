@@ -1,8 +1,8 @@
-import type { H3Event } from 'h3'
+import type { EventHandler, EventHandlerRequest, H3Event } from 'h3'
 
-type CachedPayload = { body: unknown, contentType: string }
+interface CachedPayload { body: unknown, contentType: string }
 type Entry = CachedPayload & { expiresAt: number }
-type Serialized = { base64: string, contentType: string, expiresAt: number }
+interface Serialized { base64: string, contentType: string, expiresAt: number }
 
 // горячий кэш воркера + дедупликация параллельных промахов
 const memory = ((globalThis as any).__binaryCache ??= new Map<string, Entry>()) as Map<string, Entry>
@@ -27,7 +27,7 @@ export const defineCachedBinaryHandler = (
         maxAge: number,
         getKey: (event: H3Event) => string
     }
-) => defineEventHandler(async (event) => {
+): EventHandler<EventHandlerRequest, Promise<unknown>> => defineEventHandler(async (event) => {
     const key = options.getKey(event)
     const now = Date.now()
 
@@ -56,7 +56,7 @@ export const defineCachedBinaryHandler = (
 
     const promise = handler(event).then((body) => ({
         body,
-        contentType: String(getResponseHeader(event, 'content-type') || 'application/octet-stream')
+        contentType: String(getResponseHeader(event, 'content-type') ?? 'application/octet-stream')
     }))
     inflight.set(key, promise)
 
@@ -73,7 +73,7 @@ export const defineCachedBinaryHandler = (
             base64: await toBase64(cached.body),
             contentType: cached.contentType,
             expiresAt
-        } satisfies Serialized, { ttl: options.maxAge }).catch(() => {})
+        } satisfies Serialized, { ttl: options.maxAge }).catch(() => undefined)
 
         setHeader(event, 'Content-Type', cached.contentType)
         return cached.body

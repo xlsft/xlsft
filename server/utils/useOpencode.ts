@@ -1,20 +1,12 @@
 import { spawn, type ChildProcess } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { randomBytes } from 'node:crypto'
 import { generateText } from 'ai'
 import { createOpencode } from 'ai-sdk-provider-opencode-sdk'
 
-/**
- * Провайдер opencode: бесплатные модели через OpenCode CLI.
- * Поднимаем свой изолированный `opencode serve` (отдельные config/data, агент без файловых и shell-инструментов,
- * единственный доступный инструмент — MCP-сервер приложения /api/mcp) и ходим в него пакетом ai-sdk-provider-opencode-sdk.
- * Список моделей берём из `opencode models`: каталог бесплатных моделей меняется часто.
- */
-
-const BIN = process.env.OPENCODE_BIN || 'opencode'
 const PROVIDER_PREFIX = 'opencode/'
 const PROBE_TIMEOUT_MS = 45_000
 
@@ -32,8 +24,10 @@ const waitForMcp = async (url: string) => {
     throw new Error('MCP endpoint is not reachable')
 }
 
-export const createOpencodeProvider = (): AiProvider => {
-    const root = process.env.AI_OPENCODE_HOME || join(tmpdir(), `xlsft-opencode-${process.pid}`)
+export const useOpencode = (): AiProvider => {
+    const config = useRuntimeConfig().ai
+    const mcp = useMcp()
+    const root = config.opencode.home.length ? config.opencode.home : join(tmpdir(), `xlsft-opencode-${process.pid}`)
     const env = {
         ...process.env,
         XDG_CONFIG_HOME: join(root, 'config'), XDG_DATA_HOME: join(root, 'data'),
@@ -45,15 +39,15 @@ export const createOpencodeProvider = (): AiProvider => {
     let serverUrl = ''
     let authHeaders: Record<string, string> = {}
 
-    const mcpUrl = () => process.env.AI_MCP_URL || `http://127.0.0.1:${process.env.NITRO_PORT || process.env.PORT || 3000}/api/mcp`
+    const mcpUrl = (): string => config.mcp.length ? config.mcp : `http://127.0.0.1:${process.env.NITRO_PORT ?? process.env.PORT ?? 3000}/api/mcp`
 
     return {
         id: 'opencode',
         toolMode: 'mcp',
 
         async start() {
-            const secret = useAiMcpSecret()
-            if (!secret) throw new Error('AI_MCP_SECRET is not set')
+            const secret = mcp.secret
+            if (!secret.length) throw new Error('NUXT_AI_SECRET is not set')
 
             await rm(root, { recursive: true, force: true })
             await Promise.all(['config/opencode', 'data', 'state', 'cache', 'work'].map(dir => mkdir(join(root, dir), { recursive: true })))
@@ -72,8 +66,8 @@ export const createOpencodeProvider = (): AiProvider => {
             await waitForMcp(mcpUrl())
 
             const port = await freePort()
-            child = spawn(BIN, ['serve', '--hostname', '127.0.0.1', '--port', String(port)], { env, cwd: join(root, 'work'), stdio: ['ignore', 'pipe', 'pipe'] })
-            child.stderr?.on('data', chunk => process.env.AI_DEBUG && console.warn('[opencode]', String(chunk).trim()))
+            child = spawn(config.opencode.bin, ['serve', '--hostname', '127.0.0.1', '--port', String(port)], { env, cwd: join(root, 'work'), stdio: ['ignore', 'pipe', 'pipe'] })
+            child.stderr?.on('data', chunk => config.debug && console.warn('[opencode]', String(chunk).trim()))
             child.once('exit', code => { child = undefined; console.warn(`[ai] opencode exited (${code})`) })
 
             const baseUrl = serverUrl = `http://127.0.0.1:${port}`
@@ -94,7 +88,7 @@ export const createOpencodeProvider = (): AiProvider => {
                 const response = await fetch(`${serverUrl}/api/model`, { headers: authHeaders, signal: AbortSignal.timeout(5000) }).then(r => r.json(), () => undefined) as
                     { data?: { modelID: string, providerID: string, capabilities?: { tools?: boolean, output?: string[] } }[] } | undefined
                 // только модели с инструментами и текстовым выводом; бесплатные в анонимном режиме — все, что отдаёт сервер
-                const models = (response?.data || [])
+                const models = (response?.data ?? [])
                     .filter(model => model.providerID === 'opencode' && model.capabilities?.tools && model.capabilities.output?.includes('text'))
                     .map(model => `${PROVIDER_PREFIX}${model.modelID}`)
                 if (models.length) return models
@@ -112,7 +106,7 @@ export const createOpencodeProvider = (): AiProvider => {
                 abortSignal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
             })
             const ponged = result.steps.some(step => step.toolResults.some(item => JSON.stringify(item.output).includes('pong')))
-            if (!ponged) throw new Error(`model did not call MCP tools: ${result.finishReason} ${JSON.stringify(result.providerMetadata?.opencode?.error || result.steps.flatMap(step => step.toolResults.map(item => item.output))).slice(0, 200)} ${result.text.slice(0, 100)}`)
+            if (!ponged) throw new Error(`model did not call MCP tools: ${result.finishReason} ${JSON.stringify(result.providerMetadata?.opencode?.error ?? result.steps.flatMap(step => step.toolResults.map(item => item.output))).slice(0, 200)} ${result.text.slice(0, 100)}`)
         },
 
         createModel(modelId, context) {
@@ -123,7 +117,7 @@ export const createOpencodeProvider = (): AiProvider => {
         async stop() {
             await opencode?.dispose?.()
             child?.kill('SIGTERM')
-            await rm(root, { recursive: true, force: true }).catch(() => {})
+            await rm(root, { recursive: true, force: true }).catch(() => undefined)
         },
     }
 }

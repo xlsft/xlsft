@@ -1,16 +1,9 @@
+import { tool, type ToolSet } from 'ai'
 import * as z from 'zod'
-import { tool } from 'ai'
 
-/**
- * Инструменты ассистента — одно описание на двух транспортах:
- * · нативные AI SDK tools (DeepSeek и любые провайдеры с function calling), локаль и сессию подставляет сервер;
- * · MCP-сервер /api/mcp (opencode исполняет инструменты сам), там локаль и сессию передаёт модель аргументами.
- * Результаты намеренно крошечные: полный контент блоков UI забирает отдельным запросом (/api/assistant/block).
- */
+export interface AssistantToolContext { locale: 'ru' | 'en', session: string }
 
-export type AssistantToolContext = { locale: 'ru' | 'en', session: string }
-
-type ToolSpec = {
+interface ToolSpec {
     name: string
     description: string
     input: z.ZodRawShape
@@ -34,15 +27,15 @@ const allowNewRequest = (session: string) => {
     return true
 }
 
-export const assistantToolSpecs: ToolSpec[] = [
+export const tools: ToolSpec[] = [
     {
         name: 'show_experience',
         usage: 'Interactive block with work experience. Prefer it over long text when asked about experience.',
         description: 'Show the candidate\'s work experience block to the visitor. Optionally only one company by its id.',
         input: { company: z.string().max(64).optional().describe('Company id from the data') },
         needsLocale: true,
-        run: async ({ locale }, { company }) => {
-            const data = await useAssistantData(locale)
+        run: async ({ locale }: AssistantToolContext, { company }: { company?: string }): Promise<unknown> => {
+            const data = await useAssistantData(locale).load()
             return { block: 'experience', shown: true, locale, company, count: data.experience.filter(c => !company || c.id === company).length }
         }
     },
@@ -56,9 +49,9 @@ export const assistantToolSpecs: ToolSpec[] = [
             limit: z.number().int().min(1).max(8).optional()
         },
         needsLocale: true,
-        run: async ({ locale }, { tag, ids, limit }) => {
-            const data = await useAssistantData(locale)
-            const shown = (await buildAssistantBlock(data, 'projects', { tag, ids, limit }) as { items: { id: string }[] }).items.map(item => item.id)
+        run: async ({ locale }: AssistantToolContext, { tag, ids, limit }: { tag?: string, ids?: string[], limit?: number }): Promise<unknown> => {
+            const data = await useAssistantData(locale).load()
+            const shown = (await useBlocks(data).build('projects', { tag, ids, limit }) as { items: { id: string }[] }).items.map(item => item.id)
             return { block: 'projects', shown: true, locale, ids: shown }
         }
     },
@@ -92,8 +85,8 @@ export const assistantToolSpecs: ToolSpec[] = [
         description: 'Show a detailed card of a single project of the candidate by its id.',
         input: { id: z.string().max(64).describe('Project id from the data') },
         needsLocale: true,
-        run: async ({ locale }, { id }) => {
-            const project = (await useAssistantData(locale)).projects.find(p => p.id === id)
+        run: async ({ locale }: AssistantToolContext, { id }: { id: string }): Promise<unknown> => {
+            const project = (await useAssistantData(locale).load()).projects.find(p => p.id === id)
             if (!project) return { error: 'not_found', id }
             return { block: 'project', shown: true, locale, id, name: project.name, stack: project.stack?.slice(0, 8), status: project.status, repo: project.repo }
         }
@@ -104,8 +97,8 @@ export const assistantToolSpecs: ToolSpec[] = [
         description: 'Show the candidate\'s public GitHub repositories with stars. Optionally only for given project ids.',
         input: { ids: z.array(z.string().max(64)).max(6).optional().describe('Project ids from the data') },
         needsLocale: true,
-        run: async ({ locale }, { ids }) => {
-            const block = await buildAssistantBlock(await useAssistantData(locale), 'repos', { ids }) as { items: { id: string, repo: string, github: { stars: number } | null }[] }
+        run: async ({ locale }: AssistantToolContext, { ids }: { ids?: string[] }): Promise<unknown> => {
+            const block = await useBlocks(await useAssistantData(locale).load()).build('repos', { ids }) as { items: { id: string, repo: string, github: { stars: number } | null }[] }
             return { block: 'repos', shown: true, locale, ids, repos: block.items.map(item => ({ id: item.id, repo: item.repo, stars: item.github?.stars })) }
         }
     },
@@ -115,8 +108,8 @@ export const assistantToolSpecs: ToolSpec[] = [
         description: 'Search the candidate\'s CV texts: summary, job descriptions and project descriptions. Returns short snippets with refs. Not visible to the visitor.',
         input: { query: z.string().min(2).max(200).describe('Keywords in the visitor\'s language and/or English') },
         needsLocale: true,
-        run: async ({ locale }, { query }) => {
-            const hits = searchCv(await useAssistantData(locale), query)
+        run: async ({ locale }: AssistantToolContext, { query }: { query: string }): Promise<unknown> => {
+            const hits = useKnowledge(await useAssistantData(locale).load()).search(query)
             return hits.length ? { hits } : { hits: [], note: 'Nothing found in the CV. Say so honestly and offer to pass the question to the candidate.' }
         }
     },
@@ -126,7 +119,7 @@ export const assistantToolSpecs: ToolSpec[] = [
         description: 'How long the candidate has worked with a technology: years from positions where it is listed, those positions and project ids that use it. Not visible to the visitor.',
         input: { tech: z.string().min(1).max(64).describe('Technology name, e.g. "Vue", "PostgreSQL"') },
         needsLocale: true,
-        run: async ({ locale }, { tech }) => techExperience(await useAssistantData(locale), tech)
+        run: async ({ locale }, { tech }) => useKnowledge(await useAssistantData(locale).load()).tech(tech)
     },
     {
         name: 'match_vacancy',
@@ -137,7 +130,7 @@ export const assistantToolSpecs: ToolSpec[] = [
             requirements: z.array(z.string().min(1).max(80)).min(1).max(20).describe('Short atomic requirements, one technology or skill each')
         },
         needsLocale: true,
-        run: async ({ locale }, { title, requirements }) => ({ block: 'match', shown: true, locale, title, ...matchVacancy(await useAssistantData(locale), requirements) })
+        run: async ({ locale }, { title, requirements }) => ({ block: 'match', shown: true, locale, title, ...useKnowledge(await useAssistantData(locale).load()).match(requirements) })
     },
     {
         name: 'groq_query',
@@ -148,7 +141,7 @@ export const assistantToolSpecs: ToolSpec[] = [
             params: z.record(z.string(), z.union([z.string().max(200), z.number(), z.boolean()])).optional().describe('Extra GROQ params, referenced as $name')
         },
         needsLocale: true,
-        run: async ({ locale }, { query, params }) => await runGroqQuery(locale, query, params)
+        run: async ({ locale, session }, { query, params }) => await useLookup(locale, session).groq(query, params)
     },
     {
         name: 'web_search',
@@ -157,7 +150,7 @@ export const assistantToolSpecs: ToolSpec[] = [
         input: { query: z.string().min(2).max(200).describe('Search query, e.g. "Beget hosting company"') },
         needsLocale: true,
         needsSession: true,
-        run: async ({ locale, session }, { query }) => await runWebSearch(session, locale, query)
+        run: async ({ locale, session }, { query }) => await useLookup(locale, session).web(query)
     },
     {
         name: 'submit_request',
@@ -177,22 +170,25 @@ export const assistantToolSpecs: ToolSpec[] = [
     },
 ]
 
-/**
- * Раздел TOOLS системного промпта, собранный из спецификаций — чтобы список не расходился с реальными инструментами.
- * В MCP-режиме модель сама передаёт locale / session, поэтому они попадают в сигнатуру.
- */
-export const describeAssistantTools = (mode: 'native' | 'mcp', context: AssistantToolContext) => assistantToolSpecs.map(spec => {
-    const args = [
-        ...(mode === 'mcp' && spec.needsLocale ? ['locale'] : []),
-        ...(mode === 'mcp' && spec.needsSession ? ['session'] : []),
-        ...Object.entries(spec.input).map(([key, schema]) => (schema as z.ZodType).safeParse(undefined).success ? `${key}?` : key)
-    ]
-    const call = mode === 'mcp' ? `tools.cv.${spec.name}` : spec.name
-    return `- ${call}(${args.length ? `{ ${args.join(', ')} }` : ''}): ${spec.usage}`
-}).join('\n') + (mode === 'mcp' ? `\n- Always pass locale: "${context.locale}" and, to request tools, session: "${context.session}".` : '')
+export const useTools = (context: AssistantToolContext): { describe: (mode: 'native' | 'mcp') => string, build: () => ToolSet } => {
+    function describe(mode: 'native' | 'mcp'): string {
+        return tools.map((spec) => {
+            const args = [
+                ...mode === 'mcp' && spec.needsLocale ? ['locale'] : [],
+                ...mode === 'mcp' && spec.needsSession ? ['session'] : [],
+                ...Object.entries(spec.input).map(([key, schema]) => (schema as z.ZodType).safeParse(undefined).success ? `${key}?` : key),
+            ]
+            const call = mode === 'mcp' ? `tools.cv.${spec.name}` : spec.name
+            return `- ${call}(${args.length ? `{ ${args.join(', ')} }` : ''}): ${spec.usage}`
+        }).join('\n') + (mode === 'mcp' ? `\n- Always pass locale: "${context.locale}" and, to request tools, session: "${context.session}".` : '')
+    }
 
-/** Нативные AI SDK tools: контекст (локаль, сессия) зафиксирован на запрос. */
-export const buildAssistantTools = (context: AssistantToolContext) => Object.fromEntries(assistantToolSpecs.map(spec => [
-    spec.name,
-    tool({ description: spec.description, inputSchema: z.object(spec.input), execute: async (args) => await spec.run(context, args) })
-]))
+    function build(): ToolSet {
+        return Object.fromEntries(tools.map((spec) => [
+            spec.name,
+            tool({ description: spec.description, inputSchema: z.object(spec.input), execute: async (args) => await spec.run(context, args) }),
+        ]))
+    }
+
+    return { describe, build }
+}

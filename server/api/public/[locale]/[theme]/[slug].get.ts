@@ -1,10 +1,11 @@
 import { groq } from '@crumbleerp/clarity'
 import removeMarkdown from 'remove-markdown'
 import locales from '~~/i18n/locales/index'
+import { icons } from '~~/server/static/icons'
 
-// тот же вывод, что OrganismsTerminalProfile на главной: команда, fastfetch с фото, readme и stack.tsv
+// тот же вывод, что Profile на главной: команда, fastfetch с фото, readme и stack.tsv
 
-type ProfileData = {
+interface ProfileData {
     summary: { title: string, description: string, content: string, image: string, status: string }
     skills: { type: string, name: string, priority: number }[]
     experience: { name: string, positions: { duration: { from: string, to?: string } }[] }[]
@@ -56,16 +57,16 @@ const icon = (body: string, color: string, size: number) =>
 
 export default defineCachedBinaryHandler(async (event) => {
 
-    const config = useRuntimeConfig().public.config
-    const [ locale, theme ] = [
+    const config = useRuntimeConfig().public
+    const [locale, theme] = [
         getRouterParam(event, 'locale'),
         getRouterParam(event, 'theme')
     ]
     // throw, а не return: иначе объект ошибки уйдёт в бинарный кэш как тело ответа
-    if (!locale || !config.globals.locales.includes(locale)) throw createError({ status: 400, message: 'Locale is undefined' })
-    if (!theme || !config.globals.themes.includes(theme)) throw createError({ status: 400, message: 'Theme is undefined' })
+    if (!locale || !config.locales.includes(locale)) throw createError({ status: 400, message: 'Locale is undefined' })
+    if (!theme || !config.themes.includes(theme)) throw createError({ status: 400, message: 'Theme is undefined' })
 
-    const timing = useServerTiming(event)
+    const timing = useTiming(event)
     const client = useClarity()
     // только то, что реально рисуется на картинке
     const data = await timing('cms', () => client.fetch<ProfileData>(groq`{
@@ -114,7 +115,7 @@ export default defineCachedBinaryHandler(async (event) => {
     const content = summary.content?.trim() || ''
     const heading = content.match(/^# +([^\n]+)(?:\n|$)/)
     const bio = {
-        heading: heading?.[1]!.trim() || summary.title,
+        heading: heading?.[1]!.trim() ?? summary.title,
         // MDC-блоки (::response-block) оставляем только текстом
         body: (content.slice(heading?.[0].length ?? 0).trim() || summary.description || '').replace(/^::.*$/gm, '').trim()
     }
@@ -126,15 +127,15 @@ export default defineCachedBinaryHandler(async (event) => {
     const photoCell = 420
 
     const rows = [
-        identity.user && { key: t.profile.user, value: `<span style="color:${c.text}">${esc(identity.user)}</span>`, icon: terminalIcons.user },
-        identity.role && { key: t.profile.role, value: esc(identity.role), icon: terminalIcons.role },
-        host && { key: t.profile.host, value: esc(host), icon: terminalIcons.host },
-        uptime && { key: t.profile.uptime, value: esc(uptime), icon: terminalIcons.uptime },
-        packages && { key: t.profile.packages, value: `${packages}<span style="margin-left:${charGap};color:{row}">[−] stack.tsv</span>`, icon: terminalIcons.packages },
-        shell && { key: t.profile.shell, value: esc(shell), icon: terminalIcons.shell },
-        summary.status && { key: t.profile.status, value: esc(summary.status), icon: terminalIcons.status },
-        config.head.url && { key: t.profile.web, value: esc(bareUrl(config.head.url)), icon: terminalIcons.web },
-        links.length && { key: t.profile.links, value: `<span style="color:${c.comment}">${links.map(link => esc(link.label.toLowerCase())).join(', ')}</span>`, icon: terminalIcons.links },
+        identity.user && { key: t.profile.user, value: `<span style="color:${c.text}">${esc(identity.user)}</span>`, icon: icons.user },
+        identity.role && { key: t.profile.role, value: esc(identity.role), icon: icons.role },
+        host && { key: t.profile.host, value: esc(host), icon: icons.host },
+        uptime && { key: t.profile.uptime, value: esc(uptime), icon: icons.uptime },
+        packages && { key: t.profile.packages, value: `${packages}<span style="margin-left:${charGap};color:{row}">[−] stack.tsv</span>`, icon: icons.packages },
+        shell && { key: t.profile.shell, value: esc(shell), icon: icons.shell },
+        summary.status && { key: t.profile.status, value: esc(summary.status), icon: icons.status },
+        config.site.url && { key: t.profile.web, value: esc(bareUrl(config.site.url)), icon: icons.web },
+        links.length && { key: t.profile.links, value: `<span style="color:${c.comment}">${links.map(link => esc(link.label.toLowerCase())).join(', ')}</span>`, icon: icons.links },
     ].filter(Boolean) as { key: string, value: string, icon: string }[]
     const keyWidth = Math.max(...rows.map(row => row.key.length)) * font.row * 0.586
 
@@ -183,14 +184,14 @@ export default defineCachedBinaryHandler(async (event) => {
                         <span style="color:${palette.primary}">root</span><span style="color:${c.text}">@</span><span style="color:${palette.primary}">xlsft</span>
                     </div>
                     ${rows.map((row, index) => {
-                        const color = rowColors[index % rowColors.length]!
-                        return `
+        const color = rowColors[index % rowColors.length]!
+        return `
                         <div style="display:flex;align-items:center;font-size:${font.row}px;line-height:${font.rowLine}px">
                             ${icon(row.icon, color, 22)}
                             <span style="display:flex;width:${keyWidth}px;margin-left:16px;color:${color}">${esc(row.key.toLowerCase())}</span>
                             <span style="display:flex;margin-left:16px;color:${c.value}">${row.value.replace('{row}', color)}</span>
                         </div>`
-                    }).join('')}
+    }).join('')}
                 </div>
                 <div style="display:flex;margin-top:24px">
                     ${swatches.map(color => `<div style="display:flex;width:29px;height:14px;background:${color}"></div>`).join('')}
@@ -220,11 +221,11 @@ export default defineCachedBinaryHandler(async (event) => {
             <div style="display:flex;flex-direction:column;padding:22px 0 26px">
                 ${tableRow(1, 'category', 'items', true)}
                 ${groups.map((group, index) => tableRow(index + 2, esc(group.type),
-                    group.items.map((skill, i) => `<div style="display:flex"><span>${esc(skill.name)}</span>${i < group.items.length - 1 ? tab : ''}</div>`).join(''))).join('')}
+        group.items.map((skill, i) => `<div style="display:flex"><span>${esc(skill.name)}</span>${i < group.items.length - 1 ? tab : ''}</div>`).join(''))).join('')}
             </div>
         </div>` : ''
 
-    return useSatori(event, /*html*/`
+    return useSatori(event, timing).render(/* html*/`
         <div style="display:flex;flex-direction:column;width:100%;background:${c.bg};border:1px solid ${c.border};font-family:'Cascadia Code'">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:26px ${pad}px;border-bottom:1px solid ${c.border}">
                 ${commandLine}
@@ -234,17 +235,17 @@ export default defineCachedBinaryHandler(async (event) => {
             ${about}
             ${stack}
         </div>
-    `, timing)
+    `)
 }, {
     maxAge: 3600,
     getKey: (event) => {
         const query = getQuery(event)
         return [
             'og:v2',
-            getRouterParam(event, 'locale') || 'unknown',
-            getRouterParam(event, 'theme') || 'unknown',
-            getRouterParam(event, 'slug') || 'unknown',
-            String(query.width || '')
+            getRouterParam(event, 'locale') ?? 'unknown',
+            getRouterParam(event, 'theme') ?? 'unknown',
+            getRouterParam(event, 'slug') ?? 'unknown',
+            String(query.width ?? '')
         ].join(':')
     }
 })

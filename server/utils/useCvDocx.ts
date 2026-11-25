@@ -1,14 +1,13 @@
-import type { H3Event } from 'h3'
 import { groq } from '@crumbleerp/clarity'
 import { renderAsync } from '@resvg/resvg-js'
-import MarkdownIt from 'markdown-it'
 import {
     AlignmentType, BorderStyle, CharacterSet, Document, ExternalHyperlink, ImageRun, Packer, Paragraph,
     HeightRule, LineRuleType, UnderlineType, ShadingType, TabStopType, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, VerticalMergeType, WidthType,
-    type IBorderOptions, type ParagraphChild
+    type IBorderOptions, type ParagraphChild, type TableVerticalAlign
 } from 'docx'
+import MarkdownIt from 'markdown-it'
+import type { H3Event } from 'h3'
 import locales from '~~/i18n/locales'
-import globalConfig from '~~/global.config'
 
 /**
  * CV в .docx на одну страницу в стиле главной: тонкая шапка (фото | о себе | контакты, ниже навыки)
@@ -17,7 +16,7 @@ import globalConfig from '~~/global.config'
  * так Word, LibreOffice и Google Docs раскладывают одинаково.
  */
 
-type CvData = {
+interface CvData {
     summary: { title: string, description: string, content: string, image: string, status: string }
     skills: { type: string, name: string, priority: number }[]
     experience: {
@@ -27,11 +26,11 @@ type CvData = {
     links: Record<string, { label: string, to: string } | null>
 }
 
-// светлая тема из app/assets/css/theme.css
+const ACCENT = useRuntimeConfig().public.theme.accent.replace('#', '').toUpperCase()
+
 const color = {
     text: '000000', value: '383838', dimmed: '595959', comment: '767676', border: 'C2C2C2', bg: 'FFFFFF',
-    // брендовый акцент — из global.config, чтобы не разъезжался с сайтом
-    primary: globalConfig.theme.accent.replace('#', '').toUpperCase(), success: '00BC7D', warning: 'FF6900', error: 'FF2056', info: '00B8DB', purple: 'AD46FF',
+    primary: ACCENT, success: '00BC7D', warning: 'FF6900', error: 'FF2056', info: '00B8DB', purple: 'AD46FF',
     amber: 'FE9A00', indigo: '615FFF'
 }
 const FONT = 'Cascadia Code'
@@ -54,7 +53,7 @@ const SETTINGS_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 
 // --- примитивы ---
 
-type RunStyle = { color?: string, bold?: boolean, italics?: boolean, size?: number, fill?: string, raise?: number }
+interface RunStyle { color?: string, bold?: boolean, italics?: boolean, size?: number, fill?: string, raise?: number }
 const run = (text: string, style: RunStyle = {}) => new TextRun({ text, font: FONT, size: style.size ?? SIZE.body, color: style.color ?? color.value, bold: style.bold, italics: style.italics, position: style.raise ? `${style.raise}pt` : undefined, shading: style.fill ? { type: ShadingType.CLEAR, color: 'auto', fill: style.fill } : undefined })
 // ссылки — акцентным синим с подчёркиванием, как ссылки на сайте
 const link = (text: string, href: string, style: RunStyle = {}) => new ExternalHyperlink({ link: href, children: [new TextRun({
@@ -67,7 +66,7 @@ const link = (text: string, href: string, style: RunStyle = {}) => new ExternalH
 const lines = (rows: ParagraphChild[][], size = SIZE.small, tiny: Set<number> = new Set()) => rows.flatMap((row, index) =>
     index ? [new TextRun({ text: '', break: 1, size: tiny.has(index - 1) ? GAP : size, font: FONT }), ...row] : row)
 // межстрочный интервал точный (1.3 от кегля абзаца): «авто» Pages считает по метрикам Cascadia Code — выходит ~1.5
-type ParaOptions = {
+interface ParaOptions {
     after?: number, before?: number, align?: (typeof AlignmentType)[keyof typeof AlignmentType], indent?: { left?: number, hanging?: number },
     keepNext?: boolean, size?: number, auto?: boolean, rightTab?: number, factor?: number,
     // минимальный интервал: высота каждой строки — по её собственному тексту (нужно для строк-зазоров)
@@ -83,8 +82,8 @@ const para = (children: ParagraphChild[], options: ParaOptions = {}) => new Para
         ? { before: options.before ?? 0, after: options.after ?? 0, line: 20, lineRule: LineRuleType.AT_LEAST }
         : options.auto
         // абзацы с картинками — «авто», иначе точная высота строки обрежет логотип
-        ? { before: options.before ?? 0, after: options.after ?? 0, line: 240, lineRule: LineRuleType.AUTO }
-        : { before: options.before ?? 0, after: options.after ?? 0, line: Math.round((options.size ?? SIZE.body) * 10 * (options.factor ?? 1.3)), lineRule: LineRuleType.EXACT },
+            ? { before: options.before ?? 0, after: options.after ?? 0, line: 240, lineRule: LineRuleType.AUTO }
+            : { before: options.before ?? 0, after: options.after ?? 0, line: Math.round((options.size ?? SIZE.body) * 10 * (options.factor ?? 1.3)), lineRule: LineRuleType.EXACT },
     // размер знака абзаца — иначе Pages считает высоту строки по шрифту по умолчанию
     run: { size: options.size ?? SIZE.small },
 })
@@ -96,9 +95,9 @@ const borders = (sides: Sides = {}) => ({
     top: sides.top ?? none, bottom: sides.bottom ?? none, left: sides.left ?? none, right: sides.right ?? none,
 })
 
-type CellOptions = {
+interface CellOptions {
     width: number, children: (Paragraph | Table)[], borders?: Sides, fill?: string,
-    margins?: { top?: number, bottom?: number, left?: number, right?: number }, align?: (typeof VerticalAlign)[keyof typeof VerticalAlign], span?: number, rowSpan?: number
+    margins?: { top?: number, bottom?: number, left?: number, right?: number }, align?: TableVerticalAlign, span?: number, rowSpan?: number
 }
 const cell = (options: CellOptions) => options
 
@@ -127,10 +126,10 @@ const table = (columns: number[], rows: CellOptions[][], options: { borders?: Si
             const edges = (spec: CellOptions, start: number, end: number, lastRow: boolean) => {
                 const own = spec.borders ?? {}
                 return {
-                    top: (rowIndex === 0 && outer.top) || own.top || none,
-                    bottom: (lastRow && outer.bottom) || own.bottom || none,
-                    left: (start === 0 && outer.left) || own.left || none,
-                    right: (end >= columns.length && outer.right) || own.right || none,
+                    top: (rowIndex === 0 ? outer.top : undefined) ?? own.top ?? none,
+                    bottom: (lastRow ? outer.bottom : undefined) ?? own.bottom ?? none,
+                    left: (start === 0 ? outer.left : undefined) ?? own.left ?? none,
+                    right: (end >= columns.length ? outer.right : undefined) ?? own.right ?? none,
                 }
             }
             // ячейки-продолжения для колонок, занятых объединением сверху
@@ -194,7 +193,7 @@ const inlineRuns = (source: string, base: RunStyle = {}): ParagraphChild[] => {
     const out: ParagraphChild[] = []
     let bold = 0, italics = 0, href: string | null = null
     for (const token of tokens) {
-        const style = { ...base, bold: base.bold || bold > 0 || undefined, italics: italics > 0 || undefined, color: bold > 0 && !base.color ? color.text : base.color }
+        const style = { ...base, bold: base.bold === true || bold > 0 ? true : undefined, italics: italics > 0 || undefined, color: bold > 0 && !base.color ? color.text : base.color }
         if (token.type === 'strong_open') bold++
         else if (token.type === 'strong_close') bold--
         else if (token.type === 'em_open') italics++
@@ -210,13 +209,13 @@ const inlineRuns = (source: string, base: RunStyle = {}): ParagraphChild[] => {
 }
 
 /** Кусок текста со стилем — для ручного переноса строк */
-type Segment = { text: string, style: RunStyle, href?: string }
+interface Segment { text: string, style: RunStyle, href?: string }
 const inlineSegments = (source: string, base: RunStyle = {}): Segment[] => {
     const tokens = md.parseInline(source, {})[0]?.children ?? []
     const out: Segment[] = []
     let bold = 0, italics = 0, href: string | null = null
     for (const token of tokens) {
-        const style: RunStyle = { ...base, bold: base.bold || bold > 0 || undefined, italics: italics > 0 || undefined, color: bold > 0 && !base.color ? color.text : base.color }
+        const style: RunStyle = { ...base, bold: base.bold === true || bold > 0 ? true : undefined, italics: italics > 0 || undefined, color: bold > 0 && !base.color ? color.text : base.color }
         if (token.type === 'strong_open') bold++
         else if (token.type === 'strong_close') bold--
         else if (token.type === 'em_open') italics++
@@ -260,7 +259,7 @@ const wrapSegments = (segments: Segment[], width: number, indent = 0): Segment[]
 const segmentRuns = (segments: Segment[], base: RunStyle = {}): ParagraphChild[] =>
     segments.map(segment => segment.href ? link(segment.text, segment.href, { ...base, ...segment.style }) : run(segment.text, { ...base, ...segment.style }))
 
-type Block = { kind: 'paragraph' | 'list' | 'quote' | 'heading', items: string[] }
+interface Block { kind: 'paragraph' | 'list' | 'quote' | 'heading', items: string[] }
 /** Разбор markdown на блоки верхнего уровня: абзац, список (по пунктам), цитата, заголовок */
 const blocks = (source: string): Block[] => {
     const result: Block[] = []
@@ -313,13 +312,16 @@ const bareUrl = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace
 
 // --- сборка ---
 
-export const useCvDocx = async (event: H3Event) => {
-    const locale = getRouterParam(event, 'locale') as keyof typeof locales
-    if (!locale || !(locale in locales)) throw createError({ status: 400, message: 'Locale is undefined' })
-    const t = locales[locale]
-    const config = useRuntimeConfig().public.config
+export const useCvDocx = (event: H3Event): { build: () => Promise<Buffer> } => {
+    const fonts = useFonts()
 
-    const data = await useClarity().fetch<CvData>(groq`{
+    async function build(): Promise<Buffer> {
+        const locale = getRouterParam(event, 'locale') as keyof typeof locales
+        if (!locale || !(locale in locales)) throw createError({ status: 400, message: 'Locale is undefined' })
+        const t = locales[locale]
+        const config = useRuntimeConfig().public
+
+        const data = await useClarity().fetch<CvData>(groq`{
         "summary": *[_type == "summary"][0]{
             "title": title[$locale],
             "description": description[$locale],
@@ -346,93 +348,93 @@ export const useCvDocx = async (event: H3Event) => {
         },
     }`, { locale })
 
-    const summary = data.summary
-    const experience = data.experience ?? []
-    const total = (from?: string, to?: string) => from ? useExperience(event, from, to) : null
-    const range = (from: string, to?: string) => useExperience(event, from, to).period().split(' / ')[0]!
+        const summary = data.summary
+        const experience = data.experience ?? []
+        const total = (from?: string, to?: string) => from ? useExperience(event, from, to) : null
+        const range = (from: string, to?: string) => useExperience(event, from, to).period().split(' / ')[0]!
 
-    // шапка в docx тонкая: опыт важнее карточки кандидата
-    const titleMatch = (summary.title || '').match(/^(.*?)\s*\(([^()]+)\)\s*$/)
-    const identity = titleMatch ? { role: titleMatch[1]!, user: titleMatch[2]! } : { role: summary.title || '', user: '' }
-    const groups = Object.entries(Object.groupBy(data.skills ?? [], skill => skill.type))
-        .map(([type, items]) => ({ type, items: [...items!].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0)) }))
-        .filter(group => group.items.length)
-        .sort((a, b) => b.items.length - a.items.length)
-    const uptime = total(experience.at(-1)?.positions?.at(-1)?.duration?.from, experience.at(0)?.positions?.at(0)?.duration?.to)?.duration() ?? ''
-    const links = Object.values(data.links ?? {}).filter(item => !!item?.to) as { label: string, to: string }[]
-    const small = { size: SIZE.small }
+        // шапка в docx тонкая: опыт важнее карточки кандидата
+        const titleMatch = (summary.title || '').match(/^(.*?)\s*\(([^()]+)\)\s*$/)
+        const identity = titleMatch ? { role: titleMatch[1]!, user: titleMatch[2]! } : { role: summary.title || '', user: '' }
+        const groups = Object.entries(Object.groupBy(data.skills ?? [], skill => skill.type))
+            .map(([type, items]) => ({ type, items: [...items!].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0)) }))
+            .filter(group => group.items.length)
+            .sort((a, b) => b.items.length - a.items.length)
+        const uptime = total(experience.at(-1)?.positions?.at(-1)?.duration?.from, experience.at(0)?.positions?.at(0)?.duration?.to)?.duration() ?? ''
+        const links = Object.values(data.links ?? {}).filter(item => !!item?.to) as { label: string, to: string }[]
+        const small = { size: SIZE.small }
 
-    // картинки грузим параллельно: фото и логотипы
-    const [photo, logos, [regular, bold]] = await Promise.all([
-        summary.image ? toRaster(summary.image, 200).catch(() => null) : null,
-        Promise.all(experience.map(company => company.logo ? toRaster(company.logo, 28).catch(() => null) : null)),
-        Promise.all([useSatoriFont('Cascadia Code', 400), useSatoriFont('Cascadia Code', 700)]),
-    ])
+        // картинки грузим параллельно: фото и логотипы
+        const [photo, logos, [regular, bold]] = await Promise.all([
+            summary.image ? toRaster(summary.image, 200).catch(() => null) : null,
+            Promise.all(experience.map(company => company.logo ? toRaster(company.logo, 28).catch(() => null) : null)),
+            Promise.all([fonts.load('Cascadia Code', 400), fonts.load('Cascadia Code', 700)]),
+        ])
 
-    // Pages не умеет вложенные таблицы (превращает их в текст), поэтому каждый блок — одна плоская таблица
-    const children: (Paragraph | Table)[] = []
+        // Pages не умеет вложенные таблицы (превращает их в текст), поэтому каждый блок — одна плоская таблица
+        const children: (Paragraph | Table)[] = []
 
-    // | фото | имя, роль, опыт, одна строка о себе | контакты |
-    // | stack: категория навыки · категория навыки … |
-    // фото квадратом на всю ячейку; высота строки шапки — по фото, ширина ячейки — фото плюс поля, которые Pages добавляет сам
-    const photoPx = 72
-    const photoWidth = photo ? photoPx * 15 + 120 : 0
-    const contactsWidth = 3000
-    const aboutWidth = CONTENT - photoWidth - contactsWidth
-    const contacts = [
-        ...(config.head.url ? [{ label: t.profile.web, to: config.head.url }] : []),
-        ...links,
-    ]
-    const headRow: CellOptions[] = [
+        // | фото | имя, роль, опыт, одна строка о себе | контакты |
+        // | stack: категория навыки · категория навыки … |
+        // фото квадратом на всю ячейку; высота строки шапки — по фото, ширина ячейки — фото плюс поля, которые Pages добавляет сам
+        const photoPx = 72
+        const photoWidth = photo ? photoPx * 15 + 120 : 0
+        const contactsWidth = 3000
+        const aboutWidth = CONTENT - photoWidth - contactsWidth
+        const contacts = [
+            ...(config.site.url ? [{ label: t.profile.web, to: config.site.url }] : []),
+            ...links,
+        ]
+        const headRow: CellOptions[] = [
         // высота строки задаётся фото (см. height ниже)
-        ...(photo ? [cell({ width: photoWidth, align: VerticalAlign.TOP, borders: { right: line() }, children: [
-            new Paragraph({
-                children: [new ImageRun({ type: photo.type, data: photo.data, transformation: { width: photoPx, height: photoPx } })],
-                // минимальная, а не точная высота: при точной LibreOffice обрезает картинку по строке
-                spacing: { before: 0, after: 0, line: photoPx * 15, lineRule: LineRuleType.AT_LEAST },
-            }),
-        ] })] : []),
-        cell({ width: aboutWidth, align: VerticalAlign.CENTER, margins: { top: 80, bottom: 80, left: 200, right: 200 }, children: [
-            para(lines([
-                [
-                    run(identity.user || identity.role, { color: color.text, bold: true, size: SIZE.heading }),
-                    ...(identity.user ? [run(`  ${identity.role}`, { color: color.text, size: SIZE.body })] : []),
-                ],
-                [
-                    ...(uptime ? [run(`# ${t.sections.experience.toLowerCase()}: ${uptime}`, { ...small, color: color.primary })] : []),
-                    ...(summary.status ? [run(`  # ${summary.status}`, { ...small, color: color.comment })] : []),
-                ],
-                ...(summary.description ? [inlineRuns(summary.description, small)] : []),
-            ]), { size: SIZE.heading }),
-        ] }),
-        cell({ width: contactsWidth, align: VerticalAlign.CENTER, borders: { left: line() }, margins: { top: 80, bottom: 80, left: 200, right: 200 }, children:
+            ...(photo ? [cell({ width: photoWidth, align: VerticalAlign.TOP, borders: { right: line() }, children: [
+                new Paragraph({
+                    children: [new ImageRun({ type: photo.type, data: photo.data, transformation: { width: photoPx, height: photoPx } })],
+                    // минимальная, а не точная высота: при точной LibreOffice обрезает картинку по строке
+                    spacing: { before: 0, after: 0, line: photoPx * 15, lineRule: LineRuleType.AT_LEAST },
+                }),
+            ] })] : []),
+            cell({ width: aboutWidth, align: VerticalAlign.CENTER, margins: { top: 80, bottom: 80, left: 200, right: 200 }, children: [
+                para(lines([
+                    [
+                        run(identity.user || identity.role, { color: color.text, bold: true, size: SIZE.heading }),
+                        ...(identity.user ? [run(`  ${identity.role}`, { color: color.text, size: SIZE.body })] : []),
+                    ],
+                    [
+                        ...(uptime ? [run(`# ${t.sections.experience.toLowerCase()}: ${uptime}`, { ...small, color: color.primary })] : []),
+                        ...(summary.status ? [run(`  # ${summary.status}`, { ...small, color: color.comment })] : []),
+                    ],
+                    ...(summary.description ? [inlineRuns(summary.description, small)] : []),
+                ]), { size: SIZE.heading }),
+            ] }),
+            cell({ width: contactsWidth, align: VerticalAlign.CENTER, borders: { left: line() }, margins: { top: 80, bottom: 80, left: 200, right: 200 }, children:
             [para(lines(contacts.map(item => [run(`${item.label.toLowerCase()} `, { ...small, color: color.comment }), link(bareUrl(item.to), item.to, small)])), { size: SIZE.small })],
-        }),
-    ]
-    // навыки и категории через одинаковые двойные пробелы, без разделителей
-    const gap = () => run('  ', small)
-    const skillsRow: CellOptions[] = [cell({ width: CONTENT, span: photo ? 3 : 2, borders: { top: line() }, margins: { top: 60, bottom: 60, left: 200, right: 200 }, children: [
-        para(groups.flatMap((group, index) => [
-            ...(index ? [gap()] : []),
-            run(group.type, { ...small, color: color.warning }),
-            ...group.items.flatMap(skill => [gap(), run(skill.name, small)]),
-        ]), { size: SIZE.small }),
-    ] })]
-    children.push(table([...(photo ? [photoWidth] : []), aboutWidth, contactsWidth], [headRow, ...(groups.length ? [skillsRow] : [])],
-        { borders: { top: line(), bottom: line() }, rowHeights: [photo ? photoPx * 15 : undefined] }))
+            }),
+        ]
+        // навыки и категории через одинаковые двойные пробелы, без разделителей
+        const gap = () => run('  ', small)
+        const skillsRow: CellOptions[] = [cell({ width: CONTENT, span: photo ? 3 : 2, borders: { top: line() }, margins: { top: 60, bottom: 60, left: 200, right: 200 }, children: [
+            para(groups.flatMap((group, index) => [
+                ...(index ? [gap()] : []),
+                run(group.type, { ...small, color: color.warning }),
+                ...group.items.flatMap(skill => [gap(), run(skill.name, small)]),
+            ]), { size: SIZE.small }),
+        ] })]
+        children.push(table([...(photo ? [photoWidth] : []), aboutWidth, contactsWidth], [headRow, ...(groups.length ? [skillsRow] : [])],
+            { borders: { top: line(), bottom: line() }, rowHeights: [photo ? photoPx * 15 : undefined] }))
 
-    // ~/experience $ echo "($DURATION)" && cat experience.conf
-    if (experience.length) {
-        children.push(table([CONTENT], [[cell({ width: CONTENT, margins: { top: 80, bottom: 80, left: 240, right: 240 }, children: [
-            para([run('~/experience', { color: color.text, bold: true, size: SIZE.heading }), run('  $', { color: color.primary, size: SIZE.command }),
-                run(' echo', { color: color.text, size: SIZE.command }), run(' "($DURATION)"', { color: color.info, size: SIZE.command }),
-                run(' &&', { color: color.dimmed, size: SIZE.command }), run(' cat', { color: color.text, size: SIZE.command }), run(' experience.conf', { color: color.success, size: SIZE.command }), run(`  (${uptime})`, { color: color.comment, size: SIZE.command })], { keepNext: true, size: SIZE.heading }),
-        ] })]], { borders: { bottom: line() } }))
+        // ~/experience $ echo "($DURATION)" && cat experience.conf
+        if (experience.length) {
+            children.push(table([CONTENT], [[cell({ width: CONTENT, margins: { top: 80, bottom: 80, left: 240, right: 240 }, children: [
+                para([run('~/experience', { color: color.text, bold: true, size: SIZE.heading }), run('  $', { color: color.primary, size: SIZE.command }),
+                    run(' echo', { color: color.text, size: SIZE.command }), run(' "($DURATION)"', { color: color.info, size: SIZE.command }),
+                    run(' &&', { color: color.dimmed, size: SIZE.command }), run(' cat', { color: color.text, size: SIZE.command }), run(' experience.conf', { color: color.success, size: SIZE.command }), run(`  (${uptime})`, { color: color.comment, size: SIZE.command })], { keepNext: true, size: SIZE.heading }),
+            ] })]], { borders: { bottom: line() } }))
 
-        // колонки: номер в рамке (объединён по вертикали) | ключ | = | значение | период; отступы — полями ячеек
-        const numberCol = 760, keyWidth = 1500, eqWidth = 260, periodWidth = 2800
-        const valueWidth = CONTENT - numberCol - keyWidth - eqWidth - periodWidth
-        const columns = [numberCol, keyWidth, eqWidth, valueWidth, periodWidth]
+            // колонки: номер в рамке (объединён по вертикали) | ключ | = | значение | период; отступы — полями ячеек
+            const numberCol = 760, keyWidth = 1500, eqWidth = 260, periodWidth = 2800
+            const valueWidth = CONTENT - numberCol - keyWidth - eqWidth - periodWidth
+            const columns = [numberCol, keyWidth, eqWidth, valueWidth, periodWidth]
 
         // строка содержимого — набор ячеек на 4 колонки контента (ключ, =, значение, период)
         type Content = CellOptions[]
@@ -441,7 +443,7 @@ export const useCvDocx = async (event: H3Event) => {
             const period = total(company.positions.at(-1)?.duration.from, company.positions.at(0)?.duration.to)
             const count = company.positions.length
             const companyTotal = count > 1
-                ? `${useNumberCase(count, t.positions.one, t.positions.two, t.positions.more)}, ${period?.duration()}`
+                ? `${plural(count, t.positions.one, t.positions.two, t.positions.more)}, ${period?.duration()}`
                 : period?.duration() ?? ''
             const logo = logos[companyIndex]
 
@@ -474,7 +476,7 @@ export const useCvDocx = async (event: H3Event) => {
             // Pages игнорирует поля ячеек и добавляет свой отступ к каждой строке таблицы и каждому абзацу, поэтому их минимум.
             // Длинные значения переносим сами, добавляя ключам пустые строки — так всё стоит строка в строку
             // строка таблицы на позицию: одну огромную строку Pages не разрывает между страницами
-            type Entry = { key: string, eq: boolean, lines: Segment[][], keyColor?: string, keyRuns?: ParagraphChild[], eqRuns?: ParagraphChild[], valueRuns?: ParagraphChild[], gap?: boolean }
+            interface Entry { key: string, eq: boolean, lines: Segment[][], keyColor?: string, keyRuns?: ParagraphChild[], eqRuns?: ParagraphChild[], valueRuns?: ParagraphChild[], gap?: boolean }
             let entries: Entry[] = []
             const add = (key: string, segments: Segment[], eq = true, indent = 0) => entries.push({ key, eq, lines: wrapSegments(segments, chars, indent) })
             const tight = { atLeast: true }
@@ -560,36 +562,39 @@ export const useCvDocx = async (event: H3Event) => {
             })
             children.push(table(columns, companyRows, { borders: { bottom: line() } }))
         })
+        }
+
+        const document = new Document({
+            creator: config.site.author,
+            title: summary.title,
+            description: summary.description,
+            // имена без пробелов — это имена файлов в word/fonts; в документ оба начертания подключаются одним семейством в fontTable ниже
+            fonts: [
+                { name: 'CascadiaCode-Regular', data: Buffer.from(regular.data as ArrayBuffer), characterSet: CharacterSet.ANSI },
+                { name: 'CascadiaCode-Bold', data: Buffer.from(bold.data as ArrayBuffer), characterSet: CharacterSet.ANSI },
+            ],
+            styles: {
+                default: { document: { run: { font: FONT, size: SIZE.small, color: color.value }, paragraph: { spacing: { before: 0, after: 0, line: LINE } } } },
+                // Normal задаём явно: пустые абзацы, которые docx сам дописывает в ячейки-продолжения объединений (vMerge),
+                // Pages/Quick Look рисуют по Normal — с его 12pt каждая строка таблицы раздувалась
+                paragraphStyles: [{ id: 'Normal', name: 'Normal', run: { font: FONT, size: SIZE.small, color: color.value }, paragraph: { spacing: { before: 0, after: 0, line: LINE } } }],
+            },
+            sections: [{
+                properties: { page: { size: { width: PAGE.width, height: PAGE.height }, margin: { top: PAGE.margin, bottom: PAGE.margin, left: PAGE.margin, right: PAGE.margin } } },
+                children,
+            }],
+        })
+
+        setHeader(event, 'Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        // docx кладёт шрифт в word/fonts, но не включает embedTrueTypeFonts — без флага Word и LibreOffice его игнорируют.
+        // fontTable переписываем: одно семейство с обычным и жирным начертанием и моноширинная замена,
+        // если программа встроенные шрифты не читает (Pages, Google Docs)
+        const [regularKey, boldKey] = (document as any).FontTable.fontOptionsWithKey.map((font: { fontKey: string }) => font.fontKey)
+        return Packer.toBuffer(document, false, [
+            { path: 'word/settings.xml', data: SETTINGS_XML },
+            { path: 'word/fontTable.xml', data: fontTableXml(regularKey, boldKey) },
+        ])
     }
 
-    const document = new Document({
-        creator: config.head.author,
-        title: summary.title,
-        description: summary.description,
-        // имена без пробелов — это имена файлов в word/fonts; в документ оба начертания подключаются одним семейством в fontTable ниже
-        fonts: [
-            { name: 'CascadiaCode-Regular', data: Buffer.from(regular.data as ArrayBuffer), characterSet: CharacterSet.ANSI },
-            { name: 'CascadiaCode-Bold', data: Buffer.from(bold.data as ArrayBuffer), characterSet: CharacterSet.ANSI },
-        ],
-        styles: {
-            default: { document: { run: { font: FONT, size: SIZE.small, color: color.value }, paragraph: { spacing: { before: 0, after: 0, line: LINE } } } },
-            // Normal задаём явно: пустые абзацы, которые docx сам дописывает в ячейки-продолжения объединений (vMerge),
-            // Pages/Quick Look рисуют по Normal — с его 12pt каждая строка таблицы раздувалась
-            paragraphStyles: [{ id: 'Normal', name: 'Normal', run: { font: FONT, size: SIZE.small, color: color.value }, paragraph: { spacing: { before: 0, after: 0, line: LINE } } }],
-        },
-        sections: [{
-            properties: { page: { size: { width: PAGE.width, height: PAGE.height }, margin: { top: PAGE.margin, bottom: PAGE.margin, left: PAGE.margin, right: PAGE.margin } } },
-            children,
-        }],
-    })
-
-    setHeader(event, 'Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-    // docx кладёт шрифт в word/fonts, но не включает embedTrueTypeFonts — без флага Word и LibreOffice его игнорируют.
-    // fontTable переписываем: одно семейство с обычным и жирным начертанием и моноширинная замена,
-    // если программа встроенные шрифты не читает (Pages, Google Docs)
-    const [regularKey, boldKey] = (document as any).FontTable.fontOptionsWithKey.map((font: { fontKey: string }) => font.fontKey)
-    return Packer.toBuffer(document, false, [
-        { path: 'word/settings.xml', data: SETTINGS_XML },
-        { path: 'word/fontTable.xml', data: fontTableXml(regularKey, boldKey) },
-    ])
+    return { build }
 }

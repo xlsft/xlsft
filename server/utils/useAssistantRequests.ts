@@ -15,13 +15,13 @@ export const requestFieldsSchema = z.object({
 })
 
 export type RequestFields = z.infer<typeof requestFieldsSchema>
-export type RequestRecord = { messageId?: number, fields: RequestFields, updates: number, notified?: RequestFields }
+export interface RequestRecord { messageId?: number, fields: RequestFields, updates: number, notified?: RequestFields }
 
 const FIELDS = ['name', 'email', 'phone', 'telegram', 'message'] as const
 const EMAIL = /^[^\s@<>()]+@[^\s@<>()]+\.[a-zA-Z]{2,}$/
 const MAX_UPDATES = 10
 
-const esc = (value?: string) => (value || '-').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
+const esc = (value?: string) => (value?.length ? value : '-').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
 
 const clean = (fields: RequestFields): RequestFields => {
     const out: RequestFields = {}
@@ -46,7 +46,7 @@ const render = (fields: RequestFields, url: string, title: string) => `<strong>$
 
 const summarize = (fields: RequestFields) => ({
     fields,
-    hasContact: !!(fields.email || fields.phone || fields.telegram),
+    hasContact: [fields.email, fields.phone, fields.telegram].some(Boolean),
     missing: FIELDS.filter(key => !fields[key])
 })
 
@@ -60,28 +60,36 @@ const withTimeout = <T>(promise: Promise<T>) => Promise.race([
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error('telegram timeout')), TELEGRAM_TIMEOUT_MS))
 ])
 
-export const useAssistantRequests = (sessionId: string) => {
+export interface RequestState { fields: RequestFields, hasContact: boolean, missing: (keyof RequestFields)[] }
+export interface AssistantRequests {
+    get: () => Promise<(RequestState & { exists: true }) | { exists: false }>
+    create: (input: RequestFields) => Promise<{ error: 'already_exists' | 'empty' } | (RequestState & { created: true, error?: undefined })>
+    update: (input: RequestFields) => Promise<{ error: 'not_found' | 'too_many_updates' } | (RequestState & { updated: boolean, error?: undefined })>
+}
+
+export const useAssistantRequests = (sessionId: string): AssistantRequests => {
     const storage = useStorage<RequestRecord>('chat:requests')
-    const config = useRuntimeConfig().public.config
+    const site = useRuntimeConfig().public.site
+    const telegram = useTelegram()
     const key = sessionId
 
     /** Привести сообщение в Telegram к актуальному состоянию заявки: создать его или отредактировать. */
     const deliver = async () => {
-        const bot = useTelegramBot()
-        if (!bot || !config.requests.telegram) return
+        const bot = telegram.bot
+        if (!bot) return
         const record = await storage.getItem(key)
         if (!record || JSON.stringify(record.notified) === JSON.stringify(record.fields)) return
-        const chat = config.requests.telegram
+        const chat = telegram.chat
         try {
             if (!record.messageId) {
-                const message = await withTimeout(bot.api.sendMessage(chat, render(record.fields, config.head.url, 'New AI request!'), { parse_mode: 'HTML' }))
+                const message = await withTimeout(bot.api.sendMessage(chat, render(record.fields, site.url, 'New AI request!'), { parse_mode: 'HTML' }))
                 await storage.setItem(key, { ...record, messageId: message.message_id, notified: record.fields })
                 return
             }
             const changed = FIELDS.filter(field => record.fields[field] !== record.notified?.[field])
-            await withTimeout(bot.api.editMessageText(chat, record.messageId, render(record.fields, config.head.url, 'AI request'), { parse_mode: 'HTML' })).catch(() => {})
+            await withTimeout(bot.api.editMessageText(chat, record.messageId, render(record.fields, site.url, 'AI request'), { parse_mode: 'HTML' })).catch(() => undefined)
             // правка сообщения не присылает уведомление — дублируем коротким ответом
-            await withTimeout(bot.api.sendMessage(chat, `Request updated: ${changed.join(', ')}`, { reply_parameters: { message_id: record.messageId } })).catch(() => {})
+            await withTimeout(bot.api.sendMessage(chat, `Request updated: ${changed.join(', ')}`, { reply_parameters: { message_id: record.messageId } })).catch(() => undefined)
             await storage.setItem(key, { ...record, notified: record.fields })
         } catch (error) {
             // заявка остаётся в хранилище и уйдёт со следующей доставкой

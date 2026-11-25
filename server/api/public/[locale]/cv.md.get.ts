@@ -1,6 +1,5 @@
-import t from '~~/i18n/locales'
 import { groq } from '@crumbleerp/clarity'
-import { useExperience } from '~~/server/utils/useExperience'
+import t from '~~/i18n/locales'
 
 export default defineCachedEventHandler(async (event) => {
     const locale = getRouterParam(event, 'locale') as keyof typeof t
@@ -52,16 +51,16 @@ export default defineCachedEventHandler(async (event) => {
 
         ## ${t[locale].sections.skills}
         ${Object.entries(Object.fromEntries(data.skills.map((group) => [
-            group.type,
-            group.items.sort((a, b) => b.priority - a.priority)
-        ]))).sort(([, aItems], [, bItems]) => bItems.length - aItems.length).map(([type, items]) => `
+        group.type,
+        group.items.sort((a, b) => b.priority - a.priority)
+    ]))).sort(([, aItems], [, bItems]) => bItems.length - aItems.length).map(([type, items]) => `
             ### ${type}
             ${items.map((item) => `${item.name}`).join(', ')}
         `).join('')}
         ## ${t[locale].sections.experience} (${useExperience(event,
             data.experience.at(-1)?.positions.at(-1)?.duration.from!,
             data.experience.at(0)?.positions.at(0)?.duration.to
-        ).duration()})
+).duration()})
         ${data.experience.map((experience) => `
             ### ${experience.name}
             ${experience.about}
@@ -78,9 +77,8 @@ export default defineCachedEventHandler(async (event) => {
         ${data.allLinks.map((link) => `- [${link.label}](${link.to})`).join('\n')}
     `.trim().replaceAll('    ', '').replaceAll('\n\n\n', '\n\n').replaceAll('\n\n\n\n', '\n\n')
 }, {
-    // 3 дня; кэш в памяти процесса, поэтому перезапуск контейнера его сбрасывает
-    maxAge: CV_CACHE_SECONDS,
+    maxAge: useRuntimeConfig().cache.cv,
     group: 'cv',
     name: 'md',
-    getKey: (event) => getRouterParam(event, 'locale') || 'unknown'
+    getKey: (event) => getRouterParam(event, 'locale') ?? 'unknown'
 })

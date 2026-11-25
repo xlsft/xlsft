@@ -1,8 +1,3 @@
-/**
- * Внешние источники ассистента: прямой GROQ к CMS и веб-поиск через self-hosted SearXNG.
- * Оба — только чтение; ответы обрезаются, чтобы один вызов не съел контекст модели.
- */
-
 const RESULT_LIMIT = 6_000
 
 /** Обрезает JSON-ответ до лимита символов, сохраняя признак обрезки для модели. */
@@ -21,19 +16,18 @@ export const CMS_SCHEMA = [
     'link { id, label*, short, to }',
 ].join('; ')
 
-export const runGroqQuery = async (locale: string, query: string, params: Record<string, string | number | boolean> = {}) => {
+const runGroqQuery = async (locale: string, query: string, params: Record<string, string | number | boolean> = {}): Promise<{ result: unknown, truncated?: boolean, note?: string } | { error: string, message: string }> => {
     try {
         const result = await useClarity().fetch<unknown>(query, { ...params, locale }, { signal: AbortSignal.timeout(8_000) })
         return capped(result)
     } catch (error: any) {
         // текст ошибки парсера GROQ помогает модели исправить запрос со второй попытки
-        return { error: 'query_failed', message: String(error?.data?.message || error?.message || error).slice(0, 400) }
+        return { error: 'query_failed', message: String([error?.data?.message, error?.message].find(Boolean) ?? error).slice(0, 400) }
     }
 }
 
 // ─── веб-поиск ─────────────────────────────────────────────────────────────────
 
-const searxngUrl = () => process.env.SEARXNG_URL || (process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:8890' : undefined)
 
 // не больше 8 поисков в час на сессию и 120 на процесс — поиск дорогой и не должен зацикливаться
 const searchBuckets = ((globalThis as any).__assistantSearchBuckets ??= new Map<string, { count: number, resetAt: number }>()) as Map<string, { count: number, resetAt: number }>
@@ -50,7 +44,7 @@ const allowSearch = (session: string) => {
 const clip = (value: string, length: number) => value.length > length ? `${value.slice(0, length).trimEnd()}…` : value
 
 const fetchSearch = defineCachedFunction(async (query: string, locale: string) => {
-    const base = searxngUrl()!
+    const base = useRuntimeConfig().searxng.url
     const response = await $fetch<{ results?: { title?: string, url?: string, content?: string, engine?: string }[] }>(`${base.replace(/\/$/, '')}/search`, {
         query: { q: query, format: 'json', language: locale, safesearch: 1 },
         timeout: 10_000
@@ -59,13 +53,21 @@ const fetchSearch = defineCachedFunction(async (query: string, locale: string) =
     const results = (response.results ?? [])
         .filter(item => item.url && item.title && !seen.has(item.url) && seen.add(item.url))
         .slice(0, 6)
-        .map(item => ({ title: clip(item.title!, 120), url: item.url!, snippet: clip((item.content || '').replace(/\s+/g, ' ').trim(), 320) }))
+        .map(item => ({ title: clip(item.title!, 120), url: item.url!, snippet: clip((item.content ?? '').replace(/\s+/g, ' ').trim(), 320) }))
     // пустую выдачу (поисковики упали по таймауту) не кэшируем: undefined Nitro не сохраняет
     return results.length ? results : undefined
 }, { maxAge: 3600, group: 'chat', name: 'web-search', getKey: (query: string, locale: string) => `${locale}:${query.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '_').slice(0, 120)}` })
 
-export const runWebSearch = async (session: string, locale: string, query: string) => {
-    if (!searxngUrl()) return { error: 'unavailable' }
+export type WebSearchResult = { error: string } | {
+    block: string
+    shown: boolean
+    query: string
+    results: { title: string, url: string, snippet: string }[]
+    note?: string
+}
+
+const runWebSearch = async (session: string, locale: string, query: string): Promise<WebSearchResult> => {
+    if (!useRuntimeConfig().searxng.url.length) return { error: 'unavailable' }
     if (!allowSearch(session)) return { error: 'rate_limited' }
     try {
         const results = await fetchSearch(query, locale)
@@ -75,3 +77,13 @@ export const runWebSearch = async (session: string, locale: string, query: strin
         return { error: 'unavailable' }
     }
 }
+
+export interface Lookup {
+    groq: (query: string, params?: Record<string, string | number | boolean>) => ReturnType<typeof runGroqQuery>
+    web: (query: string) => Promise<WebSearchResult>
+}
+
+export const useLookup = (locale: string, session: string): Lookup => ({
+    groq: (query, params) => runGroqQuery(locale, query, params),
+    web: (query) => runWebSearch(session, locale, query),
+})

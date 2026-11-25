@@ -1,14 +1,9 @@
 import type { AssistantData } from './useAssistantData'
 
-/**
- * «Знания» ассистента поверх данных резюме: поиск по тексту, стаж по технологии и сверка с вакансией.
- * Всё считается из тех же данных CMS, без внешних сервисов — ответы детерминированы и не стоят токенов на контекст.
- */
-
 const clip = (value: string, length: number) => value.length > length ? `${value.slice(0, length).trimEnd()}…` : value
 
 /** Markdown/MDC → плоский текст для поиска и сниппетов. */
-const plain = (value?: string) => (value || '')
+const plain = (value?: string) => (value ?? '')
     .replace(/^::.*$/gm, ' ')
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/[*_`#>|~]/g, ' ')
@@ -23,7 +18,7 @@ const ALIASES: Record<string, string> = {
 }
 
 /** «Vue.js», «vue», «VueJS» → «vue»; «Node.js» → «node». */
-export const normalizeTech = (value: string) => {
+const normalizeTech = (value: string): string => {
     const base = value.toLowerCase().replace(/[\s._\-]/g, '')
     if (ALIASES[base]) return ALIASES[base]
     const stripped = base.length > 3 ? base.replace(/js$/, '') : base
@@ -40,7 +35,7 @@ const knownTechs = (data: AssistantData) => {
     return names
 }
 
-const monthIndex = (value: string) => { const [year, month] = value.split('-').map(Number); return year! * 12 + (month || 1) - 1 }
+const monthIndex = (value: string) => { const [year, month] = value.split('-').map(Number); return year! * 12 + (month ?? 1) - 1 }
 const nowMonth = () => { const now = new Date(); return now.getFullYear() * 12 + now.getMonth() }
 
 /** Сумма месяцев по объединению интервалов (параллельные позиции не считаются дважды). */
@@ -55,14 +50,23 @@ const unionMonths = (ranges: [number, number][]) => {
     return total
 }
 
-export const techExperience = (data: AssistantData, tech: string) => {
+export interface TechExperience {
+    tech: string
+    known: boolean
+    years: number
+    inSkills: boolean
+    positions: { company: string, position: string, from: string, to: string | null }[]
+    projects: string[]
+}
+
+const techExperience = (data: AssistantData, tech: string): TechExperience => {
     const key = normalizeTech(tech)
     const known = knownTechs(data)
     const has = (list?: string[]) => !!list?.some(item => normalizeTech(item) === key)
 
     const positions = data.experience.flatMap(company => company.positions
         .filter(position => has(position.skills) && position.from)
-        .map(position => ({ company: company.name, position: position.name, from: position.from.slice(0, 7), to: position.to?.slice(0, 7) || null })))
+        .map(position => ({ company: company.name, position: position.name, from: position.from.slice(0, 7), to: position.to?.slice(0, 7) ?? null })))
     const months = unionMonths(positions.map(p => [monthIndex(p.from), p.to ? monthIndex(p.to) + 1 : nowMonth() + 1]))
     const projects = data.projects.filter(project => has(project.stack) || project.tags?.some(tag => normalizeTech(tag) === key)).map(project => project.id)
     const inSkills = data.skills.some(group => has(group.items.map(item => item.name)))
@@ -79,7 +83,7 @@ export const techExperience = (data: AssistantData, tech: string) => {
 
 // ─── поиск ─────────────────────────────────────────────────────────────────────
 
-type Doc = { ref: string, title: string, text: string }
+interface Doc { ref: string, title: string, text: string }
 
 const documents = (data: AssistantData): Doc[] => [
     ...(data.summary?.content ? plain(data.summary.content).split(/(?<=[.!?])\s+(?=\S)/).reduce<string[]>((chunks, sentence) => {
@@ -100,7 +104,7 @@ const documents = (data: AssistantData): Doc[] => [
     ...data.projects.map(project => ({
         ref: `project:${project.id}`,
         title: project.name,
-        text: [plain(project.description), project.stack?.length ? `Stack: ${project.stack.join(', ')}` : '', project.tags?.length ? `Tags: ${project.tags.join(', ')}` : '', project.status || ''].filter(Boolean).join(' ')
+        text: [plain(project.description), project.stack?.length ? `Stack: ${project.stack.join(', ')}` : '', project.tags?.length ? `Tags: ${project.tags.join(', ')}` : '', project.status ?? ''].filter(Boolean).join(' ')
     }))
 ]
 
@@ -116,7 +120,7 @@ const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const wordPattern = (term: string) => new RegExp(`(?<![\\p{L}\\p{N}])${escape(term)}`, 'iu')
 const startsWord = (text: string, term: string) => wordPattern(term).test(text)
 
-export const searchCv = (data: AssistantData, query: string, limit = 5) => {
+const searchCv = (data: AssistantData, query: string, limit = 5): { ref: string, title: string, snippet: string }[] => {
     const terms = stems(query)
     if (!terms.length) return []
     const need = Math.max(1, Math.round(terms.length * 0.6))
@@ -139,9 +143,9 @@ export const searchCv = (data: AssistantData, query: string, limit = 5) => {
 
 // ─── вакансия ──────────────────────────────────────────────────────────────────
 
-export type VacancyRequirement = { requirement: string, status: 'match' | 'partial' | 'missing', tech?: string, years?: number, refs?: string[] }
+export interface VacancyRequirement { requirement: string, status: 'match' | 'partial' | 'missing', tech?: string, years?: number, refs?: string[] }
 
-export const matchVacancy = (data: AssistantData, requirements: string[]) => {
+const matchVacancy = (data: AssistantData, requirements: string[]): { score: number, items: VacancyRequirement[], projects: { id: string, name: string }[] } => {
     const known = knownTechs(data)
     const items: VacancyRequirement[] = requirements.map(raw => {
         const requirement = clip(raw.trim(), 80)
@@ -169,16 +173,14 @@ export const matchVacancy = (data: AssistantData, requirements: string[]) => {
     return { score, items, projects }
 }
 
-// ─── GitHub ────────────────────────────────────────────────────────────────────
+export interface Knowledge {
+    tech: (tech: string) => TechExperience
+    search: (query: string, limit?: number) => { ref: string, title: string, snippet: string }[]
+    match: (requirements: string[]) => { score: number, items: VacancyRequirement[], projects: { id: string, name: string }[] }
+}
 
-/** Звёзды и темы репозитория; кэш на час, при ошибке — null (блок просто покажет репозиторий без цифр). */
-export const useGithubStats = defineCachedFunction(async (repo: string) => {
-    try {
-        const token = process.env.GITHUB_TOKEN
-        const response = await $fetch<{ stargazers_count: number, forks_count: number, topics?: string[], language?: string, pushed_at?: string }>(`https://api.github.com/repos/${repo}`, {
-            headers: { Accept: 'application/vnd.github+json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-            timeout: 5000
-        })
-        return { stars: response.stargazers_count, forks: response.forks_count, topics: response.topics ?? [], language: response.language ?? null, pushed: response.pushed_at?.slice(0, 10) ?? null }
-    } catch { return null }
-}, { maxAge: 3600, swr: true, staleMaxAge: 86400, group: 'chat', name: 'github-stats', getKey: (repo: string) => repo.replace(/[^\w.-]/g, '_') })
+export const useKnowledge = (data: AssistantData): Knowledge => ({
+    tech: (tech) => techExperience(data, tech),
+    search: (query, limit) => searchCv(data, query, limit),
+    match: (requirements) => matchVacancy(data, requirements),
+})

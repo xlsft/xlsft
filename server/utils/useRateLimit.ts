@@ -1,20 +1,15 @@
 import type { H3Event } from 'h3'
 
-type Bucket = { count: number, resetAt: number }
+interface Bucket { count: number, resetAt: number }
 
 const stores = (globalThis as any).__rateLimit ??= new Map<string, Bucket>()
 
-/**
- * Простой in-memory rate limiter (token bucket по IP, на воркер).
- * Бросает 429 при превышении лимита.
- */
-export const useRateLimit = (namespace: string, limit: number, windowMs: number) => {
-    return (event: H3Event) => {
-        const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
+export const useRateLimit = (namespace: string, limit: number, windowMs: number): { check: (event: H3Event) => void } => {
+    function check(event: H3Event): void {
+        const ip = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
         const key = `${namespace}:${ip}`
         const now = Date.now()
 
-        // ленивая очистка протухших бакетов, чтобы мапа не росла бесконечно
         if (stores.size > 10000) {
             for (const [k, v] of stores) if (v.resetAt <= now) stores.delete(k)
         }
@@ -28,4 +23,6 @@ export const useRateLimit = (namespace: string, limit: number, windowMs: number)
 
         if (bucket.count > limit) throw createError({ status: 429, message: 'Too many requests' })
     }
+
+    return { check }
 }

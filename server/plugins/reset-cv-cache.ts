@@ -7,5 +7,5 @@
 export default defineNitroPlugin(async () => {
     const storage = useStorage('cache:binary')
     const keys = await storage.getKeys().catch(() => [] as string[])
-    await Promise.all(keys.filter(key => /^cv-(docx|pdf|png):/.test(key)).map(key => storage.removeItem(key).catch(() => {})))
+    await Promise.all(keys.filter(key => /^cv-(docx|pdf|png):/.test(key)).map(key => storage.removeItem(key).catch(() => undefined)))
 })
