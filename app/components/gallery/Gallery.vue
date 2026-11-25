@@ -1,4 +1,6 @@
 <script setup lang="ts">
+    import type { ComponentPublicInstance } from 'vue'
+
     const props = defineProps<{
         images: string[]
         label: string
@@ -9,7 +11,7 @@
 
     const { t } = useI18n()
 
-    const image = useTemplateRef<HTMLImageElement>('image')
+    const image = useTemplateRef<ComponentPublicInstance>('image')
 
     const MAX = 4
     const DOUBLE = 2.5
@@ -41,7 +43,7 @@
         },
         zoom: {
             clamp(): void {
-                const element = image.value
+                const element = image.value?.$el as HTMLImageElement | undefined
                 if (!element) return
                 const zoom = state.value.zoom
                 const x = Math.max(0, (element.offsetWidth * zoom.scale - element.offsetWidth) / 2)
@@ -50,7 +52,7 @@
                 zoom.y = Math.min(y, Math.max(-y, zoom.y))
             },
             at(scale: number, x: number, y: number): void {
-                const element = image.value
+                const element = image.value?.$el as HTMLImageElement | undefined
                 if (!element) return
                 const zoom = state.value.zoom
                 const next = Math.min(MAX, Math.max(1, scale))
@@ -144,6 +146,7 @@
         },
     }
 
+    const current = computed<string | undefined>(() => props.images[index.value])
     const zoomed = computed<boolean>(() => state.value.zoom.scale > 1.01)
 
     const transform = computed<{ transform: string, transition?: string, cursor: string }>(() => ({
@@ -193,16 +196,18 @@
                 :enter-from-class="state.direction > 0 ? 'opacity-0 translate-x-6' : 'opacity-0 -translate-x-6'"
                 :leave-to-class="state.direction > 0 ? 'opacity-0 -translate-x-6' : 'opacity-0 translate-x-6'"
             >
-                <img
-                    v-if="props.images[index]"
+                <CommonProgressive
+                    v-if="current"
                     ref="image"
-                    :key="props.images[index]"
-                    :src="props.images[index]"
+                    :key="current"
+                    :src="current"
+                    :steps="[16, 128, 640, 1920]"
+                    :quality="75"
                     :style="transform"
                     :alt="`${props.label} · ${index + 1} / ${props.images.length}`"
                     draggable="false"
                     class="relative max-h-full max-w-full object-contain transition-all duration-200 ease-out select-none"
-                >
+                />
             </Transition>
 
             <template v-if="props.images.length > 1">

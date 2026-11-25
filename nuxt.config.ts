@@ -2,6 +2,8 @@ import { createRequire } from 'node:module'
 import tailwindcss from '@tailwindcss/vite'
 const satoriRequire = createRequire(createRequire(import.meta.url).resolve('satori'))
 
+const cdn = 's3.ru1.storage.beget.cloud'
+
 const site = {
     url: 'https://cv.xlsft.com',
     author: 'xlsft',
@@ -27,7 +29,10 @@ export default defineNuxtConfig({
     nitro: {
         preset: 'node-cluster',
         compressPublicAssets: true,
-        storage: { 'chat:requests': { driver: 'fs', base: './.data/chat-requests' } },
+        storage: {
+            'chat:requests': { driver: 'fs', base: './.data/chat-requests' },
+            'ipx': { driver: 'fs', base: './.data/ipx' },
+        },
         externals: {
             traceInclude: [satoriRequire.resolve('harfbuzzjs/hb.wasm')]
         }
@@ -46,6 +51,7 @@ export default defineNuxtConfig({
         },
         '/api/**': { cache: false },
         '/vendor/**': { cache: false },
+        '/_ipx/**': { cache: false, headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
         '/_fonts/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
         '/api/sitemap': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
     },
@@ -65,7 +71,7 @@ export default defineNuxtConfig({
             link: [
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
                 { rel: 'icon', type: 'image/png', href: '/favicon.png' },
-                { rel: 'preconnect', href: 'https://s3.ru1.storage.beget.cloud', crossorigin: '' },
+                { rel: 'preconnect', href: `https://${cdn}`, crossorigin: '' },
                 { rel: 'preconnect', href: 'https://mc.yandex.ru', crossorigin: '' },
             ]
         },
@@ -121,12 +127,9 @@ export default defineNuxtConfig({
     ui: {
         prefix: 'Nuxt',
     },
+    serverHandlers: [{ route: '/_ipx/**', handler: '~~/server/handlers/ipx.ts' }],
     image: {
-        domains: ['s3.ru1.storage.beget.cloud'],
-        presets: {
-            deck: { modifiers: { width: 128, height: 88, fit: 'cover', format: 'webp', quality: 50 } },
-            thumb: { modifiers: { width: 160, height: 90, fit: 'cover', format: 'webp', quality: 50 } },
-        },
+        domains: [cdn],
     },
     mdc: {
         headings: {
@@ -153,7 +156,8 @@ export default defineNuxtConfig({
         searxng: { url: '' },
         libreoffice: { bin: 'soffice' },
         redis: { url: '' },
-        cache: { cv: 259200 },
+        ipx: { domains: [cdn] },
+        cache: { cv: 259200, ipx: 2592000 },
         public: {
             site,
             metrics,

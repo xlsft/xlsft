@@ -48,7 +48,7 @@
                     ]"
                     :style="{ background: props.bg }"
                 >
-                    <NuxtImg :src="src" preset="deck" alt="" loading="lazy" class="size-full object-cover"/>
+                    <CommonProgressive :src="src" :steps="[16, 128]" :aspect="128 / 88" alt="" class="size-full object-cover"/>
                 </span>
             </button>
         </NuxtTooltip>
