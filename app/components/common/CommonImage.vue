@@ -12,6 +12,9 @@
     const darkImage = useTemplateRef<ComponentPublicInstance>('darkImage')
     const lightImage = useTemplateRef<ComponentPublicInstance>('lightImage')
 
+    // строковый onload работает до гидрации: помечает картинку, и skeleton-loaded прячет скелет; после монтирования его заменяет обработчик NuxtImg
+    const LOADED = 'this.dataset.loaded=\'\''
+
     const state = ref<{ dark?: boolean, light?: boolean }>({})
 
     const methods = {
@@ -37,12 +40,12 @@
     <span
         v-if="!(colorMode.value === 'dark' ? state.dark : state.light)"
         aria-hidden="true"
-        class="relative block animate-skeleton bg-elevated motion-reduce:animate-none"
+        class="relative block animate-skeleton bg-elevated motion-reduce:animate-none skeleton-loaded"
         :class="props.skeleton"
     />
-    <NuxtImg v-if="dark && dark === light" ref="darkImage" :src="dark" v-bind="$attrs" @load="methods.load('dark')"/>
+    <NuxtImg v-if="dark && dark === light" ref="darkImage" :src="dark" v-bind="$attrs" :onload="LOADED" @load="methods.load('dark')"/>
     <template v-else>
-        <span v-if="dark" class="hidden dark:contents"><NuxtImg ref="darkImage" :src="dark" v-bind="$attrs" @load="methods.load('dark')"/></span>
-        <span v-if="light" class="contents dark:hidden"><NuxtImg ref="lightImage" :src="light" v-bind="$attrs" @load="methods.load('light')"/></span>
+        <span v-if="dark" class="hidden dark:contents"><NuxtImg ref="darkImage" :src="dark" v-bind="$attrs" :onload="LOADED" @load="methods.load('dark')"/></span>
+        <span v-if="light" class="contents dark:hidden"><NuxtImg ref="lightImage" :src="light" v-bind="$attrs" :onload="LOADED" @load="methods.load('light')"/></span>
     </template>
 </template>

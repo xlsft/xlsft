@@ -123,6 +123,12 @@ button {
     translate: calc(100% + 2rem) calc(-100% - 2rem);
 }
 
+@utility skeleton-loaded {
+    &:has(~ img[data-loaded], ~ span > img[data-loaded]) {
+        display: none;
+    }
+}
+
 @utility stagger {
     animation-delay: calc(var(--i, 0) * 70ms);
 }
