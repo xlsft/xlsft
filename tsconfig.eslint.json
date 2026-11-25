@@ -1,0 +1,13 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "app/**/*",
+        "shared/**/*",
+        "server/**/*",
+        "schema/**/*",
+        "i18n/**/*",
+        "*.ts",
+        "*.vue"
+    ],
+    "exclude": ["node_modules", ".nuxt", ".output", "dist"]
+}
