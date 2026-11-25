@@ -21,15 +21,17 @@
 
 <template>
     <AssistantShell :command="`\0ols \0i-l \0scv/`" :loading="props.loading" :status="props.status">
-        <div v-if="result" class="flex min-w-0 items-start gap-6">
-            <a :href="files[0]?.to" target="_blank" class="group/deck animate-rise motion-reduce:animate-none relative mt-1 mr-2 ml-1 block h-32 w-24 shrink-0" :aria-label="t('ai.blocks.cv_open')">
-                <span aria-hidden="true" :class="sheet" class="z-1 translate-x-3 translate-y-2 rotate-8 group-hover/deck:translate-x-4 group-hover/deck:translate-y-0.5 group-hover/deck:rotate-12"/>
-                <span aria-hidden="true" :class="sheet" class="z-2 translate-x-1.5 translate-y-1 rotate-4 group-hover/deck:translate-x-2 group-hover/deck:-translate-y-0.5 group-hover/deck:rotate-6"/>
-                <span :class="sheet" class="z-3 overflow-hidden group-hover/deck:-translate-y-1.5 group-hover/deck:-rotate-2">
-                    <span v-if="!state.preview" class="absolute inset-0 block animate-skeleton bg-elevated motion-reduce:animate-none"/>
-                    <img :src="`/api/public/${result.locale ?? locale}/cv.png`" alt="" class="size-full object-cover object-top transition-opacity duration-300" :class="state.preview ? 'opacity-100' : 'opacity-0'" @load="state.preview = true">
-                </span>
-            </a>
+        <div v-if="result" class="flex min-w-0 items-stretch gap-4">
+            <div class="relative w-32 shrink-0 overflow-y-clip border-b">
+                <a :href="files[0]?.to" target="_blank" class="group/deck animate-rise motion-reduce:animate-none absolute top-2 left-1 block h-40 w-24" :aria-label="t('ai.blocks.cv_open')">
+                    <span aria-hidden="true" :class="sheet" class="z-1 translate-x-3 translate-y-2 rotate-8 group-hover/deck:translate-x-4 group-hover/deck:translate-y-0.5 group-hover/deck:rotate-12"/>
+                    <span aria-hidden="true" :class="sheet" class="z-2 translate-x-1.5 translate-y-1 rotate-4 group-hover/deck:translate-x-2 group-hover/deck:-translate-y-0.5 group-hover/deck:rotate-6"/>
+                    <span :class="sheet" class="z-3 overflow-hidden group-hover/deck:-translate-y-1.5 group-hover/deck:-rotate-2">
+                        <span v-if="!state.preview" class="absolute inset-0 block animate-skeleton bg-elevated motion-reduce:animate-none"/>
+                        <img :src="`/api/public/${result.locale ?? locale}/cv.png`" alt="" class="size-full object-cover object-top transition-opacity duration-300" :class="state.preview ? 'opacity-100' : 'opacity-0'" @load="state.preview = true">
+                    </span>
+                </a>
+            </div>
             <div class="flex min-w-0 flex-col">
                 <span class="text-comment">total {{ files.length }}</span>
                 <a
