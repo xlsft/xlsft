@@ -38,8 +38,8 @@ export default defineNuxtConfig({
         }
     },
     routeRules: {
+        // страницы без cache: на кешируемых роутах Nuxt выносит данные в _payload.json, и гидрация ждет его вторым запросом; ответы CMS кешируются в stores/cms/cache.ts
         '/**': {
-            cache: { maxAge: 600, swr: true, staleMaxAge: 86400 },
             headers: {
                 'x-content-type-options': 'nosniff',
                 'cross-origin-opener-policy': 'same-origin',
