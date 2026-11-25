@@ -1,19 +1,32 @@
-import tailwindcss from "@tailwindcss/vite";
 import { createRequire } from 'node:module'
-import config from './global.config'
-
+import tailwindcss from '@tailwindcss/vite'
 const satoriRequire = createRequire(createRequire(import.meta.url).resolve('satori'))
+
+const site = {
+    url: 'https://cv.xlsft.com',
+    author: 'xlsft',
+    address: {
+        locality: 'Санкт-Петербург',
+        region: 'Ленинградская область',
+        postal: '195112',
+        country: 'Россия',
+    },
+}
+
+const metrics = {
+    yandex: 103237740,
+    gtag: 'GTM-TFT8VB5P',
+}
 
 export default defineNuxtConfig({
     compatibilityDate: '2025-05-15',
     devtools: { enabled: true },
     css: ['~/assets/css/main.css'],
-    vite: { plugins: [ tailwindcss() as any ] },
-    site: { url: config.head.url },
+    vite: { plugins: [tailwindcss() as any] },
+    site: { url: site.url },
     nitro: {
         preset: 'node-cluster',
         compressPublicAssets: true,
-        // заявки из чата переживают рестарт процесса, даже если Telegram недоступен
         storage: { 'chat:requests': { driver: 'fs', base: './.data/chat-requests' } },
         externals: {
             traceInclude: [satoriRequire.resolve('harfbuzzjs/hb.wasm')]
@@ -28,32 +41,31 @@ export default defineNuxtConfig({
                 'x-frame-options': 'SAMEORIGIN',
                 'referrer-policy': 'strict-origin-when-cross-origin',
                 'permissions-policy': 'camera=(), microphone=(), geolocation=()',
-                'content-security-policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:; frame-src https:; worker-src 'self' blob:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+                'content-security-policy': 'default-src \'self\'; script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https:; style-src \'self\' \'unsafe-inline\' https:; img-src \'self\' data: blob: https:; font-src \'self\' data:; connect-src \'self\' https: wss:; frame-src https:; worker-src \'self\' blob:; frame-ancestors \'self\'; base-uri \'self\'; form-action \'self\''
             }
         },
         '/api/**': { cache: false },
         '/vendor/**': { cache: false },
         '/_fonts/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
         '/api/sitemap': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
-        '/api/repo/**': { cache: { maxAge: 3600, swr: true, staleMaxAge: 86400 } },
     },
     app: {
         head: {
             charset: 'utf-8',
             viewport: 'width=device-width, initial-scale=1',
             meta: [
-                { property: 'business:contact_data:locality', content: config.head.address.locality },
-                { property: 'business:contact_data:region', content: config.head.address.region },
-                { property: 'business:contact_data:postal_code', content: config.head.address.postal },
-                { property: 'business:contact_data:country_name', content: config.head.address.country },
-                { name: 'author', content: config.head.author },
-                { name: 'copyright', content: `${config.head.author} @ ${new Date().getFullYear()}` },
+                { property: 'business:contact_data:locality', content: site.address.locality },
+                { property: 'business:contact_data:region', content: site.address.region },
+                { property: 'business:contact_data:postal_code', content: site.address.postal },
+                { property: 'business:contact_data:country_name', content: site.address.country },
+                { name: 'author', content: site.author },
+                { name: 'copyright', content: `${site.author} @ ${new Date().getFullYear()}` },
                 { name: 'robots', content: 'index, follow' }
             ],
             link: [
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
                 { rel: 'icon', type: 'image/png', href: '/favicon.png' },
-                { rel: 'preconnect', href: 'https://fucosukalekob.begetcdn.cloud', crossorigin: '' },
+                { rel: 'preconnect', href: 'https://s3.ru1.storage.beget.cloud', crossorigin: '' },
                 { rel: 'preconnect', href: 'https://mc.yandex.ru', crossorigin: '' },
             ]
         },
@@ -73,23 +85,24 @@ export default defineNuxtConfig({
         'imports:extend'(imports) {
             for (let i = imports.length - 1; i >= 0; i -= 1) {
                 const item = imports[i]
-                if (item && item.name === 'options' && item.from.includes('@nuxt/ui/dist/runtime/composables/useResizable')) {
+                if (item?.name === 'options' && item.from.includes('@nuxt/ui/dist/runtime/composables/useResizable')) {
                     imports.splice(i, 1)
                 }
             }
         }
     },
     modules: [
-      '@nuxtjs/i18n',
-      'yandex-metrika-module-nuxt3',
-      '@nuxt/ui',
-      '@crumbleerp/clarity',
-      '@nuxt/fonts',
-      '@nuxtjs/seo',
-      '@nuxt/image',
-      '@nuxtjs/mdc',
-      'nuxt-og-image',
-      'nuxt-gtag',
+        '@nuxtjs/i18n',
+        '@pinia/nuxt',
+        'yandex-metrika-module-nuxt3',
+        '@nuxt/ui',
+        '@crumbleerp/clarity',
+        '@nuxt/fonts',
+        '@nuxtjs/seo',
+        '@nuxt/image',
+        '@nuxtjs/mdc',
+        'nuxt-og-image',
+        'nuxt-gtag',
     ],
     i18n: {
         strategy: 'prefix',
@@ -108,6 +121,13 @@ export default defineNuxtConfig({
     ui: {
         prefix: 'Nuxt',
     },
+    image: {
+        domains: ['s3.ru1.storage.beget.cloud'],
+        presets: {
+            deck: { modifiers: { width: 128, height: 88, fit: 'cover', format: 'webp', quality: 50 } },
+            thumb: { modifiers: { width: 160, height: 90, fit: 'cover', format: 'webp', quality: 50 } },
+        },
+    },
     mdc: {
         headings: {
             anchorLinks: false
@@ -118,10 +138,63 @@ export default defineNuxtConfig({
         fallback: 'dark',
     },
     runtimeConfig: {
-        public: { config }
+        github: { token: '' },
+        telegram: { token: '', proxy: '', chat: 5072212559 },
+        hcaptcha: { secret: '' },
+        deepseek: { token: '', url: 'https://api.deepseek.com', models: '' },
+        ai: {
+            providers: ['deepseek', 'opencode'],
+            recheck: 10,
+            secret: '',
+            mcp: '',
+            debug: false,
+            opencode: { bin: 'opencode', home: '' },
+        },
+        searxng: { url: '' },
+        libreoffice: { bin: 'soffice' },
+        redis: { url: '' },
+        cache: { cv: 259200 },
+        public: {
+            site,
+            metrics,
+            locales: ['ru', 'en'],
+            themes: ['dark', 'light'],
+            theme: {
+                background: { dark: '#000000', light: '#FFFFFF' },
+                font: { dark: '#FFFFFF', light: '#000000' },
+                border: { dark: '#404040', light: '#c2c2c2' },
+                accent: '#2b7fff',
+            },
+            schema: {
+                person: {
+                    fullname: 'Илья Торшин',
+                    firstname: 'Илья',
+                    lastname: 'Торшин',
+                    initials: 'Илья Т.',
+                    position: 'Senior Frontend Engineer',
+                },
+                organization: {
+                    name: 'xlsft',
+                    legalName: 'ИП Торшин Илья Евгеньевич',
+                    legalAddress: '398005, Липецкая область, Г.Липецк, Ул.Суворова, д.3, кв.19',
+                    inn: '482308004814',
+                    ogrn: '323480000011992',
+                    url: 'https://xlsft.com',
+                    email: 'dev@xlsft.com',
+                    logo: 'https://cdn.sanity.io/images/d5cxszmz/production/dd1cb4829f950c4e116d511ccf77af3b5c2ed26a-480x100.svg',
+                    phone: '+7 (999) 750-66-23',
+                },
+            },
+        },
+    },
+    $development: {
+        runtimeConfig: {
+            ai: { secret: 'dev-mcp-secret' },
+            searxng: { url: 'http://127.0.0.1:8890' },
+        },
     },
     yandexMetrika: {
-        id: config.metrics.yandex,
+        id: metrics.yandex,
         metrikaUrl: '/vendor/metrika',
         clickmap: true,
         trackLinks: true,
@@ -129,7 +202,7 @@ export default defineNuxtConfig({
         webvisor: false
     },
     gtag: {
-        id: config.metrics.gtag,
+        id: metrics.gtag,
         url: '/vendor/gtag/js'
     },
     sitemap: {
@@ -141,6 +214,6 @@ export default defineNuxtConfig({
         typescriptPlugin: true
     },
     ogImage: {
-        componentDirs: ['atoms/og'],
+        componentDirs: ['og'],
     }
 })
