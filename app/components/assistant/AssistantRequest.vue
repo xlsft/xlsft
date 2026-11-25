@@ -2,56 +2,58 @@
     import { useAssistantStore, type AssistantRequest } from '~/stores/assistant'
 
     const props = defineProps<{
+        input?: unknown
         output?: unknown
         loading?: boolean
+        status?: string
     }>()
 
     const { t } = useI18n()
     const assistantStore = useAssistantStore()
 
+    const pair = 'grid grid-cols-pair'
+
     const result = computed<AssistantRequest | undefined>(() => props.loading ? undefined : assistantStore.parse<AssistantRequest>(props.output))
-    const contacts = computed<{ key: string, icon: string, value: string, to?: string }[]>(() => {
+    const contacts = computed<{ key: string, value: string, to?: string }[]>(() => {
         const fields = result.value?.fields ?? {}
         const phone = fields.phone ?? ''
         const telegram = (fields.telegram ?? '').replace(/^@/, '')
         return [
-            fields.name && { key: 'name', icon: 'mingcute:user-3-line', value: fields.name, to: undefined },
-            fields.email && { key: 'email', icon: 'mingcute:mail-line', value: fields.email, to: `mailto:${fields.email}` },
-            phone && { key: 'phone', icon: 'mingcute:phone-line', value: phone, to: `tel:${/^\d+$/.test(phone) ? `+${phone}` : phone.replace(/[^\d+]/g, '')}` },
-            telegram && { key: 'telegram', icon: 'mingcute:telegram-line', value: `@${telegram}`, to: `https://t.me/${telegram}` },
-        ].filter(Boolean) as { key: string, icon: string, value: string, to?: string }[]
+            fields.name && { key: 'name', value: fields.name, to: undefined },
+            fields.email && { key: 'email', value: fields.email, to: `mailto:${fields.email}` },
+            phone && { key: 'phone', value: phone, to: `tel:${/^\d+$/.test(phone) ? `+${phone}` : phone.replace(/[^\d+]/g, '')}` },
+            telegram && { key: 'telegram', value: `@${telegram}`, to: `https://t.me/${telegram}` },
+        ].filter(Boolean) as { key: string, value: string, to?: string }[]
     })
 </script>
 
 <template>
-    <AssistantSkeleton v-if="props.loading"/>
-    <div v-else-if="result?.fields" class="animate-rise stagger motion-reduce:animate-none flex w-full border">
-        <div class="flex w-24 shrink-0 flex-col items-center justify-center gap-1.5 border-r bg-success/5 p-3 text-center">
-            <NuxtIcon name="mingcute:check-circle-line" class="size-7 text-success"/>
-            <span class="text-xs/4 text-success">{{ result.created ? t('ai.blocks.request_saved') : t('ai.blocks.request_updated') }}</span>
+    <AssistantShell
+        :command="`\0ocurl \0i-X \0w${result && !result.created ? 'PATCH' : 'POST'} \0s/api/request`"
+        :loading="props.loading"
+        :status="props.status"
+    >
+        <div v-if="result?.fields" class="flex flex-col gap-2">
+            <p class="animate-rise motion-reduce:animate-none m-0 flex items-center gap-ch text-success">
+                <NuxtIcon name="mingcute:check-circle-line" class="size-3.5 shrink-0"/>
+                <span>{{ result.created ? '201 Created' : '200 OK' }}</span>
+                <span class="text-comment"># {{ result.created ? t('ai.blocks.request_saved') : t('ai.blocks.request_updated') }}</span>
+            </p>
+            <dl class="m-0 flex flex-col">
+                <div v-for="(contact, index) in contacts" :key="contact.key" class="animate-rise stagger motion-reduce:animate-none" :class="pair" :style="{ '--i': index + 1 }">
+                    <dt class="text-dimmed">{{ contact.key }}</dt><span aria-hidden="true" class="text-line">=</span>
+                    <dd class="m-0 min-w-0 truncate">
+                        <a v-if="contact.to" :href="contact.to" :target="contact.to.startsWith('http') ? '_blank' : undefined" class="terminal-link terminal-link-bright">{{ contact.value }}</a>
+                        <span v-else class="text-default">{{ contact.value }}</span>
+                    </dd>
+                </div>
+                <div v-if="result.fields.message" class="animate-rise stagger motion-reduce:animate-none" :class="pair" :style="{ '--i': contacts.length + 1 }">
+                    <dt class="text-dimmed">message</dt><span aria-hidden="true" class="text-line">=</span>
+                    <dd class="m-0 wrap-break-word text-default/78">"{{ result.fields.message }}"</dd>
+                </div>
+            </dl>
+            <span v-if="!contacts.length" class="text-comment"># {{ t('ai.blocks.request_no_contacts') }}</span>
+            <span class="text-comment"># {{ t('ai.blocks.request_hint') }}</span>
         </div>
-        <div class="flex min-w-0 grow flex-col gap-3 p-3">
-            <div class="flex flex-col gap-0.5 text-xs/5">
-                <span class="font-bold text-default">{{ t('ai.blocks.request') }}</span>
-                <span class="text-comment"># {{ t('ai.blocks.request_hint') }}</span>
-            </div>
-            <div v-if="contacts.length" class="flex flex-wrap gap-1.5">
-                <component
-                    :is="contact.to ? 'a' : 'span'"
-                    v-for="(contact, index) in contacts"
-                    :key="contact.key"
-                    :href="contact.to"
-                    :target="contact.to?.startsWith('http') ? '_blank' : undefined"
-                    class="animate-rise stagger motion-reduce:animate-none flex min-w-0 items-center gap-1.5 border px-2 py-1 text-xs/4 text-default no-underline! transition-colors"
-                    :class="contact.to && 'hover:border-primary hover:text-primary'"
-                    :style="{ '--i': index + 1 }"
-                    :aria-label="t(`ai.blocks.${contact.key}`)"
-                >
-                    <NuxtIcon :name="contact.icon" class="size-3.5 shrink-0 text-dimmed"/><span class="truncate">{{ contact.value }}</span>
-                </component>
-            </div>
-            <span v-else class="text-xs/4 text-comment"># {{ t('ai.blocks.request_no_contacts') }}</span>
-            <p v-if="result.fields.message" class="animate-rise stagger motion-reduce:animate-none m-0 border-l-2 border-primary pl-3 text-xs/5 wrap-break-word text-default" :style="{ '--i': contacts.length + 1 }">{{ result.fields.message }}</p>
-        </div>
-    </div>
+    </AssistantShell>
 </template>

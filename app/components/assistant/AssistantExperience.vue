@@ -2,8 +2,10 @@
     import { useAssistantStore, type AssistantList, type AssistantCompany, type AssistantQuery } from '~/stores/assistant'
 
     const props = defineProps<{
+        input?: unknown
         output?: unknown
         loading?: boolean
+        status?: string
     }>()
 
     const assistantStore = useAssistantStore()
@@ -15,26 +17,36 @@
 </script>
 
 <template>
-    <AssistantSkeleton v-if="props.loading || pending" variant="list"/>
-    <div v-else-if="data?.items?.length" class="flex w-full flex-col gap-1.5">
-        <article v-for="(company, index) in data.items" :key="company.id" class="animate-rise stagger motion-reduce:animate-none flex flex-col border" :style="{ '--i': index }">
-            <header class="flex items-center justify-between gap-3 border-b px-3 py-2">
-                <component :is="company.link ? 'a' : 'span'" :href="company.link" target="_blank" class="flex min-w-0 items-center gap-3 no-underline!">
-                    <img v-if="assistantStore.image(company.logo)" :src="assistantStore.image(company.logo)" :alt="company.name" class="h-5 w-auto max-w-32 shrink-0 object-contain">
-                    <span v-else class="truncate text-xs font-bold text-default">{{ company.name }}</span>
-                    <span v-if="company.link" class="truncate text-xs text-comment transition-colors hover:text-primary">{{ assistantStore.host(company.link) }}</span>
-                </component>
-                <span class="shrink-0 text-xs tabular-nums text-default">{{ range(company.positions) }}</span>
-            </header>
-            <div class="flex flex-col gap-2.5 p-3">
-                <div v-for="(position, item) in company.positions" :key="item" class="flex flex-col gap-0.5 border-l-2 pl-3" :class="position.to ? 'border-default' : 'border-primary'">
-                    <div class="flex items-baseline justify-between gap-4 text-xs/5">
-                        <span class="min-w-0 font-bold text-default">{{ position.name }}</span>
-                        <span class="shrink-0 tabular-nums text-comment">{{ assistantStore.date(position.from) }} — {{ assistantStore.date(position.to) }}</span>
+    <AssistantShell
+        :command="`\0ocat \0sexperience/${assistantStore.arg(assistantStore.args<AssistantQuery>(props.input, props.output).company) || '*'}.yaml`"
+        :loading="props.loading || pending"
+        :status="props.status"
+    >
+        <div v-if="data?.items?.length" class="flex flex-col gap-3">
+            <article v-for="(company, index) in data.items" :key="company.id" class="animate-rise stagger motion-reduce:animate-none flex flex-col" :style="{ '--i': index }">
+                <header class="flex items-center justify-between gap-3">
+                    <component :is="company.link ? 'a' : 'span'" :href="company.link" target="_blank" class="flex min-w-0 items-center gap-ch no-underline!">
+                        <span class="text-comment">#</span>
+                        <img v-if="assistantStore.image(company.logo)" :src="assistantStore.image(company.logo)" :alt="company.name" class="h-4 w-auto max-w-28 shrink-0 object-contain">
+                        <span v-else class="truncate font-bold text-default">{{ company.name }}</span>
+                        <span v-if="company.link" class="terminal-link truncate">{{ assistantStore.host(company.link) }}</span>
+                    </component>
+                    <span class="shrink-0 tabular-nums text-warning">{{ range(company.positions) }}</span>
+                </header>
+                <div v-for="(position, item) in company.positions" :key="item" class="flex min-w-0 gap-ch">
+                    <span aria-hidden="true" class="flex shrink-0 flex-col text-line">
+                        <span>{{ item === company.positions.length - 1 ? '└─' : '├─' }}</span>
+                        <span v-if="item < company.positions.length - 1" class="ml-ch-half grow border-l border-line"/>
+                    </span>
+                    <div class="flex min-w-0 grow flex-col">
+                        <div class="flex items-baseline justify-between gap-4">
+                            <span class="min-w-0" :class="position.to ? 'text-default/78' : 'font-bold text-default'">{{ position.name }}</span>
+                            <span class="shrink-0 tabular-nums text-comment">{{ assistantStore.date(position.from) }} — {{ assistantStore.date(position.to) }}</span>
+                        </div>
+                        <CommonHighlight v-if="position.skills?.length" :text="`\0c[${position.skills.map((skill) => `\0d${skill}`).join('\0c, ')}\0c]`"/>
                     </div>
-                    <CommonHighlight v-if="position.skills?.length" class="text-xs/5" :text="`\0c[${position.skills.map((skill) => `\0d${skill}`).join('\0c, ')}\0c]`"/>
                 </div>
-            </div>
-        </article>
-    </div>
+            </article>
+        </div>
+    </AssistantShell>
 </template>

@@ -2,35 +2,29 @@
     import { useAssistantStore, type AssistantSources } from '~/stores/assistant'
 
     const props = defineProps<{
+        input?: unknown
         output?: unknown
         loading?: boolean
+        status?: string
     }>()
 
-    const { t } = useI18n()
     const assistantStore = useAssistantStore()
 
     const result = computed<AssistantSources | undefined>(() => props.loading ? undefined : assistantStore.parse<AssistantSources>(props.output))
 </script>
 
 <template>
-    <AssistantSkeleton v-if="props.loading"/>
-    <div v-else-if="result?.results?.length" class="flex flex-col border">
-        <div class="flex items-center gap-2 border-b px-3 py-2 text-xs/5 text-dimmed">
-            <NuxtIcon name="mingcute:search-line" class="size-4 shrink-0"/>
-            <span class="truncate">{{ t('ai.blocks.sources', { q: result.query }) }}</span>
-        </div>
-        <a
-            v-for="(source, index) in result.results.slice(0, 4)"
-            :key="source.url"
-            :href="source.url"
-            target="_blank"
-            rel="noopener nofollow"
-            class="animate-rise stagger motion-reduce:animate-none flex items-center justify-between gap-3 px-3 py-2 text-xs/5 no-underline! transition-colors hover:bg-elevated"
-            :class="index !== 0 && 'border-t'"
-            :style="{ '--i': index }"
-        >
-            <span class="min-w-0 truncate text-default">{{ source.title }}</span>
-            <span class="shrink-0 text-dimmed">{{ assistantStore.domain(source.url) }}</span>
-        </a>
-    </div>
+    <AssistantShell
+        :command="`\0ocurl \0i-s \0ssearx/search?q=\0w&quot;${assistantStore.arg(assistantStore.args<AssistantSources>(props.input, props.output).query)}&quot;`"
+        :loading="props.loading"
+        :status="props.status"
+    >
+        <ol v-if="result?.results?.length" class="m-0 flex list-none flex-col p-0">
+            <li v-for="(source, index) in result.results.slice(0, 4)" :key="source.url" class="animate-rise stagger motion-reduce:animate-none flex min-w-0 items-baseline gap-ch" :style="{ '--i': index }">
+                <span class="shrink-0 tabular-nums text-comment">{{ index + 1 }}.</span>
+                <a :href="source.url" target="_blank" rel="noopener nofollow" class="terminal-link terminal-link-bright min-w-0 grow truncate">{{ source.title }}</a>
+                <span class="shrink-0 text-info">{{ assistantStore.domain(source.url) }}</span>
+            </li>
+        </ol>
+    </AssistantShell>
 </template>

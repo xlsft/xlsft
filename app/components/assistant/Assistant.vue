@@ -1,6 +1,5 @@
 <script setup lang="ts">
     import { useChat } from '@ai-sdk/vue'
-    import { isToolStreaming } from '@nuxt/ui/utils/ai'
     import { useLocalStorage } from '@vueuse/core'
     import { DefaultChatTransport, isReasoningUIPart, isTextUIPart, isToolUIPart, type UIMessage } from 'ai'
     import type { Component } from 'vue'
@@ -117,19 +116,15 @@
                     <template v-for="(part, index) in message.parts" :key="`${message.id}-${part.type}-${index}`">
                         <template v-if="isReasoningUIPart(part)"/>
                         <template v-else-if="isToolUIPart(part)">
-                            <template v-if="assistantStore.tool(part) && part.state !== 'output-error'">
-                                <div v-if="part.state !== 'output-available'" class="flex min-h-6 items-center">
-                                    <NuxtChatTool :text="t(`ai.tools.${assistantStore.tool(part)}`)" :streaming="isToolStreaming(part)"/>
-                                </div>
-                                <Transition mode="out-in" appear enter-active-class="animate-fade motion-reduce:animate-none" leave-active-class="transition-opacity duration-150 ease-in" leave-to-class="opacity-0">
-                                    <component
-                                        :is="blocks[assistantStore.tool(part)!]"
-                                        class="my-2 first:mt-0"
-                                        :output="part.state === 'output-available' ? part.output : undefined"
-                                        :loading="part.state !== 'output-available'"
-                                    />
-                                </Transition>
-                            </template>
+                            <component
+                                :is="blocks[assistantStore.tool(part)!]"
+                                v-if="assistantStore.tool(part) && part.state !== 'output-error'"
+                                class="animate-fade motion-reduce:animate-none my-3 first:mt-0"
+                                :input="part.input"
+                                :output="part.state === 'output-available' ? part.output : undefined"
+                                :loading="part.state !== 'output-available'"
+                                :status="t(`ai.tools.${assistantStore.tool(part)}`)"
+                            />
                         </template>
                         <div
                             v-else-if="isTextUIPart(part) && part.text"
@@ -142,7 +137,7 @@
                     <div v-if="status === 'streaming' && message.id === history.at(-1)?.id && !methods.visible(message)" class="flex min-h-6 items-center text-sm"><NuxtChatShimmer :text="t('ai.working')"/></div>
                     <div v-if="message.id === 'error'" class="mt-3 flex flex-col gap-3">
                         <NuxtButton class="w-fit rounded-none text-sm! text-default/50! underline" size="sm" variant="outline" color="neutral" icon="mingcute:refresh-2-line" @click="regenerate()">{{ t('ai.errors.retry') }}</NuxtButton>
-                        <AssistantContacts :output="{ block: 'contacts', shown: true, locale }"/>
+                        <AssistantContacts :output="{ block: 'contacts', shown: true, locale }" :status="t('ai.tools.show_contacts')"/>
                     </div>
                     <div v-if="message.id === 'greeting' && !history.length" class="mt-3 flex flex-wrap gap-2">
                         <NuxtButton v-for="chip in chips" :key="chip.label" size="sm" variant="outline" color="neutral" class="rounded-none" :icon="chip.icon" @click="methods.send(t(chip.label))">{{ t(chip.label) }}</NuxtButton>

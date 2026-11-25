@@ -30,6 +30,12 @@ export const useAssistantStore = defineStore('assistant', () => {
             if (Array.isArray(record?.content)) return methods.parse<T>(record.content.find((part) => part.type === 'text')?.text)
             return (value ?? undefined) as T | undefined
         },
+        args<T extends object>(input: unknown, output: unknown): Partial<T> {
+            return { ...(input && typeof input === 'object' ? input : {}), ...methods.parse<T>(output) }
+        },
+        arg(value?: string): string {
+            return (value ?? '').replaceAll('\0', '').replaceAll('"', '\\"')
+        },
         async block<T>(type: AssistantBlockType, query?: AssistantQuery & AssistantList<T>): Promise<AssistantList<T> | undefined> {
             if (!query || query.error) return undefined
             if (query.items ?? query.groups) return query

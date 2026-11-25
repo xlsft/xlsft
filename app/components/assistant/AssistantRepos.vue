@@ -2,8 +2,10 @@
     import { useAssistantStore, type AssistantList, type AssistantQuery, type AssistantRepo } from '~/stores/assistant'
 
     const props = defineProps<{
+        input?: unknown
         output?: unknown
         loading?: boolean
+        status?: string
     }>()
 
     const { t } = useI18n()
@@ -14,29 +16,22 @@
 </script>
 
 <template>
-    <AssistantSkeleton v-if="props.loading || pending" variant="list"/>
-    <div v-else-if="data?.items?.length" class="flex flex-col border">
-        <a
-            v-for="(item, index) in data.items"
-            :key="item.repo"
-            :href="`https://github.com/${item.repo}`"
-            target="_blank"
-            class="animate-rise stagger motion-reduce:animate-none flex flex-col gap-1.5 p-3 no-underline! transition-colors hover:bg-elevated"
-            :class="index !== 0 && 'border-t'"
-            :style="{ '--i': index }"
-        >
-            <span class="flex items-center justify-between gap-3 text-xs/5">
-                <span class="flex min-w-0 items-center gap-2"><NuxtIcon name="mingcute:github-line" class="size-4 shrink-0"/><span class="truncate font-bold text-default">{{ item.repo }}</span></span>
-                <span class="flex shrink-0 items-center gap-3 tabular-nums text-dimmed">
-                    <span v-if="item.github?.language">{{ item.github.language }}</span>
-                    <span class="flex items-center gap-1" :title="t('ai.blocks.stars')"><NuxtIcon name="mingcute:star-line" class="size-3.5"/>{{ item.github?.stars ?? '—' }}</span>
-                    <span v-if="item.github?.forks" class="flex items-center gap-1" :title="t('ai.blocks.forks')"><NuxtIcon name="mingcute:git-branch-line" class="size-3.5"/>{{ item.github.forks }}</span>
+    <AssistantShell :command="`\0ogh \0orepo list \0ixlsft \0i--source`" :loading="props.loading || pending" :status="props.status">
+        <ul v-if="data?.items?.length" class="m-0 flex list-none flex-col gap-2 p-0">
+            <li v-for="(item, index) in data.items" :key="item.repo" class="animate-rise stagger motion-reduce:animate-none flex min-w-0 flex-col" :style="{ '--i': index }">
+                <span class="flex items-baseline justify-between gap-3">
+                    <a :href="`https://github.com/${item.repo}`" target="_blank" class="terminal-link terminal-link-bright flex min-w-0 items-center gap-ch">
+                        <NuxtIcon name="mingcute:github-line" class="size-3.5 shrink-0 self-center"/><span class="truncate font-bold">{{ item.repo }}</span>
+                    </a>
+                    <span class="flex shrink-0 gap-ch-2 tabular-nums">
+                        <span v-if="item.github?.language" class="text-info">{{ item.github.language }}</span>
+                        <span class="text-warning" :title="t('ai.blocks.stars')">★ {{ item.github?.stars ?? '—' }}</span>
+                        <span v-if="item.github?.forks" class="text-dimmed" :title="t('ai.blocks.forks')">⑂ {{ item.github.forks }}</span>
+                    </span>
                 </span>
-            </span>
-            <span class="text-xs text-dimmed">{{ item.name }}</span>
-            <span v-if="item.github?.topics?.length" class="flex flex-wrap gap-1">
-                <NuxtBadge v-for="topic in item.github.topics.slice(0, 6)" :key="topic" :label="topic" size="sm" color="neutral" variant="outline" class="rounded-none"/>
-            </span>
-        </a>
-    </div>
+                <span class="text-comment"># {{ item.name }}</span>
+                <span v-if="item.github?.topics?.length" class="text-success">{{ item.github.topics.slice(0, 6).map((topic) => `#${topic}`).join(' ') }}</span>
+            </li>
+        </ul>
+    </AssistantShell>
 </template>

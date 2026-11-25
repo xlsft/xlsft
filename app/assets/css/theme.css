@@ -204,6 +204,11 @@ button {
     &:focus-visible { outline: 1px solid var(--terminal-link-hover, var(--ui-primary)); outline-offset: 2px; }
 }
 
+@utility terminal-link-bright {
+    --terminal-link-color: var(--ui-text);
+    --terminal-link-hover: var(--ui-primary);
+}
+
 @custom-variant screen (@media screen);
 @custom-variant mobile-screen (@media screen and (max-width: 1023.98px));
 
