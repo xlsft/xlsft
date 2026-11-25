@@ -23,3 +23,7 @@ build.json
 .env
 .env.*
 !.env.example
+
+# Lint caches
+.eslintcache
+.stylelintcache
