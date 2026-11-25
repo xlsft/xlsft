@@ -1,11 +1,17 @@
 name: cv-xlsft-com
 
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
   app:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
+    image: ghcr.io/xlsft/xlsft:${APP_TAG:-latest}
+    pull_policy: always
     restart: unless-stopped
+    logging: *logging
     environment:
       NUXT_CLARITY_TOKEN: ${NUXT_CLARITY_TOKEN}
       NUXT_GITHUB_TOKEN: ${NUXT_GITHUB_TOKEN}
@@ -14,8 +20,17 @@ services:
       NUXT_DEEPSEEK_TOKEN: ${NUXT_DEEPSEEK_TOKEN}
       NUXT_AI_SECRET: ${NUXT_AI_SECRET}
       NUXT_SEARXNG_URL: http://searxng:8080
+    volumes:
+      - app-data:/app/.data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
     depends_on:
-      - searxng
+      searxng:
+        condition: service_started
     networks:
       - default
       - traefik
@@ -29,6 +44,7 @@ services:
       traefik.http.services.cv.loadbalancer.server.port: "3000"
 
   clarity:
+    logging: *logging
     image: crumbleerp/clarity:40c71ad@sha256:dd4e211980ae420a9c82c5c6dc2795be46014caf9b2f14373d291c9b796198e2
     restart: unless-stopped
     environment:
@@ -66,6 +82,7 @@ services:
       traefik.http.middlewares.cv-legacy-media.redirectregex.permanent: "true"
 
   postgres:
+    logging: *logging
     image: postgres:18-alpine
     restart: unless-stopped
     environment:
@@ -81,6 +98,7 @@ services:
       retries: 20
 
   searxng:
+    logging: *logging
     image: searxng/searxng:latest
     restart: unless-stopped
     environment:
@@ -90,6 +108,7 @@ services:
       - ./config/searxng.yml:/etc/searxng/settings.yml:ro
 
 volumes:
+  app-data:
   postgres-data:
 
 networks:

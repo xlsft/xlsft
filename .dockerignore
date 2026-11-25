@@ -13,3 +13,14 @@ dist
 .nuxt
 .data
 .cache
+
+**/.env
+**/.env.*
+.github
+.claude
+.husky
+test
+deploy
+*.md
+.eslintcache
+.stylelintcache

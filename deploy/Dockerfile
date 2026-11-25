@@ -1,16 +1,17 @@
-FROM node:alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11.8.0
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile --store-dir /pnpm/store
 
 COPY . .
 ENV NODE_OPTIONS="--max-old-space-size=8192"
 RUN pnpm run build
 
-FROM node:alpine AS runtime
+FROM node:24-alpine AS runtime
 
 WORKDIR /app
 RUN npm install -g @opencode/cli@2.0.24
@@ -24,5 +25,7 @@ COPY --from=builder /app/.output /app/.output
 COPY --from=builder /app/node_modules /app/node_modules
 COPY package.json ./
 
+ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=8192"
+EXPOSE 3000
 ENTRYPOINT ["node", ".output/server/index.mjs"]

@@ -217,6 +217,9 @@ export default defineNuxtConfig({
     experimental: {
         typescriptPlugin: true
     },
+    typescript: {
+        tsConfig: { include: ['../test/**/*', '../vitest.config.ts'] },
+    },
     ogImage: {
         componentDirs: ['og'],
     }
