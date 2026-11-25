@@ -30,7 +30,7 @@ const allowNewRequest = (session: string) => {
 export const tools: ToolSpec[] = [
     {
         name: 'show_experience',
-        usage: 'Interactive block with work experience. Prefer it over long text when asked about experience.',
+        usage: 'Renders the work experience timeline (optionally one company). Use when asked where he worked; still answer in your own words: current role first, then a sentence about the path.',
         description: 'Show the candidate\'s work experience block to the visitor. Optionally only one company by its id.',
         input: { company: z.string().max(64).optional().describe('Company id from the data') },
         needsLocale: true,
@@ -41,7 +41,7 @@ export const tools: ToolSpec[] = [
     },
     {
         name: 'show_projects',
-        usage: 'Bento grid of projects. Prefer it over long text when asked about projects in general.',
+        usage: 'Renders a grid of projects (filter by tag or ids). Use for general questions about projects; still name one or two standout ones and say why.',
         description: 'Show a block with the candidate\'s projects to the visitor. Optionally filter by tag or ids.',
         input: {
             tag: z.string().max(64).optional().describe('Project tag from the data'),
@@ -57,7 +57,7 @@ export const tools: ToolSpec[] = [
     },
     {
         name: 'show_skills',
-        usage: 'Block with the technology stack.',
+        usage: 'Renders his technology stack. Use when asked about the stack in general; still mention the core of it in a sentence.',
         description: 'Show the candidate\'s technology stack block to the visitor.',
         input: {},
         needsLocale: true,
@@ -65,7 +65,7 @@ export const tools: ToolSpec[] = [
     },
     {
         name: 'show_contacts',
-        usage: 'Buttons to contact the candidate directly.',
+        usage: 'Renders buttons to contact him directly. Use when the visitor wants to write or call him.',
         description: 'Show buttons to contact the candidate directly (Telegram, e-mail, phone, social links).',
         input: {},
         needsLocale: true,
@@ -73,7 +73,7 @@ export const tools: ToolSpec[] = [
     },
     {
         name: 'show_downloads',
-        usage: 'CV/resume files (PDF, DOCX, Markdown). Use whenever the visitor wants the CV as a file or a printable version.',
+        usage: 'Renders download buttons for the CV (PDF, DOCX, Markdown). Use whenever the visitor wants the CV as a file or a printable version.',
         description: 'Show buttons to download the candidate\'s CV (resume) in printable formats: PDF, DOCX and Markdown. Use when the visitor asks for the CV/resume as a file, a printable version or to download it.',
         input: {},
         needsLocale: true,
@@ -81,7 +81,7 @@ export const tools: ToolSpec[] = [
     },
     {
         name: 'show_project',
-        usage: 'Detailed card of ONE project (description, stack, links, GitHub stars). Use when the visitor asks about a specific project.',
+        usage: 'Renders details of ONE project (description, stack, links, GitHub stars). Use when the visitor asks about a specific project; still tell what it is and what was interesting about it.',
         description: 'Show a detailed card of a single project of the candidate by its id.',
         input: { id: z.string().max(64).describe('Project id from the data') },
         needsLocale: true,
@@ -93,7 +93,7 @@ export const tools: ToolSpec[] = [
     },
     {
         name: 'show_repos',
-        usage: 'Block with the candidate\'s open-source GitHub repositories (stars, topics). Use for questions about open source, GitHub or code samples.',
+        usage: 'Renders his open-source GitHub repositories (stars, topics). Use for questions about open source, GitHub or code samples.',
         description: 'Show the candidate\'s public GitHub repositories with stars. Optionally only for given project ids.',
         input: { ids: z.array(z.string().max(64)).max(6).optional().describe('Project ids from the data') },
         needsLocale: true,
@@ -123,7 +123,7 @@ export const tools: ToolSpec[] = [
     },
     {
         name: 'match_vacancy',
-        usage: 'When the visitor pastes a job description or lists requirements: extract up to 20 short atomic requirements (one technology or skill each) and pass them. Renders a fit table for the visitor; then summarize the score and gaps in one or two sentences and offer submit_request with the vacancy summary in "message".',
+        usage: 'When the visitor pastes a job description or lists requirements: extract up to 20 short atomic requirements (one technology or skill each) and pass them. Renders a fit table; then give your honest take on the fit in a few sentences (strong points, gaps) and offer to pass the vacancy on to him via submit_request with its summary in "message".',
         description: 'Compare a vacancy\'s requirements with the candidate\'s CV and show a match table to the visitor.',
         input: {
             title: z.string().max(120).optional().describe('Vacancy title, if known'),
