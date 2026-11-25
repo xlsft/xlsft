@@ -6,13 +6,6 @@ x-logging: &logging
     max-size: 10m
     max-file: "3"
 
-x-twenty-env: &twenty-env
-  SERVER_URL: https://crm.xlsft.com
-  PG_DATABASE_URL: postgres://twenty:${TWENTY_DB_PASSWORD}@twenty-db:5432/twenty
-  REDIS_URL: redis://twenty-redis:6379
-  STORAGE_TYPE: local
-  ENCRYPTION_KEY: ${TWENTY_ENCRYPTION_KEY}
-
 services:
   app:
     image: ghcr.io/xlsft/xlsft:${APP_TAG:-latest}
@@ -22,8 +15,12 @@ services:
     environment:
       NUXT_CLARITY_TOKEN: ${NUXT_CLARITY_TOKEN}
       NUXT_GITHUB_TOKEN: ${NUXT_GITHUB_TOKEN}
-      NUXT_TWENTY_URL: http://twenty:3000
-      NUXT_TWENTY_TOKEN: ${TWENTY_API_KEY:-}
+      NUXT_REQUESTS_EMAIL_HOST: ${NUXT_REQUESTS_EMAIL_HOST}
+      NUXT_REQUESTS_EMAIL_PORT: ${NUXT_REQUESTS_EMAIL_PORT}
+      NUXT_REQUESTS_EMAIL_USER: ${NUXT_REQUESTS_EMAIL_USER}
+      NUXT_REQUESTS_EMAIL_PASSWORD: ${NUXT_REQUESTS_EMAIL_PASSWORD}
+      NUXT_REQUESTS_EMAIL_FROM: ${NUXT_REQUESTS_EMAIL_FROM}
+      NUXT_REQUESTS_EMAIL_TO: ${NUXT_REQUESTS_EMAIL_TO}
       NUXT_HCAPTCHA_SECRET: ${NUXT_HCAPTCHA_SECRET}
       NUXT_DEEPSEEK_TOKEN: ${NUXT_DEEPSEEK_TOKEN}
       NUXT_AI_SECRET: ${NUXT_AI_SECRET}
@@ -112,95 +109,9 @@ services:
     volumes:
       - ./config/searxng.yml:/etc/searxng/settings.yml:ro
 
-  twenty:
-    logging: *logging
-    image: twentycrm/twenty:${TWENTY_TAG:-v2.63.0}
-    restart: unless-stopped
-    stop_grace_period: 120s
-    environment:
-      <<: *twenty-env
-      NODE_PORT: 3000
-    volumes:
-      - twenty-storage:/app/packages/twenty-server/.local-storage
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:3000/healthz"]
-      interval: 10s
-      timeout: 5s
-      start_period: 60s
-      retries: 20
-    depends_on:
-      twenty-db:
-        condition: service_healthy
-      twenty-redis:
-        condition: service_healthy
-    networks:
-      - default
-      - traefik
-    labels:
-      traefik.enable: "true"
-      traefik.docker.network: traefik
-      traefik.http.routers.crm.rule: Host(`crm.xlsft.com`)
-      traefik.http.routers.crm.entrypoints: websecure
-      traefik.http.routers.crm.tls.certresolver: letsencrypt
-      traefik.http.routers.crm.service: crm
-      traefik.http.services.crm.loadbalancer.server.port: "3000"
-      # Twenty не поддерживает подпуть, поэтому /admin только ведёт на его хост
-      traefik.http.routers.cv-admin.rule: Host(`cv.xlsft.com`) && (Path(`/admin`) || PathPrefix(`/admin/`))
-      traefik.http.routers.cv-admin.priority: "100"
-      traefik.http.routers.cv-admin.entrypoints: websecure
-      traefik.http.routers.cv-admin.tls.certresolver: letsencrypt
-      traefik.http.routers.cv-admin.service: crm
-      traefik.http.routers.cv-admin.middlewares: cv-admin
-      traefik.http.middlewares.cv-admin.redirectregex.regex: ^https?://cv\.xlsft\.com/admin(.*)
-      traefik.http.middlewares.cv-admin.redirectregex.replacement: https://crm.xlsft.com$${1}
-
-  twenty-worker:
-    logging: *logging
-    image: twentycrm/twenty:${TWENTY_TAG:-v2.63.0}
-    restart: unless-stopped
-    command: ["yarn", "worker:prod"]
-    environment:
-      <<: *twenty-env
-      DISABLE_DB_MIGRATIONS: "true"
-      DISABLE_CRON_JOBS_REGISTRATION: "true"
-    volumes:
-      - twenty-storage:/app/packages/twenty-server/.local-storage
-    depends_on:
-      twenty:
-        condition: service_healthy
-
-  twenty-db:
-    logging: *logging
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: twenty
-      POSTGRES_PASSWORD: ${TWENTY_DB_PASSWORD}
-      POSTGRES_DB: twenty
-    volumes:
-      - twenty-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U twenty -d twenty"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
-  twenty-redis:
-    logging: *logging
-    image: redis:8-alpine
-    restart: unless-stopped
-    command: ["--maxmemory-policy", "noeviction"]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
 volumes:
   app-data:
   postgres-data:
-  twenty-db-data:
-  twenty-storage:
 
 networks:
   traefik:

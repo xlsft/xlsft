@@ -142,7 +142,7 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         github: { token: '' },
-        twenty: { url: '', token: '' },
+        requests: { email: { host: '', port: 465, user: '', password: '', from: '', to: [] as string[] } },
         hcaptcha: { secret: '' },
         deepseek: { token: '', url: 'https://api.deepseek.com', models: '' },
         ai: {
