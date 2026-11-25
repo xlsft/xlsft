@@ -17,11 +17,7 @@
         color: var(--ui-text);
     }
 
-    ul, ol {  }
-    li + li { }
-    ul ul, ol ol {  }
-
-    input[type="checkbox"] { @apply mr-2 accent-(--ui-primary); }
+    input[type="checkbox"] { @apply mr-2 accent-primary; }
 
     blockquote {
         @apply border-l-4  pl-4 py-2 my-6 italic;
@@ -32,29 +28,37 @@
     }
 
     pre {
-        @apply overflow-x-auto my-6 text-sm! outline-[1px] outline-(--ui-primary) p-[24px] bg-(--ui-primary)/10;
+        @apply overflow-x-auto my-6 text-sm! outline outline-primary p-6 bg-primary/10;
         code {
             @apply bg-transparent text-inherit p-0 outline-0!;
         }
     }
 
     table {
-        @apply border-collapse mx-[24px] w-[calc(100%-48px)] text-sm! my-[12px];
+        @apply border-collapse mx-6 text-sm! my-3;
+        width: calc(100% - 48px);
         th, td { @apply border px-3 py-2 text-left; }
         th { @apply font-semibold; }
     }
 
     hr { @apply border-t my-8; }
 
-    img { @apply my-4 border max-w-[50dvh]!; }
+    img {
+        @apply my-4 border;
+        max-width: 50dvh !important;
+    }
 
     sup { @apply text-xs! align-super; }
 
-    :is(span.emoji, img.emoji) { @apply align-middle h-[1.1em]; }
+    :is(span.emoji, img.emoji) {
+        @apply align-middle;
+        height: 1.1em;
+    }
 
     h2[id], h3[id] { @apply scroll-mt-24; }
 
     a {
-        @apply border-none! [font-size:unset]!;
+        @apply border-none!;
+        font-size: unset !important;
     }
 }

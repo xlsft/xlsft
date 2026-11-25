@@ -6,6 +6,8 @@
     --ui-bg-inverted: var(--color-black);
 
     --ui-neutral: #c2c2c2;
+
+    --ui-text-dimmed: #595959;
 }
 
 .dark {
@@ -16,6 +18,7 @@
     --ui-bg-inverted: var(--color-white);
 
     --ui-neutral: #404040;
+    --ui-text-dimmed: #9e9e9e;
 }
 
 :root, .dark {
@@ -35,7 +38,6 @@
     --ui-warning: var(--color-orange-500);
     --ui-error: var(--color-rose-500);
 
-
     --ui-border: var(--ui-neutral);
     --ui-border-accented: var(--ui-neutral);
     --ui-border-muted: var(--ui-neutral);
@@ -47,21 +49,7 @@
     --ui-text-muted: var(--ui-text-dimmed);
     --ui-text-toned: var(--ui-text-dimmed);
     --ui-text-highlighted: var(--ui-text);
-}
 
-/* контраст текста не должен зависеть от цвета бордеров:
-   #404040/#c2c2c2 на фоне дают contrast < 4.5:1 и фейлят WCAG AA */
-:root {
-    --ui-text-dimmed: #595959;
-}
-
-.dark {
-    --ui-text-dimmed: #9e9e9e;
-}
-
-/* комментарии (`# …`) — самый тусклый текст, но всё ещё проходят AA:
-   #767676 даёт 4.54:1 на белом и 4.6:1 на чёрном */
-:root, .dark {
     --ui-text-comment: #767676;
 }
 
@@ -76,8 +64,6 @@ body {
     background: var(--ui-bg) !important;
 }
 
-/* в base-слое, чтобы это были только значения по умолчанию: правило вне слоёв перебивает любые
-   утилиты (border-primary, outline-primary, hover:… и т.п.), и цветные рамки молча не работают */
 @layer base {
     * {
         border-color: var(--ui-border);
@@ -97,4 +83,202 @@ a {
 
 button {
     @apply cursor-nw-resize! *:cursor-nw-resize! hover:opacity-75 transition-opacity
+}
+
+@utility bg-grid {
+    position: relative;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: .6;
+        pointer-events: none;
+        background: linear-gradient(var(--ui-border) 1px, transparent 1px), linear-gradient(90deg, var(--ui-border) 1px, transparent 1px);
+        background-size: 24px 24px;
+        background-position: center;
+    }
+}
+
+@utility bg-lines {
+    background: linear-gradient(var(--grid-line, var(--ui-border)) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line, var(--ui-border)) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: center;
+}
+
+@utility tile-lines {
+    --logo-color: var(--logo-color-light);
+    --grid-line: var(--ui-border);
+
+    &:where(.dark *) { --logo-color: var(--logo-color-dark); }
+    :is(.group\/tile:hover, .group\/tile:focus-visible) & { --grid-line: var(--logo-color); }
+}
+
+@utility tile-place {
+    grid-column: var(--tile-col);
+    grid-row: var(--tile-row);
+}
+
+@utility tuck {
+    translate: calc(100% + 2rem) calc(-100% - 2rem);
+}
+
+@utility stagger {
+    animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@utility pixelated {
+    image-rendering: pixelated;
+}
+
+@utility print-exact {
+    print-color-adjust: exact;
+}
+
+@utility no-ligatures {
+    font-feature-settings: 'calt' 0;
+}
+
+@utility fetch-rows {
+    & > * {
+        color: var(--row);
+        --terminal-link-hover: var(--row);
+    }
+
+    & > :nth-child(6n + 1) { --row: var(--ui-error); }
+    & > :nth-child(6n + 2) { --row: var(--ui-warning); }
+    & > :nth-child(6n + 3) { --row: var(--ui-success); }
+    & > :nth-child(6n + 4) { --row: var(--ui-info); }
+    & > :nth-child(6n + 5) { --row: var(--ui-primary); }
+    & > :nth-child(6n + 6) { --row: var(--color-purple-500); }
+}
+
+@utility md-strong {
+    & strong { color: var(--ui-text); }
+}
+
+@utility md-notes {
+    color: var(--ui-text-comment);
+
+    & > * {
+        position: relative;
+        margin: 0 !important;
+        padding-left: 2ch;
+        font-size: inherit !important;
+        line-height: inherit !important;
+    }
+
+    & > *::before {
+        content: "#";
+        position: absolute;
+        left: 0;
+    }
+
+    & strong {
+        font-weight: 400 !important;
+        color: var(--ui-text-comment);
+    }
+}
+
+@utility md-chat {
+    & p { margin-block: 0; line-height: 1.5rem; }
+    & p + p { margin-top: .5rem; }
+}
+
+@utility md-compact {
+    & > * { margin-block: 0 !important; }
+    & p + p { margin-top: .5rem !important; }
+}
+
+@utility terminal-link {
+    font: inherit;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    color: var(--terminal-link-color, var(--ui-text-comment)) !important;
+    text-decoration: none !important;
+    opacity: 1 !important;
+    cursor: pointer;
+    transition: color .15s;
+
+    &:hover, &[aria-expanded="true"] { color: var(--terminal-link-hover, var(--ui-text)) !important; }
+    &:focus-visible { outline: 1px solid var(--terminal-link-hover, var(--ui-primary)); outline-offset: 2px; }
+}
+
+@custom-variant screen (@media screen);
+@custom-variant mobile-screen (@media screen and (max-width: 1023.98px));
+
+@utility conf-md {
+    --conf-key: 96px;
+    --conf-gap: 24px;
+
+    & li > p, & blockquote > p { margin: 0; }
+    & .md { gap: 0 !important; color: color-mix(in srgb, var(--ui-text) 78%, var(--ui-bg)); }
+    & .md > * { position: relative; padding: 3px 0 3px calc(var(--conf-key) + var(--conf-gap)) !important; font-size: inherit !important; line-height: inherit !important; }
+    & .md > *::before { content: var(--k, ""); position: absolute; left: 0; top: 3px; color: var(--ui-text-dimmed); font-style: normal; font-weight: normal; }
+    & .md > *::after { content: var(--eq, ""); position: absolute; left: var(--conf-key); top: 3px; color: var(--ui-border); font-style: normal; }
+    & .md > p:first-child { --k: "summary"; --eq: "="; }
+    & .md > ul, & .md > ol { --k: "scope"; --eq: "="; list-style: none; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+    & .md > blockquote { --k: "result"; --eq: "="; border: 0 !important; font-style: normal !important; color: var(--ui-text); font-weight: 700; }
+    & li { position: relative; padding-left: 132px; }
+    & li > strong:first-child, & li > p:first-child > strong:first-child { position: absolute; left: 0; width: 120px; font-weight: 400 !important; color: var(--ui-text); }
+
+    @media screen and (max-width: 1023.98px) {
+        & .md { gap: 10px !important; }
+        & .md > * { padding: 0 !important; }
+        & .md > *::before { content: var(--k-m, ""); position: static; display: block; margin-bottom: 2px; font-size: 12px; line-height: 16px; }
+        & .md > *::after { content: none; }
+        & .md > p:first-child { --k-m: "summary ="; }
+        & .md > ul, & .md > ol { --k-m: "scope ="; gap: 6px; }
+        & .md > blockquote { --k-m: "result ="; }
+        & li { padding-left: 0; }
+        & li > strong:first-child, & li > p:first-child > strong:first-child { position: static; display: block; width: auto; }
+    }
+}
+
+@theme inline {
+    --color-comment: var(--ui-text-comment);
+    --color-line: var(--ui-border);
+    --color-dim: var(--ui-text-dimmed);
+    --spacing-header: var(--ui-header-height);
+    --spacing-viewport: var(--ui-viewport-height);
+}
+
+@theme {
+    --text-terminal: 15px;
+    --text-terminal--line-height: 26px;
+    --text-compact: 13px;
+    --text-compact--line-height: 22px;
+    --text-2xs: 11px;
+    --text-2xs--line-height: 16px;
+
+    --spacing-ch: 1ch;
+    --spacing-ch-2: 2ch;
+    --spacing-ch-9: 9ch;
+    --spacing-ch-half: .5ch;
+    --spacing-gutter: calc(48px + 3ch);
+    --spacing-gutter-sm: calc(26px + 2ch);
+    --spacing-key: calc(24px + 12ch);
+    --spacing-key-sm: calc(12px + 10ch);
+    --spacing-key-wide: 144px;
+    --spacing-key-wide-sm: 88px;
+
+    --grid-template-columns-photo: clamp(240px, 32%, 360px) minmax(0, 1fr);
+    --grid-template-columns-fetch: 18px max-content minmax(0, 1fr);
+    --grid-template-columns-fetch-sm: 15px max-content minmax(0, 1fr);
+    --grid-template-columns-conf: 96px 24px minmax(0, 1fr);
+    --grid-template-columns-pair: 9ch 2ch minmax(0, 1fr);
+    --grid-template-columns-head: minmax(0, 1fr) auto;
+    --grid-template-columns-head-sm: auto minmax(0, 1fr);
+    --grid-template-columns-skills: 2.5rem 7rem minmax(0, 1fr);
+    --grid-template-columns-tags: repeat(auto-fit, minmax(4rem, 1fr));
+    --grid-template-rows-open: 1fr;
+    --grid-template-rows-closed: 0fr;
+
+    --animate-rise: rise .45s cubic-bezier(.2, .7, .2, 1) both;
+    --animate-fade: fade .3s ease-out both;
+    --animate-skeleton: skeleton 1.2s ease-in-out infinite;
+
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+    @keyframes fade { from { opacity: 0; } }
+    @keyframes skeleton { 50% { opacity: .45; } }
 }
