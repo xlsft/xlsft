@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * Заявки из чата: одна на сессию (sessionId живёт в браузере посетителя).
  * Создать и дополнить можно, удалить — нет.
- * Заявка = одно сообщение в Telegram, которое редактируется по мере уточнения данных.
+ * Заявка = сделка в Twenty CRM (контакт, сделка на канбане и заметка с деталями), которая обновляется по мере уточнения данных.
  */
 
 export const requestFieldsSchema = z.object({
@@ -15,13 +15,12 @@ export const requestFieldsSchema = z.object({
 })
 
 export type RequestFields = z.infer<typeof requestFieldsSchema>
-export interface RequestRecord { messageId?: number, fields: RequestFields, updates: number, notified?: RequestFields }
+export interface RequestCrm { person?: string, opportunity?: string, note?: string, linked?: boolean }
+export interface RequestRecord { crm?: RequestCrm, fields: RequestFields, updates: number, notified?: RequestFields }
 
 const FIELDS = ['name', 'email', 'phone', 'telegram', 'message'] as const
 const EMAIL = /^[^\s@<>()]+@[^\s@<>()]+\.[a-zA-Z]{2,}$/
 const MAX_UPDATES = 10
-
-const esc = (value?: string) => (value?.length ? value : '-').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!))
 
 const clean = (fields: RequestFields): RequestFields => {
     const out: RequestFields = {}
@@ -36,13 +35,23 @@ const clean = (fields: RequestFields): RequestFields => {
     return out
 }
 
-const render = (fields: RequestFields, url: string, title: string) => `<strong>${title} (${esc(url)})</strong>
+const person = (fields: RequestFields) => {
+    const [firstName = 'Website visitor', ...rest] = (fields.name ?? '').split(/\s+/).filter(Boolean)
+    return { name: { firstName, lastName: rest.join(' ') }, emails: { primaryEmail: fields.email ?? '' } }
+}
 
-<strong>Name</strong>: <code>${esc(fields.name)}</code>
-<strong>Email</strong>: <code>${esc(fields.email)}</code>
-<strong>Phone</strong>: <code>${esc(fields.phone)}</code>
-<strong>Telegram</strong>: <code>${esc(fields.telegram)}</code>
-<strong>Message</strong>: <blockquote>${esc(fields.message)}</blockquote>`
+const title = (fields: RequestFields) => `${fields.name ?? 'Website visitor'}: ${fields.message?.slice(0, 80) ?? 'request from the chat'}`
+
+const note = (fields: RequestFields, url: string) => [
+    `**Name**: ${fields.name ?? '-'}`,
+    `**Email**: ${fields.email ?? '-'}`,
+    `**Phone**: ${fields.phone ?? '-'}`,
+    `**Telegram**: ${fields.telegram ? `[@${fields.telegram}](https://t.me/${fields.telegram})` : '-'}`,
+    '',
+    fields.message ? `> ${fields.message.replace(/\n/g, '\n> ')}` : '',
+    '',
+    `Source: AI chat on ${url}`,
+].join('\n')
 
 const summarize = (fields: RequestFields) => ({
     fields,
@@ -50,15 +59,9 @@ const summarize = (fields: RequestFields) => ({
     missing: FIELDS.filter(key => !fields[key])
 })
 
-// доставка в Telegram идёт в фоне и по очереди на сессию: сеть может тормозить или лежать,
+// доставка в CRM идёт в фоне и по очереди на сессию: сеть может тормозить или лежать,
 // заявка при этом уже сохранена и посетителю отвечаем сразу
-const TELEGRAM_TIMEOUT_MS = 15_000
 const queues = ((globalThis as any).__assistantRequestQueues ??= new Map<string, Promise<void>>()) as Map<string, Promise<void>>
-
-const withTimeout = <T>(promise: Promise<T>) => Promise.race([
-    promise,
-    new Promise<never>((_, reject) => setTimeout(() => reject(new Error('telegram timeout')), TELEGRAM_TIMEOUT_MS))
-])
 
 export interface RequestState { fields: RequestFields, hasContact: boolean, missing: (keyof RequestFields)[] }
 export interface AssistantRequests {
@@ -70,30 +73,36 @@ export interface AssistantRequests {
 export const useAssistantRequests = (sessionId: string): AssistantRequests => {
     const storage = useStorage<RequestRecord>('chat:requests')
     const site = useRuntimeConfig().public.site
-    const telegram = useTelegram()
+    const twenty = useTwenty()
     const key = sessionId
 
-    /** Привести сообщение в Telegram к актуальному состоянию заявки: создать его или отредактировать. */
+    /** Привести записи в CRM к актуальному состоянию заявки: создать их или обновить. */
     const deliver = async () => {
-        const bot = telegram.bot
-        if (!bot) return
+        if (!twenty.enabled) return
         const record = await storage.getItem(key)
         if (!record || JSON.stringify(record.notified) === JSON.stringify(record.fields)) return
-        const chat = telegram.chat
+        const crm: RequestCrm = { ...record.crm }
+        // id сохраняются сразу, чтобы повторная доставка после сбоя не плодила дубли
+        const save = (notified?: RequestFields) => storage.setItem(key, { ...record, crm, notified: notified ?? record.notified })
+        const upsert = async (object: string, id: keyof Omit<RequestCrm, 'linked'>, body: object) => {
+            const current = crm[id]
+            if (current) return twenty.update(object, current, body)
+            crm[id] = await twenty.create(object, body)
+            await save()
+        }
         try {
-            if (!record.messageId) {
-                const message = await withTimeout(bot.api.sendMessage(chat, render(record.fields, site.url, 'New AI request!'), { parse_mode: 'HTML' }))
-                await storage.setItem(key, { ...record, messageId: message.message_id, notified: record.fields })
-                return
+            await upsert('people', 'person', person(record.fields))
+            await upsert('opportunities', 'opportunity', { name: title(record.fields), pointOfContactId: crm.person })
+            await upsert('notes', 'note', { title: 'Request details', bodyV2: { markdown: note(record.fields, site.url) } })
+            if (!crm.linked) {
+                await twenty.create('noteTargets', { noteId: crm.note, targetOpportunityId: crm.opportunity })
+                crm.linked = true
             }
-            const changed = FIELDS.filter(field => record.fields[field] !== record.notified?.[field])
-            await withTimeout(bot.api.editMessageText(chat, record.messageId, render(record.fields, site.url, 'AI request'), { parse_mode: 'HTML' })).catch(() => undefined)
-            // правка сообщения не присылает уведомление — дублируем коротким ответом
-            await withTimeout(bot.api.sendMessage(chat, `Request updated: ${changed.join(', ')}`, { reply_parameters: { message_id: record.messageId } })).catch(() => undefined)
-            await storage.setItem(key, { ...record, notified: record.fields })
+            await save(record.fields)
         } catch (error) {
             // заявка остаётся в хранилище и уйдёт со следующей доставкой
-            console.error('[assistant] telegram delivery failed:', (error as Error)?.message)
+            await save()
+            console.error('[assistant] crm delivery failed:', (error as Error)?.message)
         }
     }
 
